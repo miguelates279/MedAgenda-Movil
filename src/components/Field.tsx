@@ -1,134 +1,64 @@
-import React from 'react';
-import {
-  KeyboardTypeOptions,
-  StyleProp,
-  StyleSheet,
-  Text,
-  TextInput,
-  TextStyle,
-  View,
-  ViewStyle,
-} from 'react-native';
-import {
-  Control,
-  Controller,
-  FieldPath,
-  FieldValues,
-  RegisterOptions,
-} from 'react-hook-form';
+/**
+ * Campo de texto conectado a react-hook-form.
+ *
+ * `Controller` es el puente entre el formulario y un input de React Native:
+ * le entrega el valor actual y recibe los cambios. Gracias a eso la pantalla
+ * no necesita un `useState` por cada campo.
+ */
 
-type FieldProps<
-  TFieldValues extends FieldValues,
-  TName extends FieldPath<TFieldValues>,
-> = {
-  control: Control<TFieldValues>;
-  name: TName;
-  label?: string;
-  placeholder?: string;
-  keyboardType?: KeyboardTypeOptions;
-  secureTextEntry?: boolean;
-  autoCapitalize?: 'none' | 'sentences' | 'words' | 'characters';
-  autoCorrect?: boolean;
-  editable?: boolean;
-  multiline?: boolean;
-  numberOfLines?: number;
-  rules?: RegisterOptions<TFieldValues, TName>;
-  defaultValue?: string;
-  containerStyle?: StyleProp<ViewStyle>;
-  inputStyle?: StyleProp<TextStyle>;
-  labelStyle?: StyleProp<TextStyle>;
-  errorStyle?: StyleProp<TextStyle>;
+import {
+  Controller,
+  type Control,
+  type FieldValues,
+  type Path,
+  type RegisterOptions,
+} from 'react-hook-form';
+import { Text, TextInput, View, type TextInputProps } from 'react-native';
+
+// Hereda todas las props de TextInput (keyboardType, secureTextEntry...) y
+// añade las del formulario.
+type Props<T extends FieldValues> = TextInputProps & {
+  control: Control<T>;
+  /** Nombre del campo dentro del formulario. TypeScript solo acepta los que existen. */
+  name: Path<T>;
+  label: string;
+  /** Reglas de validación: required, minLength, pattern, validate... */
+  rules?: RegisterOptions<T, Path<T>>;
 };
 
-export function Field<
-  TFieldValues extends FieldValues,
-  TName extends FieldPath<TFieldValues>,
->({
+export default function Field<T extends FieldValues>({
   control,
   name,
   label,
-  placeholder,
-  keyboardType = 'default',
-  secureTextEntry = false,
-  autoCapitalize = 'sentences',
-  autoCorrect = true,
-  editable = true,
-  multiline = false,
-  numberOfLines,
   rules,
-  defaultValue = '',
-  containerStyle,
-  inputStyle,
-  labelStyle,
-  errorStyle,
-}: FieldProps<TFieldValues, TName>) {
+  className,
+  ...input
+}: Props<T>) {
   return (
     <Controller
       control={control}
       name={name}
       rules={rules}
-      defaultValue={defaultValue as any}
-      render={({ field, fieldState }) => (
-        <View style={[styles.container, containerStyle]}>
-          {label ? <Text style={[styles.label, labelStyle]}>{label}</Text> : null}
-
+      render={({ field: { onChange, onBlur, value }, fieldState: { error } }) => (
+        <View className="gap-1.5">
+          <Text className="font-semibold text-neutral-700">{label}</Text>
           <TextInput
-            value={field.value ?? ''}
-            onChangeText={field.onChange}
-            onBlur={field.onBlur}
-            placeholder={placeholder}
-            keyboardType={keyboardType}
-            secureTextEntry={secureTextEntry}
-            autoCapitalize={autoCapitalize}
-            autoCorrect={autoCorrect}
-            editable={editable}
-            multiline={multiline}
-            numberOfLines={numberOfLines}
-            style={[
-              styles.input,
-              inputStyle,
-              fieldState.error ? styles.inputError : null,
-            ]}
+            // El `className` que llegue desde fuera se suma al de aquí; si se
+            // pasara dentro de `...input` reemplazaría estos estilos base.
+            className={`rounded-xl border bg-white p-3.5 ${
+              error ? 'border-red-500' : 'border-neutral-300'
+            } ${className ?? ''}`}
+            value={value}
+            onChangeText={onChange}
+            onBlur={onBlur}
+            autoCapitalize="none"
+            placeholderTextColor="#a3a3a3"
+            {...input}
           />
-
-          {fieldState.error ? (
-            <Text style={[styles.error, errorStyle]}>
-              {fieldState.error.message}
-            </Text>
-          ) : null}
+          {/* El mensaje sale de las `rules`: quien define la regla define el texto. */}
+          {!!error && <Text className="text-xs text-red-600">{error.message}</Text>}
         </View>
       )}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    marginBottom: 12,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '600',
-    marginBottom: 8,
-    color: '#1f2937',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 10,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 16,
-    backgroundColor: '#fff',
-    color: '#111827',
-  },
-  inputError: {
-    borderColor: '#ef4444',
-  },
-  error: {
-    marginTop: 6,
-    fontSize: 12,
-    color: '#ef4444',
-  },
-});
