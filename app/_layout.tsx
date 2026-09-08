@@ -10,7 +10,7 @@
  */
 
 import { Stack } from 'expo-router';
-// import '../global.css';
+import '../global.css';
 import { SessionProvider, useSession } from '../src/session/context';
 
 export default function RootLayout() {
