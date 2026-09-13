@@ -29,10 +29,7 @@ type FieldProps<
   rules?: RegisterOptions<TFieldValues, TName>;
 };
 
-export function Field<
-  TFieldValues extends FieldValues,
-  TName extends FieldPath<TFieldValues>,
->({
+export default function Field<T extends FieldValues>({
   control,
   name,
   label,
