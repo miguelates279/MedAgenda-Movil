@@ -34,6 +34,7 @@ class ApiClient {
     }
 
     try {
+      console.log('API FETCHING:', url, options);
       const response = await fetch(url, {
         ...options,
         headers,

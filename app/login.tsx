@@ -24,11 +24,14 @@ export default function LoginScreen() {
   });
 
   const onSubmit = async (data: LoginDto) => {
+    console.log('--- LOGIN SUBMITTED ---', data);
     setError(null);
     try {
-      await signIn(data);
+      const res = await signIn(data);
+      console.log('--- LOGIN SUCCESS ---', res);
       router.replace('/home');
     } catch (err: any) {
+      console.log('--- LOGIN ERROR ---', err);
       setError(err.message || 'Error al iniciar sesión');
     }
   };

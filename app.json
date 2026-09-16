@@ -29,7 +29,7 @@
     "plugins": [
       "expo-router"      
     ],
-    "schema": "my-schema",
+    "scheme": "medagenda",
     "experiments": {
       "typedRoutes": true
     }
