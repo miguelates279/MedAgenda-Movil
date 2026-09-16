@@ -14,10 +14,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import appointmentsApi from '../../src/api/appointments';
 import { DoctorAppointmentView } from '../../src/api/types';
-import Button from '../../src/components/Button';
-import Card from '../../src/components/Card';
-import Badge from '../../src/components/Badge';
-import Field from '../../src/components/Field';
+import { Badge, Button, Card, Field } from '../../src/components';
 
 interface EditAppointmentForm {
   appointment_description: string;

@@ -10,9 +10,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import clinicsApi from '../../src/api/clinics';
 import { Clinic, ClinicScheduleRules, PublicDoctor } from '../../src/api/types';
-import Card from '../../src/components/Card';
-import Badge from '../../src/components/Badge';
-import DoctorCard from '../../src/components/DoctorCard';
+import { Badge, Card, DoctorCard } from '../../src/components';
 
 export default function ClinicDetailScreen() {
   const router = useRouter();

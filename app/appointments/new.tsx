@@ -16,11 +16,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import clinicsApi from '../../src/api/clinics';
 import { Clinic, PublicDoctor } from '../../src/api/types';
 import { useDoctorSchedule } from '../../src/hooks/useDoctorSchedule';
-import Button from '../../src/components/Button';
-import Card from '../../src/components/Card';
-import Badge from '../../src/components/Badge';
-import Field from '../../src/components/Field';
-import SelectModal, { SelectOption } from '../../src/components/SelectModal';
+import { Badge, Button, Card, Field, SelectModal, SelectOption } from '../../src/components';
 
 interface AppointmentFormData {
   clinic_id: number | null;

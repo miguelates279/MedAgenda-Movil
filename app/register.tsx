@@ -2,8 +2,7 @@ import React, { useState } from 'react';
 import { Alert, ScrollView, Text, View } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { Link, useRouter } from 'expo-router';
-import Field from '../src/components/Field';
-import Button from '../src/components/Button';
+import { Button, Field } from '../src/components';
 import { useAuth } from '../src/context/AuthContext';
 import { CreateUserDto } from '../src/api/types';
 

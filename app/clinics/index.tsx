@@ -9,11 +9,7 @@ import {
 } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useClinicSearch } from '../../src/hooks/useClinicSearch';
-import Button from '../../src/components/Button';
-import Card from '../../src/components/Card';
-import Badge from '../../src/components/Badge';
-import SelectModal, { SelectOption } from '../../src/components/SelectModal';
-import NavBar from '../../src/components/NavBar';
+import { Badge, Button, Card, NavBar, SelectModal, SelectOption } from '../../src/components';
 import { Clinic } from '../../src/api/types';
 
 export default function ClinicsIndexScreen() {

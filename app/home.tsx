@@ -12,10 +12,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../src/context/AuthContext';
 import appointmentsApi from '../src/api/appointments';
 import { DoctorAppointmentView } from '../src/api/types';
-import Button from '../src/components/Button';
-import Card from '../src/components/Card';
-import Badge from '../src/components/Badge';
-import NavBar from '../src/components/NavBar';
+import { Badge, Button, Card, NavBar } from '../src/components';
 
 export default function HomeScreen() {
   const router = useRouter();

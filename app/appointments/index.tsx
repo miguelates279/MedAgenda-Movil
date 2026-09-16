@@ -12,9 +12,7 @@ import { useRouter } from 'expo-router';
 import { useAuth } from '../../src/context/AuthContext';
 import appointmentsApi from '../../src/api/appointments';
 import { DoctorAppointmentView } from '../../src/api/types';
-import Button from '../../src/components/Button';
-import AppointmentCard from '../../src/components/AppointmentCard';
-import NavBar from '../../src/components/NavBar';
+import { AppointmentCard, Button, NavBar } from '../../src/components';
 
 export default function AppointmentsIndexScreen() {
   const router = useRouter();

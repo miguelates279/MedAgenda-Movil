@@ -13,10 +13,7 @@ import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../src/context/AuthContext';
 import { LoginDto, CreateUserDto } from '../src/api/types';
-import Field from '../src/components/Field';
-import Button from '../src/components/Button';
-import Badge from '../src/components/Badge';
-import NavBar from '../src/components/NavBar';
+import { Badge, Button, Field, NavBar } from '../src/components';
 
 function LoginForm({ onSwitch }: { onSwitch: () => void }) {
   const { signIn } = useAuth();
