@@ -150,7 +150,6 @@ export function useDoctorSchedule(clinicId: number, doctorId: number) {
     return `${WEEKDAY_NAMES[selectedDate.getDay()]}, ${selectedDate.getDate()} de ${MONTH_NAMES[selectedDate.getMonth()]}`;
   }, [selectedDate]);
 
-  // Load clinic rules
   useEffect(() => {
     if (!clinicId || !doctorId) return;
     let active = true;
@@ -173,7 +172,6 @@ export function useDoctorSchedule(clinicId: number, doctorId: number) {
     };
   }, [clinicId, doctorId]);
 
-  // Slices time slots based on rules and appointments
   const refreshSlots = useCallback(
     async (explicitDate?: Date) => {
       if (!rules || !clinicId || !doctorId) return;

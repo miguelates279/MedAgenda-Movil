@@ -30,7 +30,6 @@ export const NavBar: React.FC<NavBarProps> = ({ active, className = '' }) => {
     <View
       className={`flex-row bg-white border-t border-gray-200 py-2 pb-3.5 justify-around items-center shadow-lg ${className}`}
     >
-      {/* Home Tab */}
       <TouchableOpacity
         className="flex-1 items-center justify-center relative py-0.5"
         onPress={() => handleNavigate('home')}
@@ -51,7 +50,6 @@ export const NavBar: React.FC<NavBarProps> = ({ active, className = '' }) => {
         )}
       </TouchableOpacity>
 
-      {/* Appointments Tab */}
       <TouchableOpacity
         className="flex-1 items-center justify-center relative py-0.5"
         onPress={() => handleNavigate('appointments')}
@@ -72,7 +70,6 @@ export const NavBar: React.FC<NavBarProps> = ({ active, className = '' }) => {
         )}
       </TouchableOpacity>
 
-      {/* Clinics Tab */}
       <TouchableOpacity
         className="flex-1 items-center justify-center relative py-0.5"
         onPress={() => handleNavigate('clinics')}
@@ -93,7 +90,6 @@ export const NavBar: React.FC<NavBarProps> = ({ active, className = '' }) => {
         )}
       </TouchableOpacity>
 
-      {/* Profile Tab */}
       <TouchableOpacity
         className="flex-1 items-center justify-center relative py-0.5"
         onPress={() => handleNavigate('profile')}

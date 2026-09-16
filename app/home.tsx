@@ -33,7 +33,6 @@ export default function HomeScreen() {
         .sort((a, b) => new Date(a.start_date_time).getTime() - new Date(b.start_date_time).getTime())[0];
       setUpcomingAppt(upcoming || null);
     } catch {
-      // ignore in dashboard summary
     } finally {
       setLoadingAppt(false);
     }
@@ -67,7 +66,6 @@ export default function HomeScreen() {
           />
         }
       >
-        {/* Top Greeting Header */}
         <View className="flex-row justify-between items-center mb-5 bg-white p-4 rounded-lg border border-gray-200">
           <View className="flex-1">
             <Text className="text-xs font-bold text-primary uppercase tracking-wide">
@@ -83,7 +81,6 @@ export default function HomeScreen() {
           />
         </View>
 
-        {/* Quick Actions Grid */}
         <View className="mb-5">
           <Text className="text-[15px] font-bold text-neutral-900 mb-2.5">Acciones Rápidas</Text>
           <View className="flex-row gap-2.5 mb-2.5">
@@ -124,7 +121,6 @@ export default function HomeScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Next Appointment Card */}
         <View className="mb-5">
           <View className="flex-row justify-between items-center mb-2.5">
             <Text className="text-[15px] font-bold text-neutral-900">Próxima Cita</Text>
@@ -176,7 +172,6 @@ export default function HomeScreen() {
           )}
         </View>
 
-        {/* Profile Card */}
         <View className="mb-5">
           <Text className="text-[15px] font-bold text-neutral-900 mb-2.5">Perfil de Usuario</Text>
           <Card>
@@ -199,7 +194,6 @@ export default function HomeScreen() {
           </Card>
         </View>
 
-        {/* Logout */}
         <Button
           text="Cerrar Sesión"
           variant="outline"
@@ -208,7 +202,6 @@ export default function HomeScreen() {
         />
       </ScrollView>
 
-      {/* Bottom Navigation Bar */}
       <NavBar active="home" />
     </SafeAreaView>
   );

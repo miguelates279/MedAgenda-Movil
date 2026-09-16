@@ -84,7 +84,6 @@ export const SelectModal: React.FC<SelectModalProps> = ({
     <Modal visible={isOpen} animationType="slide" transparent onRequestClose={onClose}>
       <View className="flex-1 bg-black/40 justify-end">
         <SafeAreaView className="bg-white rounded-t-2xl max-h-[85%] min-h-[50%]">
-          {/* Header */}
           <View className="flex-row justify-between items-center px-4 pt-4 pb-3 border-b border-gray-200">
             <Text className="text-base font-bold text-neutral-900">{title}</Text>
             <TouchableOpacity onPress={onClose} className="p-1" activeOpacity={0.7}>
@@ -92,7 +91,6 @@ export const SelectModal: React.FC<SelectModalProps> = ({
             </TouchableOpacity>
           </View>
 
-          {/* Search Input */}
           <View className="px-4 py-2.5 border-b border-gray-100">
             <TextInput
               value={search}
@@ -104,7 +102,6 @@ export const SelectModal: React.FC<SelectModalProps> = ({
             />
           </View>
 
-          {/* List */}
           {loading ? (
             <View className="p-8 items-center">
               <Text className="text-sm text-gray-600">Cargando opciones...</Text>
@@ -142,7 +139,6 @@ export const SelectModal: React.FC<SelectModalProps> = ({
             />
           )}
 
-          {/* Multi-Select Action Footer */}
           {multiple && (
             <View className="p-4 border-t border-gray-200">
               <Button

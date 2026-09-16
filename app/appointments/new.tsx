@@ -36,7 +36,6 @@ export default function NewAppointmentScreen() {
   const initialClinicId = params.clinic_id ? Number(params.clinic_id) : null;
   const initialDoctorId = params.doctor_id ? Number(params.doctor_id) : null;
 
-  // Form management
   const { control, handleSubmit, setValue, watch } = useForm<AppointmentFormData>({
     defaultValues: {
       clinic_id: initialClinicId,
@@ -48,15 +47,12 @@ export default function NewAppointmentScreen() {
   const selectedClinicId = watch('clinic_id');
   const selectedDoctorId = watch('doctor_id');
 
-  // Clinic & Doctor Lists
   const [allClinics, setAllClinics] = useState<Clinic[]>([]);
   const [clinicDoctors, setClinicDoctors] = useState<PublicDoctor[]>([]);
   const [loadingInitial, setLoadingInitial] = useState(false);
 
-  // Modals for selection
   const [modalType, setModalType] = useState<'clinic' | 'doctor' | null>(null);
 
-  // Doctor Schedule Hook
   const {
     rules,
     loadingRules,
@@ -81,12 +77,11 @@ export default function NewAppointmentScreen() {
     confirmBooking,
   } = useDoctorSchedule(selectedClinicId || 0, selectedDoctorId || 0);
 
-  // Load all clinics on mount
   useEffect(() => {
     (async () => {
       setLoadingInitial(true);
       try {
-        const cList = await clinicsApi.getClinics({ countryId: 1 }); // default/fallback
+        const cList = await clinicsApi.getClinics({ countryId: 1 });
         setAllClinics(cList);
       } catch {
         try {
@@ -104,7 +99,6 @@ export default function NewAppointmentScreen() {
     })();
   }, []);
 
-  // Load doctors when clinic changes
   useEffect(() => {
     if (!selectedClinicId) {
       setClinicDoctors([]);
@@ -218,7 +212,6 @@ export default function NewAppointmentScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
       >
-        {/* Header */}
         <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
           <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
             <Text className="text-primary text-sm font-semibold">← Volver</Text>
@@ -227,11 +220,9 @@ export default function NewAppointmentScreen() {
         </View>
 
         <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
-          {/* Step 1: Clinic & Doctor Selection */}
           <Card className="mb-4">
             <Text className="text-[15px] font-bold text-neutral-900 mb-3">1. Selección de Clínica y Doctor</Text>
 
-            {/* Clinic Picker */}
             <TouchableOpacity
               className="border border-gray-300 rounded-md px-3 py-2.5 mb-2.5 bg-white"
               onPress={() => setModalType('clinic')}
@@ -243,7 +234,6 @@ export default function NewAppointmentScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* Doctor Picker */}
             <TouchableOpacity
               className={`border border-gray-300 rounded-md px-3 py-2.5 mb-2.5 bg-white ${
                 !selectedClinicId ? 'bg-gray-100 border-gray-200' : ''
@@ -267,7 +257,6 @@ export default function NewAppointmentScreen() {
             </TouchableOpacity>
           </Card>
 
-          {/* Step 2: Schedule & Time Slot Selection */}
           {selectedClinicId && selectedDoctorId ? (
             <Card className="mb-4">
               <Text className="text-[15px] font-bold text-neutral-900 mb-2">2. Selecciona Fecha y Horario</Text>
@@ -278,7 +267,6 @@ export default function NewAppointmentScreen() {
                 </View>
               ) : null}
 
-              {/* Month Selector */}
               <Text className="text-xs font-semibold text-gray-600 my-1.5">Mes:</Text>
               <ScrollView
                 horizontal
@@ -310,7 +298,6 @@ export default function NewAppointmentScreen() {
                 })}
               </ScrollView>
 
-              {/* Day Selector */}
               <Text className="text-xs font-semibold text-gray-600 my-1.5">Día:</Text>
               <ScrollView
                 horizontal
@@ -352,7 +339,6 @@ export default function NewAppointmentScreen() {
                 )}
               </ScrollView>
 
-              {/* Time Slots */}
               <View className="flex-row justify-between items-center mt-2 mb-1">
                 <Text className="text-xs font-semibold text-gray-600">Horarios para {selectedDayLabel}:</Text>
                 {loadingSlots && <ActivityIndicator size="small" color="#259487" />}
@@ -434,7 +420,6 @@ export default function NewAppointmentScreen() {
             </Card>
           ) : null}
 
-          {/* Step 3: Optional Note & Submission */}
           {selectedSlot ? (
             <Card className="mb-4">
               <Text className="text-[15px] font-bold text-neutral-900 mb-2">3. Motivo o Nota (Opcional)</Text>
@@ -456,7 +441,6 @@ export default function NewAppointmentScreen() {
             </View>
           ) : null}
 
-          {/* Submit Button */}
           <Button
             text={submitting ? 'Agendando cita...' : 'Confirmar y Guardar Cita'}
             onPress={handleSubmit(onSubmit)}
@@ -466,7 +450,6 @@ export default function NewAppointmentScreen() {
           />
         </ScrollView>
 
-        {/* Modals */}
         <SelectModal
           title="Selecciona una Clínica"
           items={clinicOptions}

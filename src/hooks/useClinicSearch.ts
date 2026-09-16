@@ -26,7 +26,6 @@ export function useClinicSearch() {
   const [error, setError] = useState<string | null>(null);
   const [hasSearched, setHasSearched] = useState(false);
 
-  // Load initial countries and specialties
   useEffect(() => {
     let isMounted = true;
     (async () => {
@@ -51,7 +50,6 @@ export function useClinicSearch() {
     };
   }, []);
 
-  // Load states when country changes
   const setCountryId = useCallback(async (id: number | null) => {
     setCountryIdState(id);
     setStateIdState(null);
@@ -69,7 +67,6 @@ export function useClinicSearch() {
     }
   }, []);
 
-  // Load cities when state changes
   const setStateId = useCallback(async (id: number | null) => {
     setStateIdState(id);
     setCityIdState(null);

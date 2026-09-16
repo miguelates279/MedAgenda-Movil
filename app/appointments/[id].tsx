@@ -45,7 +45,6 @@ export default function AppointmentDetailScreen() {
     },
   });
 
-  // Load appointment details by fetching patient appointments
   useEffect(() => {
     if (!appointmentId) return;
     let active = true;
@@ -189,7 +188,6 @@ export default function AppointmentDetailScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
       >
-        {/* Header */}
         <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
           <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
             <Text className="text-primary text-sm font-semibold">← Volver</Text>
@@ -206,7 +204,6 @@ export default function AppointmentDetailScreen() {
 
           {appointment && (
             <>
-              {/* Appointment Status & Summary */}
               <Card className="mb-4">
                 <View className="flex-row justify-between items-center mb-3">
                   <Text className="text-[15px] font-bold text-neutral-900">Detalles de la Consulta</Text>
@@ -243,7 +240,6 @@ export default function AppointmentDetailScreen() {
                 </View>
               </Card>
 
-              {/* Modify Section (Form with validation) */}
               <Card className="mb-4">
                 <Text className="text-[15px] font-bold text-neutral-900 mb-1">Modificar Motivo / Notas</Text>
                 <Text className="text-xs text-gray-600 mb-3 leading-4">
@@ -269,7 +265,6 @@ export default function AppointmentDetailScreen() {
                 />
               </Card>
 
-              {/* Cancel / Delete Section */}
               {isUpcoming && (
                 <Card className="mb-4 border-red-200 bg-red-50/40">
                   <Text className="text-[15px] font-bold text-red-800 mb-1">Cancelar Cita Médica</Text>

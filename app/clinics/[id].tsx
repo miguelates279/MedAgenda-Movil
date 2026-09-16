@@ -76,7 +76,6 @@ export default function ClinicDetailScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 bg-gray-50">
-        {/* Header */}
         <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
           <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
             <Text className="text-primary text-sm font-semibold">← Volver</Text>
@@ -114,7 +113,6 @@ export default function ClinicDetailScreen() {
                 </Text>
               ) : null}
 
-              {/* Schedule Rules Summary */}
               {rules && (
                 <View className="bg-gray-50 border border-gray-200 rounded-md p-3 mt-3">
                   <Text className="text-xs font-semibold text-gray-600 uppercase mb-1.5">
@@ -151,7 +149,6 @@ export default function ClinicDetailScreen() {
             </Card>
           )}
 
-          {/* Doctors Section */}
           <View className="mt-2">
             <Text className="text-base font-bold text-neutral-900 mb-3">Médicos Disponibles</Text>
 

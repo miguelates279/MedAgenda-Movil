@@ -55,7 +55,6 @@ export interface ApiErrorResponse {
   error?: string;
 }
 
-// Location Types
 export interface Country {
   country_id: number;
   country_name: string;
@@ -73,7 +72,6 @@ export interface City {
   state_id?: number;
 }
 
-// Specialty & Doctor Types
 export interface Specialty {
   specialty_id: number;
   specialty_name: string;
@@ -89,7 +87,6 @@ export interface PublicDoctor {
   specialties?: Specialty[];
 }
 
-// Clinic Types
 export interface Clinic {
   clinic_id: number;
   clinic_name: string;
@@ -101,14 +98,13 @@ export interface Clinic {
 }
 
 export interface ClinicScheduleRules {
-  clinic_opening_time: string; // e.g. "08:00:00"
-  clinic_close_time: string;   // e.g. "18:00:00"
-  clinic_average_appointment_time: string; // e.g. "00:30:00"
-  clinic_break_time?: string;  // e.g. "12:00:00"
-  clinic_break_duration?: string; // e.g. "01:00:00"
+  clinic_opening_time: string;
+  clinic_close_time: string;
+  clinic_average_appointment_time: string;
+  clinic_break_time?: string;
+  clinic_break_duration?: string;
 }
 
-// Appointment Types
 export interface AppointmentSlot {
   appointment_id?: number;
   start_date_time: string;

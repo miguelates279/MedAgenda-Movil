@@ -6,14 +6,7 @@ import {
   UserProfile,
 } from './types';
 
-/**
- * Homologated authentication and user API endpoints
- */
 export const authApi = {
-  /**
-   * Authenticate a user and receive a JWT token + role flags
-   * Endpoint: POST /auth/login
-   */
   async login(dto: LoginDto): Promise<LoginResponse> {
     return apiClient.post<LoginResponse>('/auth/login', {
       email: dto.email.trim().toLowerCase(),
@@ -21,10 +14,6 @@ export const authApi = {
     });
   },
 
-  /**
-   * Register a new user account
-   * Endpoint: POST /users/register
-   */
   async register(dto: CreateUserDto): Promise<void> {
     const payload: CreateUserDto = {
       ...dto,
@@ -45,26 +34,14 @@ export const authApi = {
     return apiClient.post<void>('/users/register', payload);
   },
 
-  /**
-   * Retrieve the profile of the currently authenticated user
-   * Endpoint: GET /users/profile
-   */
   async getProfile(): Promise<UserProfile> {
     return apiClient.get<UserProfile>('/users/profile');
   },
 
-  /**
-   * Update the profile of the authenticated user
-   * Endpoint: PUT /users/profile
-   */
   async updateProfile(dto: Partial<CreateUserDto>): Promise<UserProfile> {
     return apiClient.put<UserProfile>('/users/profile', dto);
   },
 
-  /**
-   * Change password for the authenticated user
-   * Endpoint: PUT /users/change-password
-   */
   async changePassword(dto: {
     current_password: string;
     new_password: string;

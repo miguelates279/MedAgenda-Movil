@@ -104,7 +104,6 @@ export default function AppointmentsIndexScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 bg-gray-50">
-        {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
           <Text className="text-lg font-bold text-neutral-900">Mis Citas</Text>
           <Button
@@ -114,7 +113,6 @@ export default function AppointmentsIndexScreen() {
           />
         </View>
 
-        {/* Search Bar */}
         <View className="px-4 py-2.5 bg-white border-b border-gray-200">
           <TextInput
             value={search}
@@ -126,7 +124,6 @@ export default function AppointmentsIndexScreen() {
           />
         </View>
 
-        {/* Tabs */}
         <View className="flex-row bg-white border-b border-gray-200">
           <TouchableOpacity
             onPress={() => setTab('upcoming')}
@@ -158,7 +155,6 @@ export default function AppointmentsIndexScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* List Content */}
         {error ? (
           <View className="bg-red-50 border border-red-200 p-3 m-4 rounded-md">
             <Text className="text-red-700 text-sm">{error}</Text>
@@ -205,7 +201,6 @@ export default function AppointmentsIndexScreen() {
           }
         />
 
-        {/* Bottom Navigation Bar */}
         <NavBar active="appointments" />
       </View>
     </SafeAreaView>

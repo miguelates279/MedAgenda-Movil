@@ -12,7 +12,6 @@ import {
 } from './types';
 
 export const clinicsApi = {
-  // Locations
   async getCountries(): Promise<Country[]> {
     return apiClient.get<Country[]>('/location/getCountries');
   },
@@ -25,12 +24,10 @@ export const clinicsApi = {
     return apiClient.get<City[]>(`/location/getCities?state_id=${stateId}`);
   },
 
-  // Specialties
   async getAllSpecialties(): Promise<Specialty[]> {
     return apiClient.get<Specialty[]>('/clinics/getAllSpecialties');
   },
 
-  // Clinics Search Homologation
   async getClinics(filters: ClinicSearchFilters): Promise<Clinic[]> {
     const { countryId, stateId, cityId, specialtyIds } = filters;
 
@@ -57,7 +54,6 @@ export const clinicsApi = {
     return apiClient.get<Clinic[]>(`/clinics/getAllClinicsInCountry?country_id=${countryId}`);
   },
 
-  // Clinic Details & Doctors
   async getClinicDetails(clinicId: number): Promise<Clinic> {
     return apiClient.get<Clinic>(`/clinics/getClinicDetails?clinic_id=${clinicId}`);
   },
@@ -66,7 +62,6 @@ export const clinicsApi = {
     return apiClient.get<PublicDoctor[]>(`/clinics/getClinicDoctors?clinic_id=${clinicId}`);
   },
 
-  // Clinic Schedule Rules & Appointments for a Day
   async getClinicScheduleRules(clinicId: number): Promise<ClinicScheduleRules> {
     return apiClient.get<ClinicScheduleRules>(`/clinics/getClinicScheduleRules?clinic_id=${clinicId}`);
   },
@@ -74,7 +69,7 @@ export const clinicsApi = {
   async getClinicDoctorAppointmentsForDay(
     clinicId: number,
     doctorId: number,
-    appointmentDate: string // YYYY-MM-DD
+    appointmentDate: string
   ): Promise<AppointmentSlot[]> {
     return apiClient.get<AppointmentSlot[]>(
       `/clinics/getClinicDoctorAppointmentsForDay?clinic_id=${clinicId}&doctor_id=${doctorId}&appointment_date=${appointmentDate}`

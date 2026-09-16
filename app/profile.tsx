@@ -18,8 +18,6 @@ import Button from '../src/components/Button';
 import Badge from '../src/components/Badge';
 import NavBar from '../src/components/NavBar';
 
-// ─── Guest: Login form ───────────────────────────────────────────────────────
-
 function LoginForm({ onSwitch }: { onSwitch: () => void }) {
   const { signIn } = useAuth();
   const router = useRouter();
@@ -80,8 +78,6 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
     </View>
   );
 }
-
-// ─── Guest: Register form ─────────────────────────────────────────────────────
 
 function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
   const { signUp } = useAuth();
@@ -222,8 +218,6 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
   );
 }
 
-// ─── Main screen ──────────────────────────────────────────────────────────────
-
 export default function ProfileScreen() {
   const { isAuthenticated, user, roles, signOut } = useAuth();
   const router = useRouter();
@@ -249,7 +243,6 @@ export default function ProfileScreen() {
     ]);
   };
 
-  // ── Authenticated view ──────────────────────────────────────────────────────
   if (isAuthenticated && user) {
     return (
       <SafeAreaView className="flex-1 bg-white">
@@ -259,7 +252,6 @@ export default function ProfileScreen() {
           </View>
 
           <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
-            {/* Avatar placeholder */}
             <View className="items-center py-6">
               <View className="w-20 h-20 rounded-full bg-primary items-center justify-center mb-2.5">
                 <Text className="text-white text-2xl font-bold uppercase">
@@ -277,7 +269,6 @@ export default function ProfileScreen() {
               </View>
             </View>
 
-            {/* Info card */}
             <View className="bg-white rounded-lg border border-gray-200 mb-5">
               <View className="flex-row justify-between items-center px-3.5 py-3">
                 <Text className="text-xs text-gray-500 font-medium">Identificación</Text>
@@ -314,7 +305,6 @@ export default function ProfileScreen() {
     );
   }
 
-  // ── Unauthenticated view ────────────────────────────────────────────────────
   return (
     <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
@@ -326,7 +316,6 @@ export default function ProfileScreen() {
             <Text className="text-xl font-bold text-neutral-900">Mi Perfil</Text>
           </View>
 
-          {/* Tab switcher */}
           <View className="flex-row bg-white border-b border-gray-200">
             <TouchableOpacity
               className={`flex-1 py-3 items-center border-b-2 ${

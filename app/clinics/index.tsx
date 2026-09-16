@@ -39,7 +39,6 @@ export default function ClinicsIndexScreen() {
     searchClinics,
   } = useClinicSearch();
 
-  // Modal Picker States
   const [modalType, setModalType] = useState<
     'country' | 'state' | 'city' | 'specialties' | null
   >(null);
@@ -105,7 +104,6 @@ export default function ClinicsIndexScreen() {
   return (
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 bg-gray-50">
-        {/* Header */}
         <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
           <Text className="text-lg font-bold text-neutral-900">Buscar Clínicas</Text>
           <TouchableOpacity
@@ -117,11 +115,9 @@ export default function ClinicsIndexScreen() {
           </TouchableOpacity>
         </View>
 
-        {/* Filter Section */}
         <View className="bg-white p-4 border-b border-gray-200">
           <Text className="text-sm font-semibold text-neutral-900 mb-2">Filtros de Búsqueda</Text>
 
-          {/* Country Selector */}
           <TouchableOpacity
             className="border border-gray-300 rounded-md px-3 py-2 mb-2 bg-white"
             onPress={() => setModalType('country')}
@@ -134,7 +130,6 @@ export default function ClinicsIndexScreen() {
           </TouchableOpacity>
 
           <View className="flex-row justify-between gap-2">
-            {/* State Selector */}
             <TouchableOpacity
               className={`flex-1 border border-gray-300 rounded-md px-3 py-2 mb-2 bg-white ${
                 !countryId ? 'bg-gray-100 border-gray-200' : ''
@@ -153,7 +148,6 @@ export default function ClinicsIndexScreen() {
               </Text>
             </TouchableOpacity>
 
-            {/* City Selector */}
             <TouchableOpacity
               className={`flex-1 border border-gray-300 rounded-md px-3 py-2 mb-2 bg-white ${
                 !stateId ? 'bg-gray-100 border-gray-200' : ''
@@ -173,7 +167,6 @@ export default function ClinicsIndexScreen() {
             </TouchableOpacity>
           </View>
 
-          {/* Specialties Selector */}
           <TouchableOpacity
             className="border border-gray-300 rounded-md px-3 py-2 mb-2 bg-white"
             onPress={() => setModalType('specialties')}
@@ -183,7 +176,6 @@ export default function ClinicsIndexScreen() {
             <Text className="text-sm text-neutral-900 mt-0.5 font-medium">{specialtiesLabel}</Text>
           </TouchableOpacity>
 
-          {/* Action Buttons */}
           <View className="flex-row mt-1">
             <Button
               text={loadingClinics ? 'Buscando...' : 'Buscar Clínicas'}
@@ -203,7 +195,6 @@ export default function ClinicsIndexScreen() {
           </View>
         </View>
 
-        {/* Results List */}
         {error ? (
           <View className="bg-red-50 border border-red-200 p-3 m-4 rounded-md">
             <Text className="text-red-700 text-sm">{error}</Text>
@@ -240,10 +231,8 @@ export default function ClinicsIndexScreen() {
         />
       </View>
 
-      {/* Bottom Navigation Bar */}
       <NavBar active="clinics" />
 
-      {/* Modals */}
       <SelectModal
         title="Selecciona un País"
         items={countryOptions}
