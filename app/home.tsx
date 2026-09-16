@@ -46,7 +46,7 @@ export default function HomeScreen() {
 
   const handleLogout = () => {
     signOut();
-    router.replace('/login');
+    router.replace('/clinics' as any);
   };
 
   const fullName = user

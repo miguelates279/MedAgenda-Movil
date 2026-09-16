@@ -13,6 +13,7 @@ import {
 } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
+import { useAuth } from '../../src/context/AuthContext';
 import clinicsApi from '../../src/api/clinics';
 import { Clinic, PublicDoctor } from '../../src/api/types';
 import { useDoctorSchedule } from '../../src/hooks/useDoctorSchedule';
@@ -30,6 +31,7 @@ interface AppointmentFormData {
 
 export default function NewAppointmentScreen() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const params = useLocalSearchParams<{ clinic_id?: string; doctor_id?: string }>();
 
   const initialClinicId = params.clinic_id ? Number(params.clinic_id) : null;
@@ -184,6 +186,31 @@ export default function NewAppointmentScreen() {
       ]
     );
   };
+
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.header}>
+          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
+            <Text style={styles.backText}>← Volver</Text>
+          </TouchableOpacity>
+          <Text style={styles.headerTitle}>Nueva Cita Médica</Text>
+        </View>
+        <View style={styles.guestGuardContainer}>
+          <Text style={{ fontSize: 44, marginBottom: 12 }}>🔒</Text>
+          <Text style={styles.guestGuardTitle}>Inicio de sesión requerido</Text>
+          <Text style={styles.guestGuardSubtitle}>
+            Debes iniciar sesión o crear una cuenta para poder agendar una cita médica.
+          </Text>
+          <Button
+            text="Iniciar Sesión / Registrarse"
+            onPress={() => router.push('/profile' as any)}
+            style={{ marginTop: 20, minWidth: 220 }}
+          />
+        </View>
+      </SafeAreaView>
+    );
+  }
 
   return (
     <SafeAreaView style={styles.safeArea}>
@@ -645,5 +672,26 @@ const styles = StyleSheet.create({
   errorText: {
     color: '#991b1b',
     fontSize: 12,
+  },
+  guestGuardContainer: {
+    flex: 1,
+    alignItems: 'center',
+    justifyContent: 'center',
+    padding: 24,
+    backgroundColor: '#f9fafb',
+  },
+  guestGuardTitle: {
+    fontSize: 18,
+    fontWeight: '700',
+    color: '#171717',
+    marginBottom: 8,
+    textAlign: 'center',
+  },
+  guestGuardSubtitle: {
+    fontSize: 14,
+    color: '#6b7280',
+    textAlign: 'center',
+    lineHeight: 20,
+    maxWidth: 280,
   },
 });

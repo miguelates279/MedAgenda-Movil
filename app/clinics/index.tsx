@@ -111,10 +111,14 @@ export default function ClinicsIndexScreen() {
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Text style={styles.backText}>← Volver</Text>
-          </TouchableOpacity>
           <Text style={styles.headerTitle}>Buscar Clínicas</Text>
+          <TouchableOpacity
+            onPress={() => router.push('/profile' as any)}
+            style={styles.profileBtn}
+            activeOpacity={0.7}
+          >
+            <Text style={styles.profileBtnIcon}>👤</Text>
+          </TouchableOpacity>
         </View>
 
         {/* Filter Section */}
@@ -264,6 +268,7 @@ export default function ClinicsIndexScreen() {
           onSelect={(val) => setSelectedSpecialtyIds(val)}
         />
       </View>
+      <NavBar active="clinics" />
     </SafeAreaView>
   );
 }
@@ -280,25 +285,30 @@ const styles = StyleSheet.create({
   header: {
     flexDirection: 'row',
     alignItems: 'center',
+    justifyContent: 'space-between',
     paddingHorizontal: 16,
     paddingVertical: 12,
     backgroundColor: '#ffffff',
     borderBottomWidth: 1,
     borderBottomColor: '#e5e7eb',
   },
-  backBtn: {
-    paddingVertical: 4,
-    paddingRight: 12,
-  },
-  backText: {
-    color: '#259487',
-    fontSize: 14,
-    fontWeight: '600',
-  },
   headerTitle: {
     fontSize: 18,
     fontWeight: '700',
     color: '#171717',
+  },
+  profileBtn: {
+    width: 36,
+    height: 36,
+    borderRadius: 18,
+    backgroundColor: '#f3f4f6',
+    borderWidth: 1,
+    borderColor: '#e5e7eb',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+  profileBtnIcon: {
+    fontSize: 18,
   },
   filtersSection: {
     backgroundColor: '#ffffff',

@@ -2,7 +2,7 @@ import React from 'react';
 import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
-export type NavTab = 'home' | 'appointments' | 'clinics';
+export type NavTab = 'home' | 'appointments' | 'clinics' | 'profile';
 
 export interface NavBarProps {
   active: NavTab;
@@ -20,6 +20,8 @@ export const NavBar: React.FC<NavBarProps> = ({ active }) => {
       router.replace('/appointments' as any);
     } else if (tab === 'clinics') {
       router.replace('/clinics' as any);
+    } else if (tab === 'profile') {
+      router.replace('/profile' as any);
     }
   };
 
@@ -62,6 +64,19 @@ export const NavBar: React.FC<NavBarProps> = ({ active }) => {
           Clínicas
         </Text>
         {active === 'clinics' && <View style={styles.activeIndicator} />}
+      </TouchableOpacity>
+
+      {/* Profile Tab */}
+      <TouchableOpacity
+        style={styles.tabItem}
+        onPress={() => handleNavigate('profile')}
+        activeOpacity={0.7}
+      >
+        <Text style={[styles.tabIcon, active === 'profile' && styles.activeIcon]}>👤</Text>
+        <Text style={[styles.tabLabel, active === 'profile' && styles.activeLabel]}>
+          Perfil
+        </Text>
+        {active === 'profile' && <View style={styles.activeIndicator} />}
       </TouchableOpacity>
     </View>
   );

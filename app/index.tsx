@@ -4,21 +4,17 @@ import { Redirect } from 'expo-router';
 import { useAuth } from '../src/context/AuthContext';
 
 export default function IndexScreen() {
-  const { isAuthenticated, isLoading } = useAuth();
+  const { isLoading } = useAuth();
 
   if (isLoading) {
     return (
       <View style={styles.container}>
-        <ActivityIndicator size="large" color="#2563eb" />
+        <ActivityIndicator size="large" color="#259487" />
       </View>
     );
   }
 
-  if (isAuthenticated) {
-    return <Redirect href="/home" />;
-  }
-
-  return <Redirect href="/login" />;
+  return <Redirect href="/clinics" />;
 }
 
 const styles = StyleSheet.create({

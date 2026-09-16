@@ -10,6 +10,7 @@ import {
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { useAuth } from '../../src/context/AuthContext';
 import appointmentsApi from '../../src/api/appointments';
 import { DoctorAppointmentView } from '../../src/api/types';
 import Button from '../../src/components/Button';
@@ -19,6 +20,7 @@ import NavBar from '../../src/components/NavBar';
 
 export default function AppointmentsIndexScreen() {
   const router = useRouter();
+  const { isAuthenticated } = useAuth();
   const [appointments, setAppointments] = useState<DoctorAppointmentView[]>([]);
   const [loading, setLoading] = useState(true);
   const [search, setSearch] = useState('');
@@ -26,6 +28,10 @@ export default function AppointmentsIndexScreen() {
   const [error, setError] = useState<string | null>(null);
 
   const loadAppointments = useCallback(async () => {
+    if (!isAuthenticated) {
+      setLoading(false);
+      return;
+    }
     setLoading(true);
     setError(null);
     try {
@@ -36,7 +42,7 @@ export default function AppointmentsIndexScreen() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated]);
 
   useEffect(() => {
     loadAppointments();
@@ -126,14 +132,36 @@ export default function AppointmentsIndexScreen() {
     );
   };
 
+  if (!isAuthenticated) {
+    return (
+      <SafeAreaView style={styles.safeArea}>
+        <View style={styles.container}>
+          <View style={styles.header}>
+            <Text style={styles.headerTitle}>Mis Citas</Text>
+          </View>
+          <View style={styles.emptyBox}>
+            <Text style={{ fontSize: 40, marginBottom: 12 }}>🔒</Text>
+            <Text style={styles.emptyTitle}>Inicia sesión para ver tus citas</Text>
+            <Text style={styles.emptySubtitle}>
+              Debes tener una sesión activa para consultar tu historial y próximas citas médicas.
+            </Text>
+            <Button
+              text="Iniciar Sesión / Registrarse"
+              onPress={() => router.push('/profile' as any)}
+              style={{ marginTop: 16 }}
+            />
+          </View>
+        </View>
+        <NavBar active="appointments" />
+      </SafeAreaView>
+    );
+  }
+
   return (
     <SafeAreaView style={styles.safeArea}>
       <View style={styles.container}>
         {/* Header */}
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.replace('/home')} style={styles.backBtn}>
-            <Text style={styles.backText}>← Inicio</Text>
-          </TouchableOpacity>
           <Text style={styles.headerTitle}>Mis Citas</Text>
           <Button
             text="+ Nueva"
