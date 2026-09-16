@@ -6,7 +6,6 @@ import {
   Platform,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -95,7 +94,6 @@ export default function AppointmentDetailScreen() {
           onPress: async () => {
             setUpdating(true);
             try {
-              // Simulated update / save note
               Alert.alert('Éxito', 'Las notas de la cita se han actualizado correctamente.', [
                 {
                   text: 'OK',
@@ -152,10 +150,10 @@ export default function AppointmentDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.centerContainer}>
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 items-center justify-center p-6 bg-gray-50">
           <ActivityIndicator size="large" color="#259487" />
-          <Text style={styles.loadingText}>Cargando cita médica...</Text>
+          <Text className="mt-3 text-sm text-gray-600">Cargando cita médica...</Text>
         </View>
       </SafeAreaView>
     );
@@ -186,65 +184,69 @@ export default function AppointmentDetailScreen() {
       : '';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
+        className="flex-1"
       >
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Text style={styles.backText}>← Volver</Text>
+        <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
+          <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
+            <Text className="text-primary text-sm font-semibold">← Volver</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Gestionar Cita</Text>
+          <Text className="text-lg font-bold text-neutral-900 flex-1">Gestionar Cita</Text>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent}>
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
           {error ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{error}</Text>
+            <View className="bg-red-50 border border-red-200 p-3 mb-4 rounded-md">
+              <Text className="text-red-700 text-sm">{error}</Text>
             </View>
           ) : null}
 
           {appointment && (
             <>
               {/* Appointment Status & Summary */}
-              <Card style={styles.card}>
-                <View style={styles.cardHeader}>
-                  <Text style={styles.sectionTitle}>Detalles de la Consulta</Text>
+              <Card className="mb-4">
+                <View className="flex-row justify-between items-center mb-3">
+                  <Text className="text-[15px] font-bold text-neutral-900">Detalles de la Consulta</Text>
                   <Badge
                     text={isUpcoming ? 'Programada' : 'Finalizada'}
                     variant={isUpcoming ? 'primary' : 'neutral'}
                   />
                 </View>
 
-                <View style={styles.detailRow}>
-                  <Text style={styles.label}>Fecha:</Text>
-                  <Text style={styles.valueCapital}>{dateStr}</Text>
+                <View className="flex-row justify-between py-1.5 border-b border-gray-100">
+                  <Text className="text-sm text-gray-600">Fecha:</Text>
+                  <Text className="text-sm text-neutral-900 font-semibold capitalize flex-1 text-right ml-2">
+                    {dateStr}
+                  </Text>
                 </View>
 
-                <View style={styles.detailRow}>
-                  <Text style={styles.label}>Horario:</Text>
-                  <Text style={styles.valueHighlight}>{timeStr}</Text>
+                <View className="flex-row justify-between py-1.5 border-b border-gray-100">
+                  <Text className="text-sm text-gray-600">Horario:</Text>
+                  <Text className="text-sm text-primary font-bold">{timeStr}</Text>
                 </View>
 
-                <View style={styles.detailRow}>
-                  <Text style={styles.label}>Doctor:</Text>
-                  <Text style={styles.valueBold}>
+                <View className="flex-row justify-between py-1.5 border-b border-gray-100">
+                  <Text className="text-sm text-gray-600">Doctor:</Text>
+                  <Text className="text-sm text-neutral-900 font-semibold flex-1 text-right ml-2">
                     Dr(a). {appointment.first_name} {appointment.first_last_name}
                   </Text>
                 </View>
 
-                <View style={styles.detailRow}>
-                  <Text style={styles.label}>Clínica:</Text>
-                  <Text style={styles.valueBold}>{appointment.clinic_name}</Text>
+                <View className="flex-row justify-between py-1.5">
+                  <Text className="text-sm text-gray-600">Clínica:</Text>
+                  <Text className="text-sm text-neutral-900 font-semibold flex-1 text-right ml-2">
+                    {appointment.clinic_name}
+                  </Text>
                 </View>
               </Card>
 
               {/* Modify Section (Form with validation) */}
-              <Card style={styles.card}>
-                <Text style={styles.sectionTitle}>Modificar Motivo / Notas</Text>
-                <Text style={styles.subtext}>
+              <Card className="mb-4">
+                <Text className="text-[15px] font-bold text-neutral-900 mb-1">Modificar Motivo / Notas</Text>
+                <Text className="text-xs text-gray-600 mb-3 leading-4">
                   Edita la descripción o síntomas asociados a esta cita. Solo se guardarán los
                   campos modificados.
                 </Text>
@@ -263,15 +265,15 @@ export default function AppointmentDetailScreen() {
                   onPress={handleSubmit(onUpdate)}
                   disabled={!isDirty || updating}
                   loading={updating}
-                  style={styles.saveBtn}
+                  className="mt-2"
                 />
               </Card>
 
               {/* Cancel / Delete Section */}
               {isUpcoming && (
-                <Card style={[styles.card, styles.dangerCard]}>
-                  <Text style={styles.dangerTitle}>Cancelar Cita Médica</Text>
-                  <Text style={styles.dangerText}>
+                <Card className="mb-4 border-red-200 bg-red-50/40">
+                  <Text className="text-[15px] font-bold text-red-800 mb-1">Cancelar Cita Médica</Text>
+                  <Text className="text-xs text-gray-600 mb-3 leading-4">
                     Si no puedes asistir a tu cita, puedes cancelarla para que otro paciente
                     pueda utilizar el horario.
                   </Text>
@@ -282,7 +284,7 @@ export default function AppointmentDetailScreen() {
                     onPress={handleCancelAppointment}
                     loading={cancelling}
                     disabled={cancelling}
-                    style={styles.cancelBtn}
+                    className="mt-1"
                   />
                 </Card>
               )}
@@ -293,136 +295,3 @@ export default function AppointmentDetailScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  backBtn: {
-    paddingVertical: 4,
-    paddingRight: 12,
-  },
-  backText: {
-    color: '#259487',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#171717',
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  centerContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-  },
-  loadingText: {
-    marginTop: 12,
-    fontSize: 14,
-    color: '#4b5563',
-  },
-  card: {
-    marginBottom: 16,
-  },
-  cardHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#171717',
-  },
-  subtext: {
-    fontSize: 13,
-    color: '#4b5563',
-    marginBottom: 12,
-    lineHeight: 18,
-  },
-  detailRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 6,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  label: {
-    fontSize: 13,
-    color: '#4b5563',
-  },
-  valueCapital: {
-    fontSize: 13,
-    color: '#171717',
-    fontWeight: '600',
-    textTransform: 'capitalize',
-    flex: 1,
-    textAlign: 'right',
-    marginLeft: 8,
-  },
-  valueHighlight: {
-    fontSize: 13,
-    color: '#259487',
-    fontWeight: '700',
-  },
-  valueBold: {
-    fontSize: 13,
-    color: '#171717',
-    fontWeight: '600',
-    flex: 1,
-    textAlign: 'right',
-    marginLeft: 8,
-  },
-  saveBtn: {
-    marginTop: 8,
-  },
-  dangerCard: {
-    borderColor: '#fecaca',
-    backgroundColor: '#fffafa',
-  },
-  dangerTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#991b1b',
-    marginBottom: 4,
-  },
-  dangerText: {
-    fontSize: 13,
-    color: '#4b5563',
-    marginBottom: 12,
-    lineHeight: 18,
-  },
-  cancelBtn: {
-    marginTop: 4,
-  },
-  errorBox: {
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fecaca',
-    padding: 12,
-    borderRadius: 6,
-    marginBottom: 16,
-  },
-  errorText: {
-    color: '#991b1b',
-    fontSize: 13,
-  },
-});

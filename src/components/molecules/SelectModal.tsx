@@ -4,7 +4,6 @@ import {
   Modal,
   Pressable,
   SafeAreaView,
-  StyleSheet,
   Text,
   TextInput,
   TouchableOpacity,
@@ -83,64 +82,61 @@ export const SelectModal: React.FC<SelectModalProps> = ({
 
   return (
     <Modal visible={isOpen} animationType="slide" transparent onRequestClose={onClose}>
-      <View style={styles.overlay}>
-        <SafeAreaView style={styles.sheet}>
+      <View className="flex-1 bg-black/40 justify-end">
+        <SafeAreaView className="bg-white rounded-t-2xl max-h-[85%] min-h-[50%]">
           {/* Header */}
-          <View style={styles.header}>
-            <Text style={styles.title}>{title}</Text>
-            <TouchableOpacity onPress={onClose} style={styles.closeBtn}>
-              <Text style={styles.closeText}>✕</Text>
+          <View className="flex-row justify-between items-center px-4 pt-4 pb-3 border-b border-gray-200">
+            <Text className="text-base font-bold text-neutral-900">{title}</Text>
+            <TouchableOpacity onPress={onClose} className="p-1" activeOpacity={0.7}>
+              <Text className="text-lg text-gray-600 font-semibold">✕</Text>
             </TouchableOpacity>
           </View>
 
           {/* Search Input */}
-          <View style={styles.searchContainer}>
+          <View className="px-4 py-2.5 border-b border-gray-100">
             <TextInput
               value={search}
               onChangeText={setSearch}
               placeholder={placeholder}
               placeholderTextColor="#9ca3af"
-              style={styles.searchInput}
+              className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-neutral-900"
               clearButtonMode="while-editing"
             />
           </View>
 
           {/* List */}
           {loading ? (
-            <View style={styles.loadingContainer}>
-              <Text style={styles.loadingText}>Cargando opciones...</Text>
+            <View className="p-8 items-center">
+              <Text className="text-sm text-gray-600">Cargando opciones...</Text>
             </View>
           ) : (
             <FlatList
               data={filteredItems}
               keyExtractor={(item) => String(item.value)}
-              contentContainerStyle={styles.listContent}
+              contentContainerStyle={{ paddingVertical: 8 }}
               renderItem={({ item }) => {
                 const checked = isSelected(item.value);
                 return (
                   <Pressable
                     onPress={() => handleItemPress(item.value)}
-                    style={({ pressed }) => [
-                      styles.itemRow,
-                      checked && styles.itemRowSelected,
-                      pressed && styles.itemRowPressed,
-                    ]}
+                    className={`flex-row justify-between items-center px-4 py-3 border-b border-gray-100 active:bg-gray-100 ${
+                      checked ? 'bg-[#e6f4f2]' : ''
+                    }`}
                   >
                     <Text
-                      style={[
-                        styles.itemText,
-                        checked && styles.itemTextSelected,
-                      ]}
+                      className={`text-sm ${
+                        checked ? 'text-primary font-semibold' : 'text-neutral-900'
+                      }`}
                     >
                       {item.label}
                     </Text>
-                    {checked && <Text style={styles.checkmark}>✓</Text>}
+                    {checked && <Text className="text-primary text-base font-bold">✓</Text>}
                   </Pressable>
                 );
               }}
               ListEmptyComponent={
-                <View style={styles.emptyContainer}>
-                  <Text style={styles.emptyText}>No se encontraron resultados</Text>
+                <View className="p-6 items-center">
+                  <Text className="text-sm text-gray-400">No se encontraron resultados</Text>
                 </View>
               }
             />
@@ -148,7 +144,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
 
           {/* Multi-Select Action Footer */}
           {multiple && (
-            <View style={styles.footer}>
+            <View className="p-4 border-t border-gray-200">
               <Button
                 text={`Confirmar (${tempMultiSelected.length})`}
                 onPress={handleConfirmMulti}
@@ -161,111 +157,5 @@ export const SelectModal: React.FC<SelectModalProps> = ({
     </Modal>
   );
 };
-
-const styles = StyleSheet.create({
-  overlay: {
-    flex: 1,
-    backgroundColor: 'rgba(0,0,0,0.4)',
-    justifyContent: 'flex-end',
-  },
-  sheet: {
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 16,
-    borderTopRightRadius: 16,
-    maxHeight: '85%',
-    minHeight: '50%',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingTop: 16,
-    paddingBottom: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  title: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#171717',
-  },
-  closeBtn: {
-    padding: 4,
-  },
-  closeText: {
-    fontSize: 18,
-    color: '#4b5563',
-    fontWeight: '600',
-  },
-  searchContainer: {
-    paddingHorizontal: 16,
-    paddingVertical: 10,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  searchInput: {
-    backgroundColor: '#f9fafb',
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 8,
-    fontSize: 14,
-    color: '#171717',
-  },
-  listContent: {
-    paddingVertical: 8,
-  },
-  itemRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  itemRowSelected: {
-    backgroundColor: '#e6f4f2',
-  },
-  itemRowPressed: {
-    backgroundColor: '#f3f4f6',
-  },
-  itemText: {
-    fontSize: 14,
-    color: '#171717',
-  },
-  itemTextSelected: {
-    color: '#259487',
-    fontWeight: '600',
-  },
-  checkmark: {
-    color: '#259487',
-    fontSize: 16,
-    fontWeight: '700',
-  },
-  emptyContainer: {
-    padding: 24,
-    alignItems: 'center',
-  },
-  emptyText: {
-    fontSize: 14,
-    color: '#9ca3af',
-  },
-  loadingContainer: {
-    padding: 32,
-    alignItems: 'center',
-  },
-  loadingText: {
-    fontSize: 14,
-    color: '#4b5563',
-  },
-  footer: {
-    padding: 16,
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-  },
-});
 
 export default SelectModal;

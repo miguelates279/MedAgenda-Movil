@@ -1,16 +1,18 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { DoctorAppointmentView } from '../../api/types';
 import Card from '../atoms/Card';
 import Badge from '../atoms/Badge';
 
 export interface AppointmentCardProps {
   appointment: DoctorAppointmentView;
+  className?: string;
   onPress?: () => void;
 }
 
 export const AppointmentCard: React.FC<AppointmentCardProps> = ({
   appointment,
+  className = '',
   onPress,
 }) => {
   const startDate = new Date(appointment.start_date_time);
@@ -35,11 +37,11 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
   const doctorName = `Dr(a). ${appointment.first_name} ${appointment.first_last_name}`;
 
   return (
-    <Card onPress={onPress} style={styles.card}>
-      <View style={styles.cardTop}>
-        <View style={styles.dateBlock}>
-          <Text style={styles.dateText}>{dateStr}</Text>
-          <Text style={styles.timeText}>{timeStr}</Text>
+    <Card onPress={onPress} className={`mb-3 ${className}`}>
+      <View className="flex-row justify-between items-start">
+        <View className="flex-1">
+          <Text className="text-[15px] font-bold text-neutral-900 capitalize">{dateStr}</Text>
+          <Text className="text-xs text-primary font-semibold mt-0.5">{timeStr}</Text>
         </View>
         <Badge
           text={isUpcoming ? 'Programada' : 'Finalizada'}
@@ -47,82 +49,22 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         />
       </View>
 
-      <View style={styles.divider} />
+      <View className="h-[1px] bg-gray-100 my-2.5" />
 
-      <Text style={styles.doctorText}>👨‍⚕️ {doctorName}</Text>
-      <Text style={styles.clinicText}>🏥 {appointment.clinic_name}</Text>
+      <Text className="text-sm font-semibold text-neutral-900 mb-1">👨‍⚕️ {doctorName}</Text>
+      <Text className="text-sm text-gray-600 mb-1">🏥 {appointment.clinic_name}</Text>
 
       {appointment.appointment_description ? (
-        <Text style={styles.descText} numberOfLines={2}>
+        <Text className="text-xs text-gray-600 mt-1 italic" numberOfLines={2}>
           📝 {appointment.appointment_description}
         </Text>
       ) : null}
 
-      <View style={styles.cardActions}>
-        <Text style={styles.detailsLink}>Ver detalles / Gestionar →</Text>
+      <View className="mt-2.5 pt-2 border-t border-gray-100 items-end">
+        <Text className="text-xs font-semibold text-primary">Ver detalles / Gestionar →</Text>
       </View>
     </Card>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    marginBottom: 12,
-  },
-  cardTop: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'flex-start',
-  },
-  dateBlock: {
-    flex: 1,
-  },
-  dateText: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#171717',
-    textTransform: 'capitalize',
-  },
-  timeText: {
-    fontSize: 13,
-    color: '#259487',
-    fontWeight: '600',
-    marginTop: 2,
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#f3f4f6',
-    marginVertical: 10,
-  },
-  doctorText: {
-    fontSize: 14,
-    fontWeight: '600',
-    color: '#171717',
-    marginBottom: 4,
-  },
-  clinicText: {
-    fontSize: 13,
-    color: '#4b5563',
-    marginBottom: 4,
-  },
-  descText: {
-    fontSize: 12,
-    color: '#4b5563',
-    marginTop: 4,
-    fontStyle: 'italic',
-  },
-  cardActions: {
-    marginTop: 10,
-    paddingTop: 8,
-    borderTopWidth: 1,
-    borderTopColor: '#f3f4f6',
-    alignItems: 'flex-end',
-  },
-  detailsLink: {
-    fontSize: 13,
-    color: '#259487',
-    fontWeight: '600',
-  },
-});
 
 export default AppointmentCard;

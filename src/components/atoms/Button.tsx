@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Pressable,
   StyleProp,
-  StyleSheet,
   Text,
   TextStyle,
   ViewStyle,
@@ -17,9 +16,36 @@ export interface ButtonProps {
   disabled?: boolean;
   loading?: boolean;
   variant?: ButtonVariant;
+  className?: string;
   style?: StyleProp<ViewStyle>;
   textStyle?: StyleProp<TextStyle>;
 }
+
+const variantClassNames: Record<
+  ButtonVariant,
+  { base: string; pressed: string; text: string }
+> = {
+  primary: {
+    base: 'bg-primary border-0',
+    pressed: 'bg-[#4682B4]',
+    text: 'text-white',
+  },
+  secondary: {
+    base: 'bg-gray-100 border border-gray-200',
+    pressed: 'bg-gray-200',
+    text: 'text-neutral-900',
+  },
+  danger: {
+    base: 'bg-red-800 border-0',
+    pressed: 'bg-red-900',
+    text: 'text-white',
+  },
+  outline: {
+    base: 'bg-white border border-gray-300',
+    pressed: 'bg-gray-50 border-primary',
+    text: 'text-primary',
+  },
+};
 
 export const Button: React.FC<ButtonProps> = ({
   text,
@@ -27,117 +53,41 @@ export const Button: React.FC<ButtonProps> = ({
   disabled = false,
   loading = false,
   variant = 'primary',
+  className = '',
   style,
   textStyle,
 }) => {
   const isInteractive = !disabled && !loading;
+  const currentVariant = variantClassNames[variant] || variantClassNames.primary;
 
   return (
     <Pressable
       onPress={isInteractive ? onPress : undefined}
       disabled={!isInteractive}
-      style={({ pressed }) => [
-        styles.base,
-        variantStyles[variant].base,
-        pressed && isInteractive ? variantStyles[variant].pressed : null,
-        disabled ? styles.disabled : null,
-        style,
-      ]}
+      className={`py-2.5 px-4 rounded-md items-center justify-center flex-row gap-2 ${currentVariant.base} ${
+        disabled ? 'opacity-50' : ''
+      } ${className}`}
+      style={style}
     >
-      {loading ? (
-        <ActivityIndicator
-          size="small"
-          color={variant === 'outline' || variant === 'secondary' ? '#259487' : '#ffffff'}
-        />
-      ) : (
-        <Text
-          style={[
-            styles.text,
-            variantStyles[variant].text,
-            textStyle,
-          ]}
-        >
-          {text}
-        </Text>
-      )}
+      {({ pressed }) =>
+        loading ? (
+          <ActivityIndicator
+            size="small"
+            color={variant === 'outline' || variant === 'secondary' ? '#259487' : '#ffffff'}
+          />
+        ) : (
+          <Text
+            className={`text-sm font-semibold ${currentVariant.text} ${
+              pressed && isInteractive ? 'opacity-90' : ''
+            }`}
+            style={textStyle}
+          >
+            {text}
+          </Text>
+        )
+      }
     </Pressable>
   );
-};
-
-const styles = StyleSheet.create({
-  base: {
-    paddingVertical: 10,
-    paddingHorizontal: 16,
-    borderRadius: 6,
-    alignItems: 'center',
-    justifyContent: 'center',
-    flexDirection: 'row',
-    gap: 8,
-  },
-  disabled: {
-    opacity: 0.5,
-  },
-  text: {
-    fontSize: 14,
-    fontWeight: '600',
-  },
-});
-
-const variantStyles: Record<
-  ButtonVariant,
-  { base: ViewStyle; pressed: ViewStyle; text: TextStyle }
-> = {
-  primary: {
-    base: {
-      backgroundColor: '#259487',
-      borderWidth: 0,
-    },
-    pressed: {
-      backgroundColor: '#4682B4',
-    },
-    text: {
-      color: '#ffffff',
-    },
-  },
-  secondary: {
-    base: {
-      backgroundColor: '#f3f4f6',
-      borderWidth: 1,
-      borderColor: '#e5e7eb',
-    },
-    pressed: {
-      backgroundColor: '#e5e7eb',
-    },
-    text: {
-      color: '#171717',
-    },
-  },
-  danger: {
-    base: {
-      backgroundColor: '#991b1b',
-      borderWidth: 0,
-    },
-    pressed: {
-      backgroundColor: '#7f1d1d',
-    },
-    text: {
-      color: '#ffffff',
-    },
-  },
-  outline: {
-    base: {
-      backgroundColor: '#ffffff',
-      borderWidth: 1,
-      borderColor: '#d1d5db',
-    },
-    pressed: {
-      backgroundColor: '#f9fafb',
-      borderColor: '#259487',
-    },
-    text: {
-      color: '#259487',
-    },
-  },
 };
 
 export default Button;

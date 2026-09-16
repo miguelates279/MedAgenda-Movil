@@ -1,14 +1,15 @@
 import React from 'react';
-import { StyleSheet, Text, TouchableOpacity, View } from 'react-native';
+import { Text, TouchableOpacity, View } from 'react-native';
 import { useRouter } from 'expo-router';
 
 export type NavTab = 'home' | 'appointments' | 'clinics' | 'profile';
 
 export interface NavBarProps {
   active: NavTab;
+  className?: string;
 }
 
-export const NavBar: React.FC<NavBarProps> = ({ active }) => {
+export const NavBar: React.FC<NavBarProps> = ({ active, className = '' }) => {
   const router = useRouter();
 
   const handleNavigate = (tab: NavTab) => {
@@ -26,110 +27,94 @@ export const NavBar: React.FC<NavBarProps> = ({ active }) => {
   };
 
   return (
-    <View style={styles.navContainer}>
+    <View
+      className={`flex-row bg-white border-t border-gray-200 py-2 pb-3.5 justify-around items-center shadow-lg ${className}`}
+    >
       {/* Home Tab */}
       <TouchableOpacity
-        style={styles.tabItem}
+        className="flex-1 items-center justify-center relative py-0.5"
         onPress={() => handleNavigate('home')}
         activeOpacity={0.7}
       >
-        <Text style={[styles.tabIcon, active === 'home' && styles.activeIcon]}>🏠</Text>
-        <Text style={[styles.tabLabel, active === 'home' && styles.activeLabel]}>
+        <Text className={`text-xl mb-0.5 ${active === 'home' ? 'opacity-100' : 'opacity-70'}`}>
+          🏠
+        </Text>
+        <Text
+          className={`text-[11px] ${
+            active === 'home' ? 'text-primary font-bold' : 'text-gray-500 font-medium'
+          }`}
+        >
           Inicio
         </Text>
-        {active === 'home' && <View style={styles.activeIndicator} />}
+        {active === 'home' && (
+          <View className="absolute -top-2 w-7 h-[3px] bg-primary rounded-full" />
+        )}
       </TouchableOpacity>
 
       {/* Appointments Tab */}
       <TouchableOpacity
-        style={styles.tabItem}
+        className="flex-1 items-center justify-center relative py-0.5"
         onPress={() => handleNavigate('appointments')}
         activeOpacity={0.7}
       >
-        <Text style={[styles.tabIcon, active === 'appointments' && styles.activeIcon]}>📅</Text>
-        <Text style={[styles.tabLabel, active === 'appointments' && styles.activeLabel]}>
+        <Text className={`text-xl mb-0.5 ${active === 'appointments' ? 'opacity-100' : 'opacity-70'}`}>
+          📅
+        </Text>
+        <Text
+          className={`text-[11px] ${
+            active === 'appointments' ? 'text-primary font-bold' : 'text-gray-500 font-medium'
+          }`}
+        >
           Citas
         </Text>
-        {active === 'appointments' && <View style={styles.activeIndicator} />}
+        {active === 'appointments' && (
+          <View className="absolute -top-2 w-7 h-[3px] bg-primary rounded-full" />
+        )}
       </TouchableOpacity>
 
       {/* Clinics Tab */}
       <TouchableOpacity
-        style={styles.tabItem}
+        className="flex-1 items-center justify-center relative py-0.5"
         onPress={() => handleNavigate('clinics')}
         activeOpacity={0.7}
       >
-        <Text style={[styles.tabIcon, active === 'clinics' && styles.activeIcon]}>🏥</Text>
-        <Text style={[styles.tabLabel, active === 'clinics' && styles.activeLabel]}>
+        <Text className={`text-xl mb-0.5 ${active === 'clinics' ? 'opacity-100' : 'opacity-70'}`}>
+          🏥
+        </Text>
+        <Text
+          className={`text-[11px] ${
+            active === 'clinics' ? 'text-primary font-bold' : 'text-gray-500 font-medium'
+          }`}
+        >
           Clínicas
         </Text>
-        {active === 'clinics' && <View style={styles.activeIndicator} />}
+        {active === 'clinics' && (
+          <View className="absolute -top-2 w-7 h-[3px] bg-primary rounded-full" />
+        )}
       </TouchableOpacity>
 
       {/* Profile Tab */}
       <TouchableOpacity
-        style={styles.tabItem}
+        className="flex-1 items-center justify-center relative py-0.5"
         onPress={() => handleNavigate('profile')}
         activeOpacity={0.7}
       >
-        <Text style={[styles.tabIcon, active === 'profile' && styles.activeIcon]}>👤</Text>
-        <Text style={[styles.tabLabel, active === 'profile' && styles.activeLabel]}>
+        <Text className={`text-xl mb-0.5 ${active === 'profile' ? 'opacity-100' : 'opacity-70'}`}>
+          👤
+        </Text>
+        <Text
+          className={`text-[11px] ${
+            active === 'profile' ? 'text-primary font-bold' : 'text-gray-500 font-medium'
+          }`}
+        >
           Perfil
         </Text>
-        {active === 'profile' && <View style={styles.activeIndicator} />}
+        {active === 'profile' && (
+          <View className="absolute -top-2 w-7 h-[3px] bg-primary rounded-full" />
+        )}
       </TouchableOpacity>
     </View>
   );
 };
-
-const styles = StyleSheet.create({
-  navContainer: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderTopWidth: 1,
-    borderTopColor: '#e5e7eb',
-    paddingVertical: 8,
-    paddingBottom: 14,
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: -2 },
-    shadowOpacity: 0.04,
-    shadowRadius: 4,
-    elevation: 8,
-  },
-  tabItem: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    position: 'relative',
-    paddingVertical: 2,
-  },
-  tabIcon: {
-    fontSize: 20,
-    marginBottom: 2,
-    opacity: 0.7,
-  },
-  activeIcon: {
-    opacity: 1,
-  },
-  tabLabel: {
-    fontSize: 11,
-    fontWeight: '500',
-    color: '#6b7280',
-  },
-  activeLabel: {
-    color: '#259487',
-    fontWeight: '700',
-  },
-  activeIndicator: {
-    position: 'absolute',
-    top: -8,
-    width: 28,
-    height: 3,
-    backgroundColor: '#259487',
-    borderRadius: 2,
-  },
-});
 
 export default NavBar;

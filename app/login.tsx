@@ -24,34 +24,31 @@ export default function LoginScreen() {
   });
 
   const onSubmit = async (data: LoginDto) => {
-    console.log('--- LOGIN SUBMITTED ---', data);
     setError(null);
     try {
-      const res = await signIn(data);
-      console.log('--- LOGIN SUCCESS ---', res);
-      router.replace('/home');
+      await signIn(data);
+      router.replace('/clinics' as any);
     } catch (err: any) {
-      console.log('--- LOGIN ERROR ---', err);
       setError(err.message || 'Error al iniciar sesión');
     }
   };
 
   return (
-    <View style={{ flex: 1, padding: 20, justifyContent: 'center' }}>
-      <Text style={{ fontSize: 22, fontWeight: 'bold', marginBottom: 15 }}>
-        Login
+    <View className="flex-1 p-5 justify-center bg-gray-50">
+      <Text className="text-2xl font-bold text-neutral-900 mb-4 text-center">
+        Iniciar Sesión
       </Text>
 
-      {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
+      {error ? <Text className="text-red-600 text-xs mb-2.5 text-center">{error}</Text> : null}
 
       <Field
         control={control}
         name="email"
-        label="Email"
-        placeholder="email@correo.com"
+        label="Correo electrónico"
+        placeholder="correo@ejemplo.com"
         keyboardType="email-address"
         autoCapitalize="none"
-        rules={{ required: 'Email requerido' }}
+        rules={{ required: 'Correo requerido' }}
       />
 
       <Field
@@ -68,10 +65,11 @@ export default function LoginScreen() {
         text={isSubmitting ? 'Cargando...' : 'Iniciar Sesión'}
         onPress={handleSubmit(onSubmit)}
         disabled={isSubmitting}
+        className="mt-2"
       />
 
-      <Link href="/register" style={{ color: 'blue', marginTop: 15, textAlign: 'center' }}>
-        No tienes cuenta? Regístrate
+      <Link href="/register" className="text-primary text-center mt-4 font-semibold text-sm">
+        ¿No tienes cuenta? Regístrate
       </Link>
     </View>
   );

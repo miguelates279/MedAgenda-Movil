@@ -4,7 +4,6 @@ import {
   RefreshControl,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -56,9 +55,10 @@ export default function HomeScreen() {
     : 'Paciente';
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView className="flex-1 bg-white">
       <ScrollView
-        contentContainerStyle={styles.scrollContent}
+        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        className="bg-gray-50"
         refreshControl={
           <RefreshControl
             refreshing={loadingAppt}
@@ -68,10 +68,14 @@ export default function HomeScreen() {
         }
       >
         {/* Top Greeting Header */}
-        <View style={styles.header}>
-          <View style={styles.greetingBlock}>
-            <Text style={styles.appName}>MedAgenda</Text>
-            <Text style={styles.welcomeText}>Hola, {user?.first_name || 'Bienvenido'}</Text>
+        <View className="flex-row justify-between items-center mb-5 bg-white p-4 rounded-lg border border-gray-200">
+          <View className="flex-1">
+            <Text className="text-xs font-bold text-primary uppercase tracking-wide">
+              MedAgenda
+            </Text>
+            <Text className="text-lg font-bold text-neutral-900 mt-0.5">
+              Hola, {user?.first_name || 'Bienvenido'}
+            </Text>
           </View>
           <Badge
             text={roles?.isAdmin ? 'Admin' : roles?.isDoctor ? 'Médico' : 'Paciente'}
@@ -80,54 +84,57 @@ export default function HomeScreen() {
         </View>
 
         {/* Quick Actions Grid */}
-        <View style={styles.actionsSection}>
-          <Text style={styles.sectionTitle}>Acciones Rápidas</Text>
-          <View style={styles.actionGrid}>
+        <View className="mb-5">
+          <Text className="text-[15px] font-bold text-neutral-900 mb-2.5">Acciones Rápidas</Text>
+          <View className="flex-row gap-2.5 mb-2.5">
             <TouchableOpacity
-              style={[styles.actionBtn, styles.actionPrimary]}
+              className="flex-1 bg-primary rounded-lg p-3.5"
               onPress={() => router.push('/appointments/new' as any)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.actionIcon}>📅</Text>
-              <Text style={styles.actionPrimaryText}>Agendar Cita</Text>
-              <Text style={styles.actionSubtextLight}>Busca horario disponible</Text>
+              <Text className="text-2xl mb-1.5">📅</Text>
+              <Text className="text-sm font-bold text-white">Agendar Cita</Text>
+              <Text className="text-[11px] text-teal-100 mt-0.5">Busca horario disponible</Text>
             </TouchableOpacity>
 
             <TouchableOpacity
-              style={styles.actionBtn}
+              className="flex-1 bg-white border border-gray-200 rounded-lg p-3.5"
               onPress={() => router.push('/clinics' as any)}
+              activeOpacity={0.7}
             >
-              <Text style={styles.actionIcon}>🏥</Text>
-              <Text style={styles.actionText}>Buscar Clínicas</Text>
-              <Text style={styles.actionSubtext}>Filtra por ciudad y doctor</Text>
+              <Text className="text-2xl mb-1.5">🏥</Text>
+              <Text className="text-sm font-bold text-neutral-900">Buscar Clínicas</Text>
+              <Text className="text-[11px] text-gray-500 mt-0.5">Filtra por ciudad y doctor</Text>
             </TouchableOpacity>
           </View>
 
           <TouchableOpacity
-            style={styles.actionWideBtn}
+            className="flex-row items-center justify-between bg-white border border-gray-200 rounded-lg p-3.5"
             onPress={() => router.push('/appointments' as any)}
+            activeOpacity={0.7}
           >
-            <View style={styles.wideBtnContent}>
-              <Text style={styles.actionIcon}>📋</Text>
-              <View style={{ flex: 1, marginLeft: 10 }}>
-                <Text style={styles.actionText}>Mis Citas Médicas</Text>
-                <Text style={styles.actionSubtext}>Consulta tus citas activas e historial</Text>
+            <View className="flex-row items-center flex-1">
+              <Text className="text-2xl">📋</Text>
+              <View className="flex-1 ml-2.5">
+                <Text className="text-sm font-bold text-neutral-900">Mis Citas Médicas</Text>
+                <Text className="text-[11px] text-gray-500">Consulta tus citas activas e historial</Text>
               </View>
             </View>
-            <Text style={styles.arrowText}>→</Text>
+            <Text className="text-lg text-primary font-bold ml-2">→</Text>
           </TouchableOpacity>
         </View>
 
         {/* Next Appointment Card */}
-        <View style={styles.section}>
-          <View style={styles.sectionHeader}>
-            <Text style={styles.sectionTitle}>Próxima Cita</Text>
-            <TouchableOpacity onPress={() => router.push('/appointments' as any)}>
-              <Text style={styles.viewAllLink}>Ver todas</Text>
+        <View className="mb-5">
+          <View className="flex-row justify-between items-center mb-2.5">
+            <Text className="text-[15px] font-bold text-neutral-900">Próxima Cita</Text>
+            <TouchableOpacity onPress={() => router.push('/appointments' as any)} activeOpacity={0.7}>
+              <Text className="text-xs text-primary font-semibold">Ver todas</Text>
             </TouchableOpacity>
           </View>
 
           {loadingAppt ? (
-            <Card style={styles.centerCard}>
+            <Card className="p-5 items-center justify-center">
               <ActivityIndicator size="small" color="#259487" />
             </Card>
           ) : upcomingAppt ? (
@@ -135,11 +142,11 @@ export default function HomeScreen() {
               onPress={() =>
                 router.push(`/appointments/${upcomingAppt.appointment_id}` as any)
               }
-              style={styles.upcomingCard}
+              className="bg-white border-l-4 border-l-primary"
             >
-              <View style={styles.upcomingHeader}>
+              <View className="flex-row justify-between items-center mb-1.5">
                 <Badge text="Confirmada" variant="success" />
-                <Text style={styles.upcomingDate}>
+                <Text className="text-xs font-semibold text-primary capitalize">
                   {new Date(upcomingAppt.start_date_time).toLocaleDateString('es-ES', {
                     weekday: 'short',
                     day: 'numeric',
@@ -147,43 +154,47 @@ export default function HomeScreen() {
                   })}
                 </Text>
               </View>
-              <Text style={styles.upcomingDoctor}>
+              <Text className="text-[15px] font-bold text-neutral-900 mb-0.5">
                 Dr(a). {upcomingAppt.first_name} {upcomingAppt.first_last_name}
               </Text>
-              <Text style={styles.upcomingClinic}>📍 {upcomingAppt.clinic_name}</Text>
-              <Text style={styles.managePrompt}>Toca para gestionar o ver detalles →</Text>
+              <Text className="text-xs text-gray-600">📍 {upcomingAppt.clinic_name}</Text>
+              <Text className="text-xs text-primary font-semibold mt-2">
+                Toca para gestionar o ver detalles →
+              </Text>
             </Card>
           ) : (
-            <Card style={styles.centerCard}>
-              <Text style={styles.noApptText}>No tienes citas médicas programadas.</Text>
+            <Card className="p-5 items-center justify-center">
+              <Text className="text-xs text-gray-600 text-center">
+                No tienes citas médicas programadas.
+              </Text>
               <Button
                 text="Agendar una Cita"
                 onPress={() => router.push('/appointments/new' as any)}
-                style={{ marginTop: 10 }}
+                className="mt-2.5"
               />
             </Card>
           )}
         </View>
 
         {/* Profile Card */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>Perfil de Usuario</Text>
+        <View className="mb-5">
+          <Text className="text-[15px] font-bold text-neutral-900 mb-2.5">Perfil de Usuario</Text>
           <Card>
-            <View style={styles.profileRow}>
-              <Text style={styles.profileLabel}>Nombre:</Text>
-              <Text style={styles.profileValue}>{fullName}</Text>
+            <View className="flex-row justify-between py-1.5 border-b border-gray-100">
+              <Text className="text-xs text-gray-500">Nombre:</Text>
+              <Text className="text-xs font-semibold text-neutral-900">{fullName}</Text>
             </View>
-            <View style={styles.profileRow}>
-              <Text style={styles.profileLabel}>Correo:</Text>
-              <Text style={styles.profileValue}>{user?.user_email_address}</Text>
+            <View className="flex-row justify-between py-1.5 border-b border-gray-100">
+              <Text className="text-xs text-gray-500">Correo:</Text>
+              <Text className="text-xs font-semibold text-neutral-900">{user?.user_email_address}</Text>
             </View>
-            <View style={styles.profileRow}>
-              <Text style={styles.profileLabel}>Cédula:</Text>
-              <Text style={styles.profileValue}>{user?.legal_id || '-'}</Text>
+            <View className="flex-row justify-between py-1.5 border-b border-gray-100">
+              <Text className="text-xs text-gray-500">Cédula:</Text>
+              <Text className="text-xs font-semibold text-neutral-900">{user?.legal_id || '-'}</Text>
             </View>
-            <View style={styles.profileRow}>
-              <Text style={styles.profileLabel}>Teléfono:</Text>
-              <Text style={styles.profileValue}>{user?.user_phone_number || '-'}</Text>
+            <View className="flex-row justify-between py-1.5">
+              <Text className="text-xs text-gray-500">Teléfono:</Text>
+              <Text className="text-xs font-semibold text-neutral-900">{user?.user_phone_number || '-'}</Text>
             </View>
           </Card>
         </View>
@@ -193,7 +204,7 @@ export default function HomeScreen() {
           text="Cerrar Sesión"
           variant="outline"
           onPress={handleLogout}
-          style={styles.logoutBtn}
+          className="mt-1"
         />
       </ScrollView>
 
@@ -202,189 +213,3 @@ export default function HomeScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 32,
-    backgroundColor: '#f9fafb',
-  },
-  header: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 20,
-    backgroundColor: '#ffffff',
-    padding: 16,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  greetingBlock: {
-    flex: 1,
-  },
-  appName: {
-    fontSize: 12,
-    fontWeight: '700',
-    color: '#259487',
-    textTransform: 'uppercase',
-    letterSpacing: 0.5,
-  },
-  welcomeText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#171717',
-    marginTop: 2,
-  },
-  actionsSection: {
-    marginBottom: 20,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#171717',
-    marginBottom: 10,
-  },
-  actionGrid: {
-    flexDirection: 'row',
-    gap: 10,
-    marginBottom: 10,
-  },
-  actionBtn: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    padding: 14,
-  },
-  actionPrimary: {
-    backgroundColor: '#259487',
-    borderColor: '#259487',
-  },
-  actionIcon: {
-    fontSize: 22,
-    marginBottom: 6,
-  },
-  actionText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#171717',
-  },
-  actionPrimaryText: {
-    fontSize: 14,
-    fontWeight: '700',
-    color: '#ffffff',
-  },
-  actionSubtext: {
-    fontSize: 11,
-    color: '#4b5563',
-    marginTop: 2,
-  },
-  actionSubtextLight: {
-    fontSize: 11,
-    color: '#e6f4f2',
-    marginTop: 2,
-  },
-  actionWideBtn: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    justifyContent: 'space-between',
-    backgroundColor: '#ffffff',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    borderRadius: 8,
-    padding: 14,
-  },
-  wideBtnContent: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    flex: 1,
-  },
-  arrowText: {
-    fontSize: 18,
-    color: '#259487',
-    fontWeight: '700',
-    marginLeft: 8,
-  },
-  section: {
-    marginBottom: 20,
-  },
-  sectionHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 10,
-  },
-  viewAllLink: {
-    fontSize: 13,
-    color: '#259487',
-    fontWeight: '600',
-  },
-  upcomingCard: {
-    backgroundColor: '#ffffff',
-    borderLeftWidth: 4,
-    borderLeftColor: '#259487',
-  },
-  upcomingHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginBottom: 6,
-  },
-  upcomingDate: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#259487',
-    textTransform: 'capitalize',
-  },
-  upcomingDoctor: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#171717',
-    marginBottom: 2,
-  },
-  upcomingClinic: {
-    fontSize: 13,
-    color: '#4b5563',
-  },
-  managePrompt: {
-    fontSize: 12,
-    color: '#259487',
-    fontWeight: '600',
-    marginTop: 8,
-  },
-  centerCard: {
-    padding: 20,
-    alignItems: 'center',
-    justifyContent: 'center',
-  },
-  noApptText: {
-    fontSize: 13,
-    color: '#4b5563',
-    textAlign: 'center',
-  },
-  profileRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    paddingVertical: 5,
-    borderBottomWidth: 1,
-    borderBottomColor: '#f3f4f6',
-  },
-  profileLabel: {
-    fontSize: 13,
-    color: '#4b5563',
-  },
-  profileValue: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#171717',
-  },
-  logoutBtn: {
-    marginTop: 4,
-  },
-});

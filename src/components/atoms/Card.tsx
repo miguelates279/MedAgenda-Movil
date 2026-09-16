@@ -1,49 +1,34 @@
 import React from 'react';
-import { Pressable, StyleProp, StyleSheet, View, ViewStyle } from 'react-native';
+import { Pressable, StyleProp, View, ViewStyle } from 'react-native';
 
 export interface CardProps {
   children: React.ReactNode;
+  className?: string;
   style?: StyleProp<ViewStyle>;
   onPress?: () => void;
 }
 
-export const Card: React.FC<CardProps> = ({ children, style, onPress }) => {
+export const Card: React.FC<CardProps> = ({ children, className = '', style, onPress }) => {
   if (onPress) {
     return (
       <Pressable
         onPress={onPress}
-        style={({ pressed }) => [
-          styles.card,
-          pressed && styles.pressed,
-          style,
-        ]}
+        className={`bg-white border border-gray-200 rounded-lg p-4 my-1.5 shadow-sm active:bg-gray-50 active:opacity-90 ${className}`}
+        style={style}
       >
         {children}
       </Pressable>
     );
   }
 
-  return <View style={[styles.card, style]}>{children}</View>;
+  return (
+    <View
+      className={`bg-white border border-gray-200 rounded-lg p-4 my-1.5 shadow-sm ${className}`}
+      style={style}
+    >
+      {children}
+    </View>
+  );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    backgroundColor: '#ffffff',
-    borderColor: '#e5e7eb',
-    borderWidth: 1,
-    borderRadius: 8,
-    padding: 16,
-    marginVertical: 6,
-    shadowColor: '#000',
-    shadowOffset: { width: 0, height: 1 },
-    shadowOpacity: 0.05,
-    shadowRadius: 2,
-    elevation: 1,
-  },
-  pressed: {
-    opacity: 0.85,
-    backgroundColor: '#f9fafb',
-  },
-});
 
 export default Card;

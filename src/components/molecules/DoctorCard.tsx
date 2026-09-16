@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { PublicDoctor } from '../../api/types';
 import Card from '../atoms/Card';
 import Badge from '../atoms/Badge';
@@ -7,10 +7,11 @@ import Button from '../atoms/Button';
 
 export interface DoctorCardProps {
   doctor: PublicDoctor;
+  className?: string;
   onBookPress?: () => void;
 }
 
-export const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookPress }) => {
+export const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, className = '', onBookPress }) => {
   const fullName = [
     doctor.first_name,
     doctor.second_name,
@@ -21,27 +22,27 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookPress }) =
     .join(' ');
 
   return (
-    <Card style={styles.card}>
-      <View style={styles.docHeader}>
-        <View style={styles.docAvatar}>
-          <Text style={styles.docAvatarText}>
+    <Card className={`mb-3 ${className}`}>
+      <View className="flex-row items-center mb-3">
+        <View className="w-11 h-11 rounded-full bg-[#e6f4f2] items-center justify-center mr-3">
+          <Text className="text-lg font-bold text-primary">
             {(doctor.first_name?.[0] || 'D').toUpperCase()}
           </Text>
         </View>
-        <View style={styles.docInfo}>
-          <Text style={styles.docName}>{fullName}</Text>
-          <View style={styles.specialtiesList}>
+        <View className="flex-1">
+          <Text className="text-[15px] font-bold text-neutral-900 mb-1">{fullName}</Text>
+          <View className="flex-row flex-wrap gap-1">
             {doctor.specialties && doctor.specialties.length > 0 ? (
               doctor.specialties.map((sp) => (
                 <Badge
                   key={sp.specialty_id}
                   text={sp.specialty_name}
                   variant="info"
-                  style={styles.specBadge}
+                  className="mr-1 mt-0.5"
                 />
               ))
             ) : (
-              <Text style={styles.noSpecText}>Sin especialidades asignadas</Text>
+              <Text className="text-xs text-gray-400">Sin especialidades asignadas</Text>
             )}
           </View>
         </View>
@@ -51,61 +52,11 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, onBookPress }) =
         <Button
           text="Agendar con este doctor"
           onPress={onBookPress}
-          style={styles.bookDoctorBtn}
+          className="mt-1"
         />
       )}
     </Card>
   );
 };
-
-const styles = StyleSheet.create({
-  card: {
-    marginBottom: 12,
-  },
-  docHeader: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginBottom: 12,
-  },
-  docAvatar: {
-    width: 44,
-    height: 44,
-    borderRadius: 22,
-    backgroundColor: '#e6f4f2',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginRight: 12,
-  },
-  docAvatarText: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#259487',
-  },
-  docInfo: {
-    flex: 1,
-  },
-  docName: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#171717',
-    marginBottom: 4,
-  },
-  specialtiesList: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 4,
-  },
-  specBadge: {
-    marginRight: 4,
-    marginTop: 2,
-  },
-  noSpecText: {
-    fontSize: 12,
-    color: '#9ca3af',
-  },
-  bookDoctorBtn: {
-    marginTop: 4,
-  },
-});
 
 export default DoctorCard;

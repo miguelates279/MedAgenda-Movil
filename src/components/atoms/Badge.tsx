@@ -1,5 +1,5 @@
 import React from 'react';
-import { StyleSheet, Text, View, ViewStyle, TextStyle } from 'react-native';
+import { StyleProp, Text, View, ViewStyle } from 'react-native';
 
 export type BadgeVariant =
   | 'primary'
@@ -12,97 +12,56 @@ export type BadgeVariant =
 export interface BadgeProps {
   text: string;
   variant?: BadgeVariant;
-  style?: ViewStyle;
+  className?: string;
+  style?: StyleProp<ViewStyle>;
 }
+
+const variantClassNames: Record<
+  BadgeVariant,
+  { container: string; text: string }
+> = {
+  primary: {
+    container: 'bg-[#e6f4f2] border-[#b2dfdb]',
+    text: 'text-primary',
+  },
+  success: {
+    container: 'bg-emerald-50 border-emerald-200',
+    text: 'text-emerald-800',
+  },
+  error: {
+    container: 'bg-red-50 border-red-200',
+    text: 'text-red-800',
+  },
+  warning: {
+    container: 'bg-amber-50 border-amber-200',
+    text: 'text-amber-800',
+  },
+  info: {
+    container: 'bg-blue-50 border-blue-200',
+    text: 'text-blue-800',
+  },
+  neutral: {
+    container: 'bg-gray-100 border-gray-200',
+    text: 'text-gray-600',
+  },
+};
 
 export const Badge: React.FC<BadgeProps> = ({
   text,
   variant = 'primary',
+  className = '',
   style,
 }) => {
-  const currentVariant = variantStyles[variant];
+  const currentVariant = variantClassNames[variant] || variantClassNames.primary;
 
   return (
-    <View style={[styles.badge, currentVariant.container, style]}>
-      <Text style={[styles.text, currentVariant.text]}>{text}</Text>
+    <View
+      className={`px-2 py-0.5 rounded-full border self-start flex-row items-center ${currentVariant.container} ${className}`}
+      style={style}
+    >
+      <Text className={`text-[11px] font-semibold ${currentVariant.text}`}>{text}</Text>
     </View>
   );
-};
-
-const styles = StyleSheet.create({
-  badge: {
-    paddingHorizontal: 8,
-    paddingVertical: 3,
-    borderRadius: 9999,
-    borderWidth: 1,
-    alignSelf: 'flex-start',
-    flexDirection: 'row',
-    alignItems: 'center',
-  },
-  text: {
-    fontSize: 11,
-    fontWeight: '600',
-  },
-});
-
-const variantStyles: Record<
-  BadgeVariant,
-  { container: ViewStyle; text: TextStyle }
-> = {
-  primary: {
-    container: {
-      backgroundColor: '#e6f4f2',
-      borderColor: '#b2dfdb',
-    },
-    text: {
-      color: '#259487',
-    },
-  },
-  success: {
-    container: {
-      backgroundColor: '#ecfdf5',
-      borderColor: '#a7f3d0',
-    },
-    text: {
-      color: '#065f46',
-    },
-  },
-  error: {
-    container: {
-      backgroundColor: '#fef2f2',
-      borderColor: '#fecaca',
-    },
-    text: {
-      color: '#991b1b',
-    },
-  },
-  warning: {
-    container: {
-      backgroundColor: '#fffbeb',
-      borderColor: '#fde68a',
-    },
-    text: {
-      color: '#92400e',
-    },
-  },
-  info: {
-    container: {
-      backgroundColor: '#eff6ff',
-      borderColor: '#bfdbfe',
-    },
-    text: {
-      color: '#1e40af',
-    },
-  },
-  neutral: {
-    container: {
-      backgroundColor: '#f3f4f6',
-      borderColor: '#e5e7eb',
-    },
-    text: {
-      color: '#4b5563',
-    },
-  },
 };
 
 export default Badge;

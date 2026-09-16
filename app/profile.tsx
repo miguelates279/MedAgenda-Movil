@@ -5,7 +5,6 @@ import {
   Platform,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -45,7 +44,7 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
   };
 
   return (
-    <View style={styles.formSection}>
+    <View className="w-full">
       <Field
         control={control}
         name="email"
@@ -64,17 +63,19 @@ function LoginForm({ onSwitch }: { onSwitch: () => void }) {
         rules={{ required: 'La contraseña es requerida' }}
       />
 
-      {serverError ? <Text style={styles.errorText}>{serverError}</Text> : null}
+      {serverError ? <Text className="text-red-600 text-xs mb-2.5">{serverError}</Text> : null}
 
       <Button
         text={loading ? 'Ingresando...' : 'Iniciar Sesión'}
         onPress={handleSubmit(onSubmit)}
         loading={loading}
-        style={styles.submitBtn}
+        className="mt-1"
       />
 
-      <TouchableOpacity onPress={onSwitch} style={styles.switchLink}>
-        <Text style={styles.switchText}>¿No tienes cuenta? <Text style={styles.switchAccent}>Regístrate</Text></Text>
+      <TouchableOpacity onPress={onSwitch} className="mt-4 items-center" activeOpacity={0.7}>
+        <Text className="text-xs text-gray-500">
+          ¿No tienes cuenta? <Text className="text-primary font-semibold">Regístrate</Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -119,9 +120,9 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
   };
 
   return (
-    <View style={styles.formSection}>
-      <View style={styles.row}>
-        <View style={styles.halfCol}>
+    <View className="w-full">
+      <View className="flex-row gap-2">
+        <View className="flex-1">
           <Field
             control={control}
             name="first_name"
@@ -130,7 +131,7 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
             rules={{ required: 'Requerido' }}
           />
         </View>
-        <View style={styles.halfColRight}>
+        <View className="flex-1">
           <Field
             control={control}
             name="second_name"
@@ -140,8 +141,8 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
         </View>
       </View>
 
-      <View style={styles.row}>
-        <View style={styles.halfCol}>
+      <View className="flex-row gap-2">
+        <View className="flex-1">
           <Field
             control={control}
             name="first_last_name"
@@ -150,7 +151,7 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
             rules={{ required: 'Requerido' }}
           />
         </View>
-        <View style={styles.halfColRight}>
+        <View className="flex-1">
           <Field
             control={control}
             name="second_last_name"
@@ -203,17 +204,19 @@ function RegisterForm({ onSwitch }: { onSwitch: () => void }) {
         }}
       />
 
-      {serverError ? <Text style={styles.errorText}>{serverError}</Text> : null}
+      {serverError ? <Text className="text-red-600 text-xs mb-2.5">{serverError}</Text> : null}
 
       <Button
         text={loading ? 'Registrando...' : 'Crear Cuenta'}
         onPress={handleSubmit(onSubmit)}
         loading={loading}
-        style={styles.submitBtn}
+        className="mt-1"
       />
 
-      <TouchableOpacity onPress={onSwitch} style={styles.switchLink}>
-        <Text style={styles.switchText}>¿Ya tienes cuenta? <Text style={styles.switchAccent}>Inicia sesión</Text></Text>
+      <TouchableOpacity onPress={onSwitch} className="mt-4 items-center" activeOpacity={0.7}>
+        <Text className="text-xs text-gray-500">
+          ¿Ya tienes cuenta? <Text className="text-primary font-semibold">Inicia sesión</Text>
+        </Text>
       </TouchableOpacity>
     </View>
   );
@@ -249,46 +252,52 @@ export default function ProfileScreen() {
   // ── Authenticated view ──────────────────────────────────────────────────────
   if (isAuthenticated && user) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.container}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Mi Perfil</Text>
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-1 bg-gray-50">
+          <View className="px-4 py-3.5 bg-white border-b border-gray-200">
+            <Text className="text-xl font-bold text-neutral-900">Mi Perfil</Text>
           </View>
 
-          <ScrollView contentContainerStyle={styles.scrollContent}>
+          <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
             {/* Avatar placeholder */}
-            <View style={styles.avatarWrap}>
-              <View style={styles.avatar}>
-                <Text style={styles.avatarText}>
+            <View className="items-center py-6">
+              <View className="w-20 h-20 rounded-full bg-primary items-center justify-center mb-2.5">
+                <Text className="text-white text-2xl font-bold uppercase">
                   {(user.first_name?.[0] ?? '') + (user.first_last_name?.[0] ?? '')}
                 </Text>
               </View>
-              <Text style={styles.userName}>{fullName}</Text>
-              <Text style={styles.userEmail}>{user.user_email_address}</Text>
-              <View style={styles.badgeRow}>
-                {roles?.isAdmin && <Badge text="Admin" variant="primary" style={styles.badge} />}
-                {roles?.isDoctor && <Badge text="Doctor" variant="info" style={styles.badge} />}
+              <Text className="text-lg font-bold text-neutral-900 mb-0.5">{fullName}</Text>
+              <Text className="text-xs text-gray-500 mb-2">{user.user_email_address}</Text>
+              <View className="flex-row gap-1.5">
+                {roles?.isAdmin && <Badge text="Admin" variant="primary" />}
+                {roles?.isDoctor && <Badge text="Doctor" variant="info" />}
                 {!roles?.isAdmin && !roles?.isDoctor && (
-                  <Badge text="Paciente" variant="success" style={styles.badge} />
+                  <Badge text="Paciente" variant="success" />
                 )}
               </View>
             </View>
 
             {/* Info card */}
-            <View style={styles.infoCard}>
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Identificación</Text>
-                <Text style={styles.infoValue}>{user.legal_id || '—'}</Text>
+            <View className="bg-white rounded-lg border border-gray-200 mb-5">
+              <View className="flex-row justify-between items-center px-3.5 py-3">
+                <Text className="text-xs text-gray-500 font-medium">Identificación</Text>
+                <Text className="text-xs text-neutral-900 font-semibold max-w-[65%] text-right">
+                  {user.legal_id || '—'}
+                </Text>
               </View>
-              <View style={styles.divider} />
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Teléfono</Text>
-                <Text style={styles.infoValue}>{user.user_phone_number || '—'}</Text>
+              <View className="h-[1px] bg-gray-100 mx-3.5" />
+              <View className="flex-row justify-between items-center px-3.5 py-3">
+                <Text className="text-xs text-gray-500 font-medium">Teléfono</Text>
+                <Text className="text-xs text-neutral-900 font-semibold max-w-[65%] text-right">
+                  {user.user_phone_number || '—'}
+                </Text>
               </View>
-              <View style={styles.divider} />
-              <View style={styles.infoRow}>
-                <Text style={styles.infoLabel}>Correo</Text>
-                <Text style={styles.infoValue}>{user.user_email_address}</Text>
+              <View className="h-[1px] bg-gray-100 mx-3.5" />
+              <View className="flex-row justify-between items-center px-3.5 py-3">
+                <Text className="text-xs text-gray-500 font-medium">Correo</Text>
+                <Text className="text-xs text-neutral-900 font-semibold max-w-[65%] text-right">
+                  {user.user_email_address}
+                </Text>
               </View>
             </View>
 
@@ -296,7 +305,7 @@ export default function ProfileScreen() {
               text="Cerrar Sesión"
               onPress={handleLogout}
               variant="danger"
-              style={styles.logoutBtn}
+              className="mt-1"
             />
           </ScrollView>
         </View>
@@ -307,38 +316,52 @@ export default function ProfileScreen() {
 
   // ── Unauthenticated view ────────────────────────────────────────────────────
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
+        className="flex-1"
       >
-        <View style={styles.container}>
-          <View style={styles.header}>
-            <Text style={styles.headerTitle}>Mi Perfil</Text>
+        <View className="flex-1 bg-gray-50">
+          <View className="px-4 py-3.5 bg-white border-b border-gray-200">
+            <Text className="text-xl font-bold text-neutral-900">Mi Perfil</Text>
           </View>
 
           {/* Tab switcher */}
-          <View style={styles.tabRow}>
+          <View className="flex-row bg-white border-b border-gray-200">
             <TouchableOpacity
-              style={[styles.tabBtn, tab === 'login' && styles.tabBtnActive]}
+              className={`flex-1 py-3 items-center border-b-2 ${
+                tab === 'login' ? 'border-primary' : 'border-transparent'
+              }`}
               onPress={() => setTab('login')}
+              activeOpacity={0.7}
             >
-              <Text style={[styles.tabBtnText, tab === 'login' && styles.tabBtnTextActive]}>
+              <Text
+                className={`text-sm ${
+                  tab === 'login' ? 'text-primary font-bold' : 'text-gray-500 font-medium'
+                }`}
+              >
                 Iniciar Sesión
               </Text>
             </TouchableOpacity>
             <TouchableOpacity
-              style={[styles.tabBtn, tab === 'register' && styles.tabBtnActive]}
+              className={`flex-1 py-3 items-center border-b-2 ${
+                tab === 'register' ? 'border-primary' : 'border-transparent'
+              }`}
               onPress={() => setTab('register')}
+              activeOpacity={0.7}
             >
-              <Text style={[styles.tabBtnText, tab === 'register' && styles.tabBtnTextActive]}>
+              <Text
+                className={`text-sm ${
+                  tab === 'register' ? 'text-primary font-bold' : 'text-gray-500 font-medium'
+                }`}
+              >
                 Registrarse
               </Text>
             </TouchableOpacity>
           </View>
 
-          <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
-            <Text style={styles.guestHint}>
+          <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+            <Text className="text-xs text-gray-500 mb-4 leading-4">
               Inicia sesión para agendar citas médicas y ver tu historial.
             </Text>
 
@@ -354,152 +377,3 @@ export default function ProfileScreen() {
     </SafeAreaView>
   );
 }
-
-// ─── Styles ───────────────────────────────────────────────────────────────────
-
-const styles = StyleSheet.create({
-  safeArea: { flex: 1, backgroundColor: '#f9fafb' },
-  container: { flex: 1 },
-
-  header: {
-    paddingHorizontal: 16,
-    paddingVertical: 14,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  headerTitle: {
-    fontSize: 20,
-    fontWeight: '700',
-    color: '#171717',
-  },
-
-  // ── Auth tabs ──────────────────────────────────────────────────────────────
-  tabRow: {
-    flexDirection: 'row',
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  tabBtn: {
-    flex: 1,
-    paddingVertical: 12,
-    alignItems: 'center',
-    borderBottomWidth: 2,
-    borderBottomColor: 'transparent',
-  },
-  tabBtnActive: {
-    borderBottomColor: '#259487',
-  },
-  tabBtnText: {
-    fontSize: 14,
-    fontWeight: '500',
-    color: '#6b7280',
-  },
-  tabBtnTextActive: {
-    color: '#259487',
-    fontWeight: '700',
-  },
-
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  guestHint: {
-    fontSize: 13,
-    color: '#6b7280',
-    marginBottom: 16,
-    lineHeight: 18,
-  },
-
-  // ── Forms ──────────────────────────────────────────────────────────────────
-  formSection: {},
-  row: { flexDirection: 'row' },
-  halfCol: { flex: 1, marginRight: 6 },
-  halfColRight: { flex: 1, marginLeft: 6 },
-  errorText: {
-    color: '#dc2626',
-    fontSize: 13,
-    marginBottom: 10,
-  },
-  submitBtn: { marginTop: 4 },
-  switchLink: {
-    marginTop: 16,
-    alignItems: 'center',
-  },
-  switchText: {
-    fontSize: 13,
-    color: '#6b7280',
-  },
-  switchAccent: {
-    color: '#259487',
-    fontWeight: '600',
-  },
-
-  // ── Authenticated profile ──────────────────────────────────────────────────
-  avatarWrap: {
-    alignItems: 'center',
-    paddingVertical: 24,
-  },
-  avatar: {
-    width: 72,
-    height: 72,
-    borderRadius: 36,
-    backgroundColor: '#259487',
-    alignItems: 'center',
-    justifyContent: 'center',
-    marginBottom: 10,
-  },
-  avatarText: {
-    color: '#ffffff',
-    fontSize: 26,
-    fontWeight: '700',
-    textTransform: 'uppercase',
-  },
-  userName: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#171717',
-    marginBottom: 2,
-  },
-  userEmail: {
-    fontSize: 13,
-    color: '#6b7280',
-    marginBottom: 8,
-  },
-  badgeRow: { flexDirection: 'row', gap: 6 },
-  badge: {},
-
-  infoCard: {
-    backgroundColor: '#ffffff',
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-    marginBottom: 20,
-  },
-  infoRow: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    paddingHorizontal: 14,
-    paddingVertical: 12,
-  },
-  infoLabel: {
-    fontSize: 13,
-    color: '#6b7280',
-    fontWeight: '500',
-  },
-  infoValue: {
-    fontSize: 13,
-    color: '#171717',
-    fontWeight: '600',
-    maxWidth: '65%',
-    textAlign: 'right',
-  },
-  divider: {
-    height: 1,
-    backgroundColor: '#f3f4f6',
-    marginHorizontal: 14,
-  },
-  logoutBtn: { marginTop: 4 },
-});

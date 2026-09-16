@@ -2,7 +2,6 @@ import React, { useState } from 'react';
 import {
   KeyboardTypeOptions,
   StyleProp,
-  StyleSheet,
   Text,
   TextInput,
   TextStyle,
@@ -34,6 +33,7 @@ export type FieldProps<
   numberOfLines?: number;
   rules?: RegisterOptions<TFieldValues, TName>;
   defaultValue?: string;
+  className?: string;
   containerStyle?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<TextStyle>;
 };
@@ -55,6 +55,7 @@ export function Field<
   numberOfLines,
   rules,
   defaultValue = '',
+  className = '',
   containerStyle,
   inputStyle,
 }: FieldProps<TFieldValues, TName>) {
@@ -67,8 +68,10 @@ export function Field<
       rules={rules}
       defaultValue={defaultValue as any}
       render={({ field, fieldState }) => (
-        <View style={[styles.container, containerStyle]}>
-          {label ? <Text style={styles.label}>{label}</Text> : null}
+        <View className={`w-full mb-3 ${className}`} style={containerStyle}>
+          {label ? (
+            <Text className="text-sm font-medium mb-1 text-gray-700">{label}</Text>
+          ) : null}
 
           <TextInput
             value={field.value ?? ''}
@@ -87,61 +90,21 @@ export function Field<
             editable={editable}
             multiline={multiline}
             numberOfLines={numberOfLines}
-            style={[
-              styles.input,
-              isFocused ? styles.inputFocused : null,
-              fieldState.error ? styles.inputError : null,
-              !editable ? styles.inputDisabled : null,
-              inputStyle,
-            ]}
+            className={`border rounded-md px-3 py-2 text-sm bg-white text-neutral-900 ${
+              isFocused ? 'border-primary' : 'border-gray-300'
+            } ${fieldState.error ? 'border-red-300 bg-red-50' : ''} ${
+              !editable ? 'bg-gray-100 text-gray-400' : ''
+            }`}
+            style={inputStyle}
           />
 
           {fieldState.error ? (
-            <Text style={styles.error}>{fieldState.error.message}</Text>
+            <Text className="mt-1 text-xs text-red-700">{fieldState.error.message}</Text>
           ) : null}
         </View>
       )}
     />
   );
 }
-
-const styles = StyleSheet.create({
-  container: {
-    width: '100%',
-    marginBottom: 12,
-  },
-  label: {
-    fontSize: 14,
-    fontWeight: '500',
-    marginBottom: 4,
-    color: '#4b5563',
-  },
-  input: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    fontSize: 14,
-    backgroundColor: '#ffffff',
-    color: '#171717',
-  },
-  inputFocused: {
-    borderColor: '#259487',
-  },
-  inputError: {
-    borderColor: '#fecaca',
-    backgroundColor: '#fef2f2',
-  },
-  inputDisabled: {
-    backgroundColor: '#f3f4f6',
-    color: '#9ca3af',
-  },
-  error: {
-    marginTop: 4,
-    fontSize: 12,
-    color: '#991b1b',
-  },
-});
 
 export default Field;

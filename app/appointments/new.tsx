@@ -6,7 +6,6 @@ import {
   Platform,
   SafeAreaView,
   ScrollView,
-  StyleSheet,
   Text,
   TouchableOpacity,
   View,
@@ -90,7 +89,6 @@ export default function NewAppointmentScreen() {
         const cList = await clinicsApi.getClinics({ countryId: 1 }); // default/fallback
         setAllClinics(cList);
       } catch {
-        // Fallback: load countries then clinics
         try {
           const countries = await clinicsApi.getCountries();
           if (countries.length > 0) {
@@ -189,23 +187,25 @@ export default function NewAppointmentScreen() {
 
   if (!isAuthenticated) {
     return (
-      <SafeAreaView style={styles.safeArea}>
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Text style={styles.backText}>← Volver</Text>
+      <SafeAreaView className="flex-1 bg-white">
+        <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
+          <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
+            <Text className="text-primary text-sm font-semibold">← Volver</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Nueva Cita Médica</Text>
+          <Text className="text-lg font-bold text-neutral-900">Nueva Cita Médica</Text>
         </View>
-        <View style={styles.guestGuardContainer}>
-          <Text style={{ fontSize: 44, marginBottom: 12 }}>🔒</Text>
-          <Text style={styles.guestGuardTitle}>Inicio de sesión requerido</Text>
-          <Text style={styles.guestGuardSubtitle}>
+        <View className="flex-1 items-center justify-center p-6 bg-gray-50">
+          <Text className="text-5xl mb-3">🔒</Text>
+          <Text className="text-lg font-bold text-neutral-900 mb-2 text-center">
+            Inicio de sesión requerido
+          </Text>
+          <Text className="text-sm text-gray-500 text-center leading-5 max-w-[280px]">
             Debes iniciar sesión o crear una cuenta para poder agendar una cita médica.
           </Text>
           <Button
             text="Iniciar Sesión / Registrarse"
             onPress={() => router.push('/profile' as any)}
-            style={{ marginTop: 20, minWidth: 220 }}
+            className="mt-5 min-w-[220px]"
           />
         </View>
       </SafeAreaView>
@@ -213,43 +213,51 @@ export default function NewAppointmentScreen() {
   }
 
   return (
-    <SafeAreaView style={styles.safeArea}>
+    <SafeAreaView className="flex-1 bg-white">
       <KeyboardAvoidingView
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-        style={{ flex: 1 }}
+        className="flex-1"
       >
         {/* Header */}
-        <View style={styles.header}>
-          <TouchableOpacity onPress={() => router.back()} style={styles.backBtn}>
-            <Text style={styles.backText}>← Volver</Text>
+        <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
+          <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
+            <Text className="text-primary text-sm font-semibold">← Volver</Text>
           </TouchableOpacity>
-          <Text style={styles.headerTitle}>Nueva Cita Médica</Text>
+          <Text className="text-lg font-bold text-neutral-900">Nueva Cita Médica</Text>
         </View>
 
-        <ScrollView contentContainerStyle={styles.scrollContent} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
           {/* Step 1: Clinic & Doctor Selection */}
-          <Card style={styles.sectionCard}>
-            <Text style={styles.sectionTitle}>1. Selección de Clínica y Doctor</Text>
+          <Card className="mb-4">
+            <Text className="text-[15px] font-bold text-neutral-900 mb-3">1. Selección de Clínica y Doctor</Text>
 
             {/* Clinic Picker */}
             <TouchableOpacity
-              style={styles.pickerSelector}
+              className="border border-gray-300 rounded-md px-3 py-2.5 mb-2.5 bg-white"
               onPress={() => setModalType('clinic')}
+              activeOpacity={0.7}
             >
-              <Text style={styles.pickerLabel}>Clínica *</Text>
-              <Text style={styles.pickerValue}>
+              <Text className="text-[11px] text-gray-600 font-medium uppercase">Clínica *</Text>
+              <Text className="text-sm text-neutral-900 mt-0.5 font-medium">
                 {currentClinic ? currentClinic.clinic_name : 'Selecciona una clínica'}
               </Text>
             </TouchableOpacity>
 
             {/* Doctor Picker */}
             <TouchableOpacity
-              style={[styles.pickerSelector, !selectedClinicId && styles.disabledSelector]}
+              className={`border border-gray-300 rounded-md px-3 py-2.5 mb-2.5 bg-white ${
+                !selectedClinicId ? 'bg-gray-100 border-gray-200' : ''
+              }`}
               onPress={() => selectedClinicId && setModalType('doctor')}
               disabled={!selectedClinicId}
+              activeOpacity={0.7}
             >
-              <Text style={styles.pickerLabel}>Doctor *</Text>
-              <Text style={[styles.pickerValue, !selectedClinicId && styles.mutedText]}>
+              <Text className="text-[11px] text-gray-600 font-medium uppercase">Doctor *</Text>
+              <Text
+                className={`text-sm mt-0.5 font-medium ${
+                  !selectedClinicId ? 'text-gray-400' : 'text-neutral-900'
+                }`}
+              >
                 {!selectedClinicId
                   ? 'Primero selecciona una clínica'
                   : currentDoctor
@@ -261,21 +269,21 @@ export default function NewAppointmentScreen() {
 
           {/* Step 2: Schedule & Time Slot Selection */}
           {selectedClinicId && selectedDoctorId ? (
-            <Card style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>2. Selecciona Fecha y Horario</Text>
+            <Card className="mb-4">
+              <Text className="text-[15px] font-bold text-neutral-900 mb-2">2. Selecciona Fecha y Horario</Text>
 
               {rulesError ? (
-                <View style={styles.errorBox}>
-                  <Text style={styles.errorText}>{rulesError}</Text>
+                <View className="bg-red-50 border border-red-200 p-2.5 rounded-md mb-2.5">
+                  <Text className="text-red-800 text-xs">{rulesError}</Text>
                 </View>
               ) : null}
 
               {/* Month Selector */}
-              <Text style={styles.subTitle}>Mes:</Text>
+              <Text className="text-xs font-semibold text-gray-600 my-1.5">Mes:</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.monthsRow}
+                contentContainerStyle={{ flexDirection: 'row', gap: 8, paddingVertical: 4 }}
               >
                 {months.map((m) => {
                   const isSelected = m.key === selectedMonthKey;
@@ -283,10 +291,17 @@ export default function NewAppointmentScreen() {
                     <TouchableOpacity
                       key={m.key}
                       onPress={() => setSelectedMonthKey(m.key)}
-                      style={[styles.monthChip, isSelected && styles.monthChipSelected]}
+                      className={`px-3 py-1.5 rounded-full border ${
+                        isSelected
+                          ? 'bg-primary border-primary'
+                          : 'bg-gray-100 border-gray-200'
+                      }`}
+                      activeOpacity={0.7}
                     >
                       <Text
-                        style={[styles.monthText, isSelected && styles.monthTextSelected]}
+                        className={`text-xs ${
+                          isSelected ? 'text-white font-bold' : 'text-gray-600 font-medium'
+                        }`}
                       >
                         {m.label}
                       </Text>
@@ -296,11 +311,11 @@ export default function NewAppointmentScreen() {
               </ScrollView>
 
               {/* Day Selector */}
-              <Text style={styles.subTitle}>Día:</Text>
+              <Text className="text-xs font-semibold text-gray-600 my-1.5">Día:</Text>
               <ScrollView
                 horizontal
                 showsHorizontalScrollIndicator={false}
-                contentContainerStyle={styles.daysRow}
+                contentContainerStyle={{ flexDirection: 'row', gap: 8, paddingVertical: 6 }}
               >
                 {days.map((d) => {
                   const isSelected = d.key === selectedDayKey;
@@ -308,35 +323,48 @@ export default function NewAppointmentScreen() {
                     <TouchableOpacity
                       key={d.key}
                       onPress={() => setSelectedDayKey(d.key)}
-                      style={[styles.dayCard, isSelected && styles.dayCardSelected]}
+                      className={`w-14 h-16 rounded-lg border items-center justify-center bg-white ${
+                        isSelected
+                          ? 'border-primary bg-[#e6f4f2]'
+                          : 'border-gray-300'
+                      }`}
+                      activeOpacity={0.7}
                     >
-                      <Text style={[styles.dayWeek, isSelected && styles.dayWeekSelected]}>
+                      <Text
+                        className={`text-[11px] font-semibold ${
+                          isSelected ? 'text-primary' : 'text-gray-600'
+                        }`}
+                      >
                         {d.weekLabel}
                       </Text>
-                      <Text style={[styles.dayNum, isSelected && styles.dayNumSelected]}>
+                      <Text
+                        className={`text-base font-bold mt-0.5 ${
+                          isSelected ? 'text-primary' : 'text-neutral-900'
+                        }`}
+                      >
                         {d.label}
                       </Text>
                     </TouchableOpacity>
                   );
                 })}
                 {days.length === 0 && (
-                  <Text style={styles.mutedText}>No hay días disponibles este mes.</Text>
+                  <Text className="text-sm text-gray-400">No hay días disponibles este mes.</Text>
                 )}
               </ScrollView>
 
               {/* Time Slots */}
-              <View style={styles.slotsHeader}>
-                <Text style={styles.subTitle}>Horarios para {selectedDayLabel}:</Text>
+              <View className="flex-row justify-between items-center mt-2 mb-1">
+                <Text className="text-xs font-semibold text-gray-600">Horarios para {selectedDayLabel}:</Text>
                 {loadingSlots && <ActivityIndicator size="small" color="#259487" />}
               </View>
 
               {slotsError ? (
-                <View style={styles.errorBox}>
-                  <Text style={styles.errorText}>{slotsError}</Text>
+                <View className="bg-red-50 border border-red-200 p-2.5 rounded-md mb-2.5">
+                  <Text className="text-red-800 text-xs">{slotsError}</Text>
                 </View>
               ) : null}
 
-              <View style={styles.slotsGrid}>
+              <View className="flex-row flex-wrap gap-2 mt-1.5">
                 {slots.map((slot) => {
                   const isSelected = selectedSlotId === slot.id;
                   const isAvailable = slot.status === 'available';
@@ -346,21 +374,27 @@ export default function NewAppointmentScreen() {
                       key={slot.id}
                       disabled={!isAvailable}
                       onPress={() => setSelectedSlotId(slot.id)}
-                      style={[
-                        styles.slotItem,
-                        isAvailable && styles.slotAvailable,
-                        isSelected && styles.slotSelected,
-                        slot.status === 'booked' && styles.slotBooked,
-                        slot.status === 'break' && styles.slotBreak,
-                        slot.status === 'past' && styles.slotPast,
-                      ]}
+                      className={`w-[48%] p-2.5 rounded-md border items-center justify-center ${
+                        isAvailable
+                          ? isSelected
+                            ? 'border-primary bg-[#e6f4f2] border-2'
+                            : 'border-emerald-200 bg-white'
+                          : slot.status === 'booked'
+                          ? 'bg-gray-100 border-gray-200 opacity-70'
+                          : slot.status === 'break'
+                          ? 'bg-amber-50 border-amber-200 opacity-70'
+                          : 'bg-gray-50 border-gray-200 opacity-50'
+                      }`}
+                      activeOpacity={0.7}
                     >
                       <Text
-                        style={[
-                          styles.slotLabel,
-                          isSelected && styles.slotLabelSelected,
-                          !isAvailable && styles.slotLabelDisabled,
-                        ]}
+                        className={`text-xs font-semibold ${
+                          isSelected
+                            ? 'text-primary font-bold'
+                            : !isAvailable
+                            ? 'text-gray-400'
+                            : 'text-neutral-900'
+                        }`}
                       >
                         {slot.label}
                       </Text>
@@ -385,7 +419,7 @@ export default function NewAppointmentScreen() {
                             ? 'warning'
                             : 'neutral'
                         }
-                        style={{ marginTop: 4 }}
+                        className="mt-1"
                       />
                     </TouchableOpacity>
                   );
@@ -393,7 +427,7 @@ export default function NewAppointmentScreen() {
               </View>
 
               {!loadingSlots && slots.length === 0 && (
-                <Text style={styles.noSlotsText}>
+                <Text className="text-xs text-gray-400 text-center my-3">
                   No hay horarios disponibles configurados para este día.
                 </Text>
               )}
@@ -402,8 +436,8 @@ export default function NewAppointmentScreen() {
 
           {/* Step 3: Optional Note & Submission */}
           {selectedSlot ? (
-            <Card style={styles.sectionCard}>
-              <Text style={styles.sectionTitle}>3. Motivo o Nota (Opcional)</Text>
+            <Card className="mb-4">
+              <Text className="text-[15px] font-bold text-neutral-900 mb-2">3. Motivo o Nota (Opcional)</Text>
               <Field
                 control={control}
                 name="appointment_description"
@@ -411,14 +445,14 @@ export default function NewAppointmentScreen() {
                 placeholder="Ej. Control de rutina, dolor de cabeza, etc."
                 multiline
                 numberOfLines={3}
-                containerStyle={{ marginBottom: 0 }}
+                className="mb-0"
               />
             </Card>
           ) : null}
 
           {scheduleError ? (
-            <View style={styles.errorBox}>
-              <Text style={styles.errorText}>{scheduleError}</Text>
+            <View className="bg-red-50 border border-red-200 p-2.5 rounded-md mb-2.5">
+              <Text className="text-red-800 text-xs">{scheduleError}</Text>
             </View>
           ) : null}
 
@@ -428,7 +462,7 @@ export default function NewAppointmentScreen() {
             onPress={handleSubmit(onSubmit)}
             loading={submitting}
             disabled={!selectedSlot || submitting}
-            style={styles.submitBtn}
+            className="mt-2"
           />
         </ScrollView>
 
@@ -455,243 +489,3 @@ export default function NewAppointmentScreen() {
     </SafeAreaView>
   );
 }
-
-const styles = StyleSheet.create({
-  safeArea: {
-    flex: 1,
-    backgroundColor: '#ffffff',
-  },
-  header: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    paddingHorizontal: 16,
-    paddingVertical: 12,
-    backgroundColor: '#ffffff',
-    borderBottomWidth: 1,
-    borderBottomColor: '#e5e7eb',
-  },
-  backBtn: {
-    paddingVertical: 4,
-    paddingRight: 12,
-  },
-  backText: {
-    color: '#259487',
-    fontSize: 14,
-    fontWeight: '600',
-  },
-  headerTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#171717',
-    flex: 1,
-  },
-  scrollContent: {
-    padding: 16,
-    paddingBottom: 40,
-  },
-  sectionCard: {
-    marginBottom: 16,
-  },
-  sectionTitle: {
-    fontSize: 15,
-    fontWeight: '700',
-    color: '#171717',
-    marginBottom: 12,
-  },
-  subTitle: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#4b5563',
-    marginVertical: 6,
-  },
-  pickerSelector: {
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    borderRadius: 6,
-    paddingHorizontal: 12,
-    paddingVertical: 10,
-    marginBottom: 10,
-    backgroundColor: '#ffffff',
-  },
-  disabledSelector: {
-    backgroundColor: '#f3f4f6',
-    borderColor: '#e5e7eb',
-  },
-  pickerLabel: {
-    fontSize: 11,
-    color: '#4b5563',
-    fontWeight: '500',
-    textTransform: 'uppercase',
-  },
-  pickerValue: {
-    fontSize: 14,
-    color: '#171717',
-    marginTop: 2,
-    fontWeight: '500',
-  },
-  mutedText: {
-    color: '#9ca3af',
-  },
-  monthsRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 4,
-  },
-  monthChip: {
-    paddingHorizontal: 12,
-    paddingVertical: 6,
-    borderRadius: 9999,
-    backgroundColor: '#f3f4f6',
-    borderWidth: 1,
-    borderColor: '#e5e7eb',
-  },
-  monthChipSelected: {
-    backgroundColor: '#259487',
-    borderColor: '#259487',
-  },
-  monthText: {
-    fontSize: 13,
-    color: '#4b5563',
-    fontWeight: '500',
-  },
-  monthTextSelected: {
-    color: '#ffffff',
-    fontWeight: '700',
-  },
-  daysRow: {
-    flexDirection: 'row',
-    gap: 8,
-    paddingVertical: 6,
-  },
-  dayCard: {
-    width: 54,
-    height: 62,
-    borderRadius: 8,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#ffffff',
-  },
-  dayCardSelected: {
-    borderColor: '#259487',
-    backgroundColor: '#e6f4f2',
-  },
-  dayWeek: {
-    fontSize: 11,
-    color: '#4b5563',
-    fontWeight: '600',
-  },
-  dayWeekSelected: {
-    color: '#259487',
-  },
-  dayNum: {
-    fontSize: 16,
-    fontWeight: '700',
-    color: '#171717',
-    marginTop: 2,
-  },
-  dayNumSelected: {
-    color: '#259487',
-  },
-  slotsHeader: {
-    flexDirection: 'row',
-    justifyContent: 'space-between',
-    alignItems: 'center',
-    marginTop: 8,
-  },
-  slotsGrid: {
-    flexDirection: 'row',
-    flexWrap: 'wrap',
-    gap: 8,
-    marginTop: 6,
-  },
-  slotItem: {
-    width: '48%',
-    padding: 10,
-    borderRadius: 6,
-    borderWidth: 1,
-    borderColor: '#d1d5db',
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#ffffff',
-  },
-  slotAvailable: {
-    borderColor: '#a7f3d0',
-    backgroundColor: '#ffffff',
-  },
-  slotSelected: {
-    borderColor: '#259487',
-    backgroundColor: '#e6f4f2',
-    borderWidth: 2,
-  },
-  slotBooked: {
-    backgroundColor: '#f3f4f6',
-    borderColor: '#e5e7eb',
-    opacity: 0.7,
-  },
-  slotBreak: {
-    backgroundColor: '#fffbeb',
-    borderColor: '#fde68a',
-    opacity: 0.7,
-  },
-  slotPast: {
-    backgroundColor: '#f9fafb',
-    borderColor: '#e5e7eb',
-    opacity: 0.5,
-  },
-  slotLabel: {
-    fontSize: 13,
-    fontWeight: '600',
-    color: '#171717',
-  },
-  slotLabelSelected: {
-    color: '#259487',
-    fontWeight: '700',
-  },
-  slotLabelDisabled: {
-    color: '#9ca3af',
-  },
-  noSlotsText: {
-    fontSize: 13,
-    color: '#9ca3af',
-    textAlign: 'center',
-    marginVertical: 12,
-  },
-  submitBtn: {
-    marginTop: 8,
-  },
-  errorBox: {
-    backgroundColor: '#fef2f2',
-    borderWidth: 1,
-    borderColor: '#fecaca',
-    padding: 10,
-    borderRadius: 6,
-    marginBottom: 10,
-  },
-  errorText: {
-    color: '#991b1b',
-    fontSize: 12,
-  },
-  guestGuardContainer: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    padding: 24,
-    backgroundColor: '#f9fafb',
-  },
-  guestGuardTitle: {
-    fontSize: 18,
-    fontWeight: '700',
-    color: '#171717',
-    marginBottom: 8,
-    textAlign: 'center',
-  },
-  guestGuardSubtitle: {
-    fontSize: 14,
-    color: '#6b7280',
-    textAlign: 'center',
-    lineHeight: 20,
-    maxWidth: 280,
-  },
-});
