@@ -1,3 +1,4 @@
+import '../src/polyfills';
 import React from 'react';
 import { ActivityIndicator, StyleSheet, View } from 'react-native';
 import { Redirect } from 'expo-router';
