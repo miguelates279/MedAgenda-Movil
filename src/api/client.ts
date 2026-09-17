@@ -7,7 +7,6 @@ class ApiClient {
   private token: string | null = null;
 
   constructor(baseUrl: string = BASE_URL) {
-    // Remove trailing slash if present
     this.baseUrl = baseUrl.replace(/\/+$/, '');
   }
 
@@ -34,6 +33,7 @@ class ApiClient {
     }
 
     try {
+      console.log('API FETCHING:', url, options);
       const response = await fetch(url, {
         ...options,
         headers,

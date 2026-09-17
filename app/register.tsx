@@ -1,9 +1,8 @@
 import React, { useState } from 'react';
-import { Alert, ScrollView, Text } from 'react-native';
+import { Alert, ScrollView, Text, View } from 'react-native';
 import { useForm } from 'react-hook-form';
 import { Link, useRouter } from 'expo-router';
-import Field from '../src/components/Field';
-import Button from '../src/components/Button';
+import { Button, Field } from '../src/components';
 import { useAuth } from '../src/context/AuthContext';
 import { CreateUserDto } from '../src/api/types';
 
@@ -56,7 +55,7 @@ export default function RegisterScreen() {
           email: data.user_email_address,
           password: data.password,
         });
-        router.replace('/home');
+        router.replace('/clinics' as any);
       } catch {
         Alert.alert('Registro exitoso', 'Inicia sesión', [
           { text: 'OK', onPress: () => router.replace('/login') },
@@ -68,48 +67,57 @@ export default function RegisterScreen() {
   };
 
   return (
-    <ScrollView style={{ flex: 1, padding: 20 }}>
-      <Text style={{ fontSize: 22, fontWeight: 'bold', marginVertical: 10 }}>
-        Registro
+    <ScrollView contentContainerStyle={{ padding: 20, paddingBottom: 40 }} className="flex-1 bg-gray-50">
+      <Text className="text-2xl font-bold text-neutral-900 my-3 text-center">
+        Crear Cuenta
       </Text>
 
-      {error ? <Text style={{ color: 'red', marginBottom: 10 }}>{error}</Text> : null}
+      {error ? <Text className="text-red-600 text-xs mb-2.5 text-center">{error}</Text> : null}
 
-      <Field
-        control={control}
-        name="first_name"
-        label="Nombre"
-        placeholder="Nombre"
-        rules={{ required: 'Obligatorio' }}
-      />
+      <View className="flex-row gap-2">
+        <View className="flex-1">
+          <Field
+            control={control}
+            name="first_name"
+            label="Primer nombre *"
+            placeholder="Juan"
+            rules={{ required: 'Obligatorio' }}
+          />
+        </View>
+        <View className="flex-1">
+          <Field
+            control={control}
+            name="second_name"
+            label="Segundo nombre"
+            placeholder="Carlos"
+          />
+        </View>
+      </View>
 
-      <Field
-        control={control}
-        name="second_name"
-        label="Segundo nombre"
-        placeholder="Segundo nombre"
-      />
-
-      <Field
-        control={control}
-        name="first_last_name"
-        label="Primer apellido"
-        placeholder="Primer apellido"
-        rules={{ required: 'Obligatorio' }}
-      />
-
-      <Field
-        control={control}
-        name="second_last_name"
-        label="Segundo apellido"
-        placeholder="Segundo apellido"
-        rules={{ required: 'Obligatorio' }}
-      />
+      <View className="flex-row gap-2">
+        <View className="flex-1">
+          <Field
+            control={control}
+            name="first_last_name"
+            label="Primer apellido *"
+            placeholder="Pérez"
+            rules={{ required: 'Obligatorio' }}
+          />
+        </View>
+        <View className="flex-1">
+          <Field
+            control={control}
+            name="second_last_name"
+            label="Segundo apellido"
+            placeholder="García"
+          />
+        </View>
+      </View>
 
       <Field
         control={control}
         name="legal_id"
-        label="Cédula"
+        label="Identificación / Cédula *"
         placeholder="Cédula"
         keyboardType="numeric"
         rules={{
@@ -122,7 +130,7 @@ export default function RegisterScreen() {
         control={control}
         name="user_phone_number"
         label="Teléfono"
-        placeholder="Teléfono"
+        placeholder="+57 300 000 0000"
         keyboardType="phone-pad"
         rules={{ required: 'Obligatorio' }}
       />
@@ -130,7 +138,7 @@ export default function RegisterScreen() {
       <Field
         control={control}
         name="user_email_address"
-        label="Correo"
+        label="Correo electrónico *"
         placeholder="correo@ejemplo.com"
         keyboardType="email-address"
         autoCapitalize="none"
@@ -140,8 +148,8 @@ export default function RegisterScreen() {
       <Field
         control={control}
         name="password"
-        label="Contraseña"
-        placeholder="Contraseña"
+        label="Contraseña *"
+        placeholder="••••••••"
         secureTextEntry
         autoCapitalize="none"
         rules={{
@@ -153,13 +161,13 @@ export default function RegisterScreen() {
       <Field
         control={control}
         name="confirm_password"
-        label="Confirmar contraseña"
-        placeholder="Confirmar contraseña"
+        label="Confirmar contraseña *"
+        placeholder="••••••••"
         secureTextEntry
         autoCapitalize="none"
         rules={{
           required: 'Obligatorio',
-          validate: (val) => val === passwordValue || 'No coinciden',
+          validate: (val) => val === passwordValue || 'Las contraseñas no coinciden',
         }}
       />
 
@@ -167,13 +175,14 @@ export default function RegisterScreen() {
         text={isSubmitting ? 'Cargando...' : 'Registrar'}
         onPress={handleSubmit(onSubmit)}
         disabled={isSubmitting}
+        className="mt-2"
       />
 
       <Link
         href="/login"
-        style={{ color: 'blue', marginVertical: 15, textAlign: 'center' }}
+        className="text-primary text-center my-4 font-semibold text-sm"
       >
-        Ya tienes cuenta? Inicia sesión
+        ¿Ya tienes cuenta? Inicia sesión
       </Link>
     </ScrollView>
   );

@@ -30,7 +30,7 @@
       "expo-router",
       "expo-status-bar"
     ],
-    "schema": "my-schema",
+    "scheme": "medagenda",
     "experiments": {
       "typedRoutes": true
     }

@@ -1,4 +1,6 @@
+import '../src/polyfills';
 import React from 'react';
+import '../global.css';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
@@ -16,9 +18,15 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="index" />
-          <Stack.Screen name="login" options={{ title: 'Iniciar Sesión' }} />
-          <Stack.Screen name="register" options={{ title: 'Registro' }} />
-          <Stack.Screen name="home" options={{ title: 'Inicio' }} />
+          <Stack.Screen name="login" />
+          <Stack.Screen name="register" />
+          <Stack.Screen name="home" />
+          <Stack.Screen name="profile" />
+          <Stack.Screen name="clinics/index" />
+          <Stack.Screen name="clinics/[id]" />
+          <Stack.Screen name="appointments/index" />
+          <Stack.Screen name="appointments/new" />
+          <Stack.Screen name="appointments/[id]" />
         </Stack>
       </AuthProvider>
     </SafeAreaProvider>
