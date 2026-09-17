@@ -2,6 +2,8 @@ import apiClient from './client';
 import {
   City,
   Clinic,
+  CreateClinicDto,
+  CreateClinicResponse,
   ClinicScheduleRules,
   ClinicSearchFilters,
   Country,
@@ -9,9 +11,30 @@ import {
   Specialty,
   State,
   AppointmentSlot,
+  UserClinic,
 } from './types';
 
 export const clinicsApi = {
+  async createClinic(dto: CreateClinicDto): Promise<CreateClinicResponse> {
+    const payload = {
+      clinic_name: dto.clinic_name.trim(),
+      clinic_address: dto.clinic_address.trim(),
+      clinic_phone_number: dto.clinic_phone_number.trim(),
+      clinic_description: dto.clinic_description?.trim() || undefined,
+      clinic_city_id: dto.clinic_city_id,
+    };
+
+    return apiClient.post<CreateClinicResponse>('/clinics/createClinic', payload);
+  },
+
+  async deleteClinic(clinicId: number): Promise<void> {
+    await apiClient.delete<void>(`/clinics/${clinicId}`);
+  },
+
+  async getUserClinics(): Promise<(Clinic & UserClinic)[]> {
+    return apiClient.get<(Clinic & UserClinic)[]>('/clinics/my-clinics');
+  },
+
   async getCountries(): Promise<Country[]> {
     return apiClient.get<Country[]>('/location/getCountries');
   },

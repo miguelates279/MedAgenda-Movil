@@ -97,6 +97,20 @@ export interface Clinic {
   is_open?: boolean;
 }
 
+export type UserClinic = Record<string, unknown>;
+
+export interface CreateClinicDto {
+  clinic_name: string;
+  clinic_address: string;
+  clinic_phone_number: string;
+  clinic_description?: string;
+  clinic_city_id: number;
+}
+
+export interface CreateClinicResponse {
+  clinic_id: number;
+}
+
 export interface ClinicScheduleRules {
   clinic_opening_time: string;
   clinic_close_time: string;
