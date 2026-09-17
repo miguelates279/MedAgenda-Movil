@@ -184,6 +184,15 @@ export default function ClinicsIndexScreen() {
         </View>
 
         <View className={isOwnerMode ? 'hidden' : 'bg-white p-4 border-b border-gray-200'}>
+          <View className="bg-teal-50 border border-teal-100 rounded-lg p-3 mb-3">
+            <Text className="text-xs font-bold text-teal-800 uppercase tracking-wider mb-0.5">
+              📅 Agendamiento de Citas
+            </Text>
+            <Text className="text-xs text-teal-900 leading-relaxed">
+              Filtra por ubicación o especialidad para encontrar clínicas y reservar tu cita médica con los doctores disponibles.
+            </Text>
+          </View>
+
           <Text className="text-sm font-semibold text-neutral-900 mb-2">Filtros de Búsqueda</Text>
 
           <TouchableOpacity

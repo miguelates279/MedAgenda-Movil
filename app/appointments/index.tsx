@@ -105,8 +105,8 @@ export default function AppointmentsIndexScreen() {
         <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
           <Text className="text-lg font-bold text-neutral-900">Mis Citas</Text>
           <Button
-            text="+ Nueva"
-            onPress={() => router.push('/appointments/new' as any)}
+            text="+ Agendar en Clínica"
+            onPress={() => router.push('/clinics' as any)}
             className="py-1.5 px-3"
           />
         </View>
@@ -185,13 +185,13 @@ export default function AppointmentsIndexScreen() {
               </Text>
               <Text className="text-xs text-gray-400 text-center leading-5">
                 {tab === 'upcoming'
-                  ? 'Agenda una nueva cita médica con un doctor disponible.'
+                  ? 'Busca una clínica en el buscador para ver sus médicos disponibles y agendar tu cita.'
                   : 'Las citas finalizadas aparecerán aquí.'}
               </Text>
               {tab === 'upcoming' && (
                 <Button
-                  text="Agendar Cita Ahora"
-                  onPress={() => router.push('/appointments/new' as any)}
+                  text="Buscar Clínica y Agendar"
+                  onPress={() => router.push('/clinics' as any)}
                   className="mt-4"
                 />
               )}

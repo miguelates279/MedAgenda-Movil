@@ -83,22 +83,22 @@ export default function HomeScreen() {
           <View className="flex-row gap-2.5 mb-2.5">
             <TouchableOpacity
               className="flex-1 bg-primary rounded-lg p-3.5"
-              onPress={() => router.push('/appointments/new' as any)}
-              activeOpacity={0.7}
-            >
-              <Text className="text-2xl mb-1.5">📅</Text>
-              <Text className="text-sm font-bold text-white">Agendar Cita</Text>
-              <Text className="text-[11px] text-teal-100 mt-0.5">Busca horario disponible</Text>
-            </TouchableOpacity>
-
-            <TouchableOpacity
-              className="flex-1 bg-white border border-gray-200 rounded-lg p-3.5"
               onPress={() => router.push('/clinics' as any)}
               activeOpacity={0.7}
             >
               <Text className="text-2xl mb-1.5">🏥</Text>
-              <Text className="text-sm font-bold text-neutral-900">Buscar Clínicas</Text>
-              <Text className="text-[11px] text-gray-500 mt-0.5">Filtra por ciudad y doctor</Text>
+              <Text className="text-sm font-bold text-white">Buscar Clínicas y Agendar</Text>
+              <Text className="text-[11px] text-teal-100 mt-0.5">Encuentra especialistas disponibles</Text>
+            </TouchableOpacity>
+
+            <TouchableOpacity
+              className="flex-1 bg-white border border-gray-200 rounded-lg p-3.5"
+              onPress={() => router.push('/appointments' as any)}
+              activeOpacity={0.7}
+            >
+              <Text className="text-2xl mb-1.5">📅</Text>
+              <Text className="text-sm font-bold text-neutral-900">Mis Citas</Text>
+              <Text className="text-[11px] text-gray-500 mt-0.5">Consulta próximas y pasadas</Text>
             </TouchableOpacity>
           </View>
           <TouchableOpacity
@@ -222,8 +222,8 @@ export default function HomeScreen() {
                 No tienes citas médicas programadas.
               </Text>
               <Button
-                text="Agendar una Cita"
-                onPress={() => router.push('/appointments/new' as any)}
+                text="Buscar Clínica y Agendar"
+                onPress={() => router.push('/clinics' as any)}
                 className="mt-2.5"
               />
             </Card>
