@@ -1,6 +1,7 @@
 import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
+  Alert,
   SafeAreaView,
   ScrollView,
   Text,
@@ -10,17 +11,20 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import clinicsApi from '../../src/api/clinics';
 import { Clinic, ClinicScheduleRules, PublicDoctor } from '../../src/api/types';
-import { Badge, Card, DoctorCard } from '../../src/components';
+import { Badge, Button, Card, DoctorCard } from '../../src/components';
+import { useAuth } from '../../src/context/AuthContext';
 
 export default function ClinicDetailScreen() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const clinicId = Number(id);
+  const { roles } = useAuth();
 
   const [clinic, setClinic] = useState<Clinic | null>(null);
   const [doctors, setDoctors] = useState<PublicDoctor[]>([]);
   const [rules, setRules] = useState<ClinicScheduleRules | null>(null);
   const [loading, setLoading] = useState(true);
+  const [deleting, setDeleting] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
@@ -58,6 +62,33 @@ export default function ClinicDetailScreen() {
       pathname: '/appointments/new',
       params: { clinic_id: clinicId, doctor_id: doctorId },
     } as any);
+  };
+
+  const handleDelete = () => {
+    Alert.alert(
+      'Eliminar clínica',
+      'Esta acción no se puede deshacer. ¿Quieres continuar?',
+      [
+        { text: 'Cancelar', style: 'cancel' },
+        {
+          text: 'Eliminar',
+          style: 'destructive',
+          onPress: async () => {
+            setDeleting(true);
+            try {
+              await clinicsApi.deleteClinic(clinicId);
+              Alert.alert('Clínica eliminada', 'La clínica se eliminó correctamente.', [
+                { text: 'Continuar', onPress: () => router.replace('/clinics' as any) },
+              ]);
+            } catch (err: any) {
+              Alert.alert('No se pudo eliminar', err.message || 'Intenta nuevamente.');
+            } finally {
+              setDeleting(false);
+            }
+          },
+        },
+      ]
+    );
   };
 
   if (loading) {
@@ -109,6 +140,17 @@ export default function ClinicDetailScreen() {
                 <Text className="text-sm text-neutral-900 mt-2 leading-5">
                   {clinic.clinic_description}
                 </Text>
+              ) : null}
+
+              {roles?.isAdmin ? (
+                <Button
+                  text={deleting ? 'Eliminando...' : 'Eliminar clínica'}
+                  variant="danger"
+                  loading={deleting}
+                  disabled={deleting}
+                  onPress={handleDelete}
+                  className="mt-4"
+                />
               ) : null}
 
               {rules && (

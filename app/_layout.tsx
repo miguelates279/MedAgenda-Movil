@@ -23,6 +23,7 @@ export default function RootLayout() {
           <Stack.Screen name="home" />
           <Stack.Screen name="profile" />
           <Stack.Screen name="clinics/index" />
+          <Stack.Screen name="clinics/new" />
           <Stack.Screen name="clinics/[id]" />
           <Stack.Screen name="appointments/index" />
           <Stack.Screen name="appointments/new" />

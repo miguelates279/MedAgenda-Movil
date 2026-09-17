@@ -16,7 +16,7 @@ import { Badge, Button, Card, NavBar } from '../src/components';
 
 export default function HomeScreen() {
   const router = useRouter();
-  const { user, roles, signOut } = useAuth();
+  const { user, roles, isAuthenticated, signOut } = useAuth();
   const [upcomingAppt, setUpcomingAppt] = useState<DoctorAppointmentView | null>(null);
   const [loadingAppt, setLoadingAppt] = useState(false);
 
@@ -101,7 +101,6 @@ export default function HomeScreen() {
               <Text className="text-[11px] text-gray-500 mt-0.5">Filtra por ciudad y doctor</Text>
             </TouchableOpacity>
           </View>
-
           <TouchableOpacity
             className="flex-row items-center justify-between bg-white border border-gray-200 rounded-lg p-3.5 mb-2.5"
             onPress={() => router.push('/appointments' as any)}
@@ -149,6 +148,36 @@ export default function HomeScreen() {
             </TouchableOpacity>
           )}
         </View>
+
+        {isAuthenticated ? (
+          <View className="mb-5">
+            <Text className="text-[15px] font-bold text-neutral-900 mb-2.5">
+              Mis clínicas
+            </Text>
+            <View className="flex-row gap-2.5">
+              <TouchableOpacity
+                className="flex-1 bg-primary rounded-lg p-3.5"
+                onPress={() => router.push('/clinics/new' as any)}
+                activeOpacity={0.7}
+              >
+                <Text className="text-2xl mb-1.5">➕</Text>
+                <Text className="text-sm font-bold text-white">Nueva clínica</Text>
+                <Text className="text-[11px] text-teal-100 mt-0.5">Registra una clínica</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                className="flex-1 bg-white border border-gray-200 rounded-lg p-3.5"
+                onPress={() => router.push('/clinics?mode=mine' as any)}
+                activeOpacity={0.7}
+              >
+                <Text className="text-2xl mb-1.5">🏥</Text>
+                <Text className="text-sm font-bold text-neutral-900">Ver mis clínicas</Text>
+                <Text className="text-[11px] text-gray-500 mt-0.5">Consulta el listado</Text>
+              </TouchableOpacity>
+            </View>
+
+          </View>
+        ) : null}
 
         <View className="mb-5">
           <View className="flex-row justify-between items-center mb-2.5">
