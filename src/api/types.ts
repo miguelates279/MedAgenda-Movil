@@ -143,3 +143,64 @@ export interface ClinicSearchFilters {
   cityId?: number | null;
   specialtyIds?: number[];
 }
+
+export interface PatientHistoryRow {
+  user_id: number;
+  first_name: string;
+  second_name?: string | null;
+  first_last_name: string;
+  second_last_name?: string | null;
+  appointment_date: string;
+  appointment_description?: string;
+  clinic_id: number;
+  clinic_name: string;
+}
+
+export interface PrescriptionUserView {
+  prescription_id?: number;
+  clinic_name: string;
+  clinic_id: number;
+  date_emitted: string;
+  doctor_first_name: string;
+  doctor_second_name?: string | null;
+  doctor_last_name: string;
+  prescription_description: string;
+}
+
+export interface PrescriptionDoctorView {
+  prescription_id?: number;
+  patient_id: number;
+  clinic_id: number;
+  date_emitted: string;
+  prescription_description: string;
+}
+
+export interface CreatePrescriptionDto {
+  patient_id: number;
+  clinic_id: number;
+  prescription_description: string;
+}
+
+export interface UpdatePrescriptionDto {
+  prescription_description: string;
+}
+
+export interface PatientHistoryGroup {
+  patientId: number;
+  patientName: string;
+  clinics: { clinicId: number; clinicName: string }[];
+  records: {
+    appointmentDate: string;
+    displayDate: string;
+    description?: string;
+    clinicId: number;
+    clinicName: string;
+  }[];
+  prescriptions: {
+    prescriptionId?: number;
+    date: string;
+    displayDate: string;
+    description: string;
+    clinicId: number;
+  }[];
+}

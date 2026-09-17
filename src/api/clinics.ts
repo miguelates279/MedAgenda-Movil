@@ -75,6 +75,10 @@ export const clinicsApi = {
       `/clinics/getClinicDoctorAppointmentsForDay?clinic_id=${clinicId}&doctor_id=${doctorId}&appointment_date=${appointmentDate}`
     );
   },
+
+  async getUserClinics(): Promise<Clinic[]> {
+    return apiClient.get<Clinic[]>('/clinics/userClinics');
+  },
 };
 
 export default clinicsApi;

@@ -1,6 +1,7 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
 import apiClient from '../api/client';
 import authApi from '../api/auth';
+import doctorsApi from '../api/doctors';
 import {
   CreateUserDto,
   LoginDto,
@@ -38,6 +39,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const profile = await authApi.getProfile();
       setUser(profile);
+      const isDoc = await doctorsApi.isUserDoctorAnywhere().catch(() => false);
+      setRoles((prev) => ({ isAdmin: prev?.isAdmin ?? false, isDoctor: isDoc }));
     } catch (error) {
       console.warn('Failed to load user profile:', error);
     }
@@ -48,14 +51,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       const res = await authApi.login(dto);
       setAuthToken(res.token);
-      setRoles({ isAdmin: res.isAdmin, isDoctor: res.isDoctor });
+      let isDoctor = res.isDoctor;
+      if (isDoctor === undefined) {
+        isDoctor = await doctorsApi.isUserDoctorAnywhere().catch(() => false);
+      }
+      setRoles({ isAdmin: res.isAdmin, isDoctor });
       try {
         const profile = await authApi.getProfile();
         setUser(profile);
       } catch (err) {
         console.warn('Could not fetch user profile immediately after login:', err);
       }
-      return res;
+      return { ...res, isDoctor };
     } finally {
       setIsLoading(false);
     }

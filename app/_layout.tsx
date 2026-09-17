@@ -27,6 +27,8 @@ export default function RootLayout() {
           <Stack.Screen name="appointments/index" />
           <Stack.Screen name="appointments/new" />
           <Stack.Screen name="appointments/[id]" />
+          <Stack.Screen name="doctor/index" />
+          <Stack.Screen name="prescriptions/index" />
         </Stack>
       </AuthProvider>
     </SafeAreaProvider>

@@ -103,7 +103,7 @@ export default function HomeScreen() {
           </View>
 
           <TouchableOpacity
-            className="flex-row items-center justify-between bg-white border border-gray-200 rounded-lg p-3.5"
+            className="flex-row items-center justify-between bg-white border border-gray-200 rounded-lg p-3.5 mb-2.5"
             onPress={() => router.push('/appointments' as any)}
             activeOpacity={0.7}
           >
@@ -116,6 +116,38 @@ export default function HomeScreen() {
             </View>
             <Text className="text-lg text-primary font-bold ml-2">→</Text>
           </TouchableOpacity>
+
+          <TouchableOpacity
+            className="flex-row items-center justify-between bg-white border border-gray-200 rounded-lg p-3.5 mb-2.5"
+            onPress={() => router.push('/prescriptions' as any)}
+            activeOpacity={0.7}
+          >
+            <View className="flex-row items-center flex-1">
+              <Text className="text-2xl">💊</Text>
+              <View className="flex-1 ml-2.5">
+                <Text className="text-sm font-bold text-neutral-900">Mis Fórmulas Médicas</Text>
+                <Text className="text-[11px] text-gray-500">Revisa tus recetas emitidas por clínica</Text>
+              </View>
+            </View>
+            <Text className="text-lg text-primary font-bold ml-2">→</Text>
+          </TouchableOpacity>
+
+          {roles?.isDoctor && (
+            <TouchableOpacity
+              className="flex-row items-center justify-between bg-teal-50 border border-teal-200 rounded-lg p-3.5"
+              onPress={() => router.push('/doctor' as any)}
+              activeOpacity={0.7}
+            >
+              <View className="flex-row items-center flex-1">
+                <Text className="text-2xl">🩺</Text>
+                <View className="flex-1 ml-2.5">
+                  <Text className="text-sm font-bold text-teal-900">Panel Médico del Doctor</Text>
+                  <Text className="text-[11px] text-teal-700">Gestiona citas, historial y recetas</Text>
+                </View>
+              </View>
+              <Text className="text-lg text-primary font-bold ml-2">→</Text>
+            </TouchableOpacity>
+          )}
         </View>
 
         <View className="mb-5">
