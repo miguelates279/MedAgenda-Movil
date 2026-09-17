@@ -90,19 +90,16 @@ export default function AppointmentDetailScreen() {
           onPress: async () => {
             setUpdating(true);
             try {
-              Alert.alert('Éxito', 'Las notas de la cita se han actualizado correctamente.', [
-                {
-                  text: 'OK',
-                  onPress: () => {
-                    setAppointment((prev) =>
-                      prev
-                        ? { ...prev, appointment_description: data.appointment_description }
-                        : null
-                    );
-                    reset(data);
-                  },
-                },
-              ]);
+              await appointmentsApi.updateAppointment(appointmentId, {
+                appointment_description: data.appointment_description.trim(),
+              });
+              setAppointment((prev) =>
+                prev
+                  ? { ...prev, appointment_description: data.appointment_description.trim() }
+                  : null
+              );
+              reset(data);
+              Alert.alert('Éxito', 'Las notas de la cita se han actualizado correctamente.');
             } catch (err: any) {
               Alert.alert('Error', err.message || 'No se pudieron guardar los cambios.');
             } finally {
@@ -130,6 +127,7 @@ export default function AppointmentDetailScreen() {
           onPress: async () => {
             setCancelling(true);
             try {
+              await appointmentsApi.cancelAppointment(appointmentId);
               Alert.alert('Cita Cancelada', 'Tu cita médica ha sido cancelada exitosamente.', [
                 { text: 'Aceptar', onPress: () => router.replace('/appointments' as any) },
               ]);

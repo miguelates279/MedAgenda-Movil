@@ -23,6 +23,17 @@ export const appointmentsApi = {
 
     return apiClient.post<void>('/appointments/scheduleAppointment', payload);
   },
+
+  async updateAppointment(
+    appointmentId: number,
+    dto: { appointment_description?: string }
+  ): Promise<{ message: string }> {
+    return apiClient.put<{ message: string }>(`/appointments/${appointmentId}`, dto);
+  },
+
+  async cancelAppointment(appointmentId: number): Promise<{ message: string }> {
+    return apiClient.delete<{ message: string }>(`/appointments/${appointmentId}`);
+  },
 };
 
 export default appointmentsApi;

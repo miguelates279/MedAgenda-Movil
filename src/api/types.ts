@@ -133,6 +133,10 @@ export interface CreateAppointmentDto {
   appointment_description?: string;
 }
 
+export interface UpdateAppointmentDto {
+  appointment_description?: string;
+}
+
 export interface ClinicSearchFilters {
   countryId: number;
   stateId?: number | null;
