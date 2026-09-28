@@ -59,7 +59,7 @@ export const Badge: React.FC<BadgeProps> = ({
       className={`px-2 py-0.5 rounded-full border self-start flex-row items-center ${currentVariant.container} ${className}`}
       style={style}
     >
-      <Text className={`text-[11px] font-semibold ${currentVariant.text}`}>{text}</Text>
+      <Text className={`text-xs font-semibold ${currentVariant.text}`}>{text}</Text>
     </View>
   );
 };

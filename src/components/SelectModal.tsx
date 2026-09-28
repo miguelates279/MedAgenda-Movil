@@ -6,10 +6,9 @@ import {
   SafeAreaView,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
-import Button from '../atoms/Button';
+import Button from './Button';
 
 export interface SelectOption {
   label: string;
@@ -86,9 +85,9 @@ export const SelectModal: React.FC<SelectModalProps> = ({
         <SafeAreaView className="bg-white rounded-t-2xl max-h-[85%] min-h-[50%]">
           <View className="flex-row justify-between items-center px-4 pt-4 pb-3 border-b border-gray-200">
             <Text className="text-base font-bold text-neutral-900">{title}</Text>
-            <TouchableOpacity onPress={onClose} className="p-1" activeOpacity={0.7}>
+            <Pressable onPress={onClose} className="p-1 active:opacity-70">
               <Text className="text-lg text-gray-600 font-semibold">✕</Text>
-            </TouchableOpacity>
+            </Pressable>
           </View>
 
           <View className="px-4 py-2.5 border-b border-gray-100">

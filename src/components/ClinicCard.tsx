@@ -1,8 +1,8 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
-import { Clinic } from '../../api/types';
-import Card from '../atoms/Card';
-import Badge from '../atoms/Badge';
+import { Clinic } from '../api/types';
+import Card from './Card';
+import Badge from './Badge';
 
 export interface ClinicCardProps {
   clinic: Clinic;
@@ -29,8 +29,8 @@ export const ClinicCard: React.FC<ClinicCardProps> = ({
         />
       </View>
 
-      <Text className="text-sm text-gray-600 mb-0.5">📍 {clinic.clinic_address}</Text>
-      <Text className="text-sm text-gray-600 mb-1">📞 {clinic.clinic_phone_number}</Text>
+      <Text className="text-sm text-gray-600 mb-0.5">{clinic.clinic_address}</Text>
+      <Text className="text-sm text-gray-600 mb-1">{clinic.clinic_phone_number}</Text>
 
       {clinic.clinic_description ? (
         <Text className="text-xs text-gray-400 mt-1" numberOfLines={2}>
@@ -51,7 +51,7 @@ export const ClinicCard: React.FC<ClinicCardProps> = ({
       )}
 
       <View className="mt-2.5 pt-2 border-t border-gray-100 items-end">
-        {footer || <Text className="text-xs font-semibold text-primary">Ver doctores y horarios →</Text>}
+        {footer || <Text className="text-xs font-semibold text-primary">Ver doctores y horarios</Text>}
       </View>
     </Card>
   );

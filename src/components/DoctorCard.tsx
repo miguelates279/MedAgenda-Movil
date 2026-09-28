@@ -1,9 +1,9 @@
 import React from 'react';
 import { Text, View } from 'react-native';
-import { PublicDoctor } from '../../api/types';
-import Card from '../atoms/Card';
-import Badge from '../atoms/Badge';
-import Button from '../atoms/Button';
+import { PublicDoctor } from '../api/types';
+import Card from './Card';
+import Badge from './Badge';
+import Button from './Button';
 
 export interface DoctorCardProps {
   doctor: PublicDoctor;
@@ -30,7 +30,7 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, className = '', 
           </Text>
         </View>
         <View className="flex-1">
-          <Text className="text-[15px] font-bold text-neutral-900 mb-1">{fullName}</Text>
+          <Text className="text-sm font-bold text-neutral-900 mb-1">{fullName}</Text>
           <View className="flex-row flex-wrap gap-1">
             {doctor.specialties && doctor.specialties.length > 0 ? (
               doctor.specialties.map((sp) => (
