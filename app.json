@@ -32,6 +32,12 @@
     "scheme": "medagenda",
     "experiments": {
       "typedRoutes": true
+    },
+    "extra": {
+      "router": {},
+      "eas": {
+        "projectId": "c1541fa5-5fe2-490b-90ed-90bb7ed0de03"
+      }
     }
   }
 }
