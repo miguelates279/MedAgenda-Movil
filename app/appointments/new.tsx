@@ -1,4 +1,4 @@
-﻿import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
@@ -16,7 +16,7 @@ import { useAuth } from '../../src/context/AuthContext';
 import clinicsApi from '../../src/api/clinics';
 import { Clinic, PublicDoctor } from '../../src/api/types';
 import { useDoctorSchedule } from '../../src/hooks/useDoctorSchedule';
-import { Badge, Button, Card, Field } from '../../src/components';
+import { Badge, Button, Card, Field, ScreenHeader } from '../../src/components';
 
 interface AppointmentFormData {
   appointment_description: string;
@@ -135,12 +135,7 @@ export default function NewAppointmentScreen() {
   if (!isAuthenticated) {
     return (
       <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
-          <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
-            <Text className="text-primary text-sm font-semibold">← Volver</Text>
-          </TouchableOpacity>
-          <Text className="text-lg font-bold text-neutral-900">Nueva Cita Médica</Text>
-        </View>
+        <ScreenHeader title="Nueva Cita Médica" />
         <View className="flex-1 items-center justify-center p-6 bg-gray-50">
           <Text className="text-5xl mb-3">🔒</Text>
           <Text className="text-lg font-bold text-neutral-900 mb-2 text-center">
@@ -162,12 +157,7 @@ export default function NewAppointmentScreen() {
   if (!clinicId || !doctorId) {
     return (
       <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
-          <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
-            <Text className="text-primary text-sm font-semibold">← Volver</Text>
-          </TouchableOpacity>
-          <Text className="text-lg font-bold text-neutral-900">Agendar Cita</Text>
-        </View>
+        <ScreenHeader title="Agendar Cita" />
         <View className="flex-1 items-center justify-center p-6 bg-gray-50">
           <Text className="text-5xl mb-3">🏥</Text>
           <Text className="text-lg font-bold text-neutral-900 mb-2 text-center">
@@ -202,14 +192,9 @@ export default function NewAppointmentScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
       >
-        <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
-          <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
-            <Text className="text-primary text-sm font-semibold">← Volver</Text>
-          </TouchableOpacity>
-          <Text className="text-lg font-bold text-neutral-900">Agendar Cita Médica</Text>
-        </View>
+        <ScreenHeader title="Agendar Cita Médica" />
 
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }} keyboardShouldPersistTaps="handled">
+        <ScrollView contentContainerClassName="p-4 pb-10" keyboardShouldPersistTaps="handled">
           <Card className="mb-4 bg-teal-50/70 border border-teal-100 p-4">
             <Text className="text-xs font-bold text-teal-800 uppercase tracking-wider mb-2">
               Información de la Cita

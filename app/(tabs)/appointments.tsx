@@ -1,20 +1,21 @@
 import React, { useCallback, useEffect, useState } from 'react';
 import {
   FlatList,
+  Pressable,
   RefreshControl,
   SafeAreaView,
   Text,
   TextInput,
-  TouchableOpacity,
   View,
 } from 'react-native';
 import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import { useAuth } from '../../src/context/AuthContext';
 import appointmentsApi from '../../src/api/appointments';
 import { DoctorAppointmentView } from '../../src/api/types';
-import { AppointmentCard, Button, NavBar } from '../../src/components';
+import { AppointmentCard, Button } from '../../src/components';
 
-export default function AppointmentsIndexScreen() {
+export default function AppointmentsTabScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const [appointments, setAppointments] = useState<DoctorAppointmentView[]>([]);
@@ -77,10 +78,12 @@ export default function AppointmentsIndexScreen() {
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 bg-gray-50">
           <View className="px-4 py-3 bg-white border-b border-gray-200">
-            <Text className="text-lg font-bold text-neutral-900">Mis Citas</Text>
+            <Text className="text-xl font-bold text-neutral-900">Mis Citas</Text>
           </View>
           <View className="p-8 items-center justify-center flex-1">
-            <Text className="text-4xl mb-3">🔒</Text>
+            <View className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 items-center justify-center mb-3">
+              <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
+            </View>
             <Text className="text-base font-bold text-neutral-900 mb-1.5 text-center">
               Inicia sesión para ver tus citas
             </Text>
@@ -94,7 +97,6 @@ export default function AppointmentsIndexScreen() {
             />
           </View>
         </View>
-        <NavBar active="appointments" />
       </SafeAreaView>
     );
   }
@@ -103,7 +105,7 @@ export default function AppointmentsIndexScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <View className="flex-1 bg-gray-50">
         <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
-          <Text className="text-lg font-bold text-neutral-900">Mis Citas</Text>
+          <Text className="text-xl font-bold text-neutral-900">Mis Citas</Text>
           <Button
             text="+ Agendar en Clínica"
             onPress={() => router.push('/clinics' as any)}
@@ -123,11 +125,13 @@ export default function AppointmentsIndexScreen() {
         </View>
 
         <View className="flex-row bg-white border-b border-gray-200">
-          <TouchableOpacity
+          <Pressable
             onPress={() => setTab('upcoming')}
             className={`flex-1 py-3 items-center border-b-2 ${
               tab === 'upcoming' ? 'border-primary' : 'border-transparent'
             }`}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: tab === 'upcoming' }}
           >
             <Text
               className={`text-sm ${
@@ -136,12 +140,14 @@ export default function AppointmentsIndexScreen() {
             >
               Próximas Citas
             </Text>
-          </TouchableOpacity>
-          <TouchableOpacity
+          </Pressable>
+          <Pressable
             onPress={() => setTab('past')}
             className={`flex-1 py-3 items-center border-b-2 ${
               tab === 'past' ? 'border-primary' : 'border-transparent'
             }`}
+            accessibilityRole="tab"
+            accessibilityState={{ selected: tab === 'past' }}
           >
             <Text
               className={`text-sm ${
@@ -150,7 +156,7 @@ export default function AppointmentsIndexScreen() {
             >
               Historial
             </Text>
-          </TouchableOpacity>
+          </Pressable>
         </View>
 
         {error ? (
@@ -168,12 +174,13 @@ export default function AppointmentsIndexScreen() {
               onPress={() => router.push(`/appointments/${item.appointment_id}` as any)}
             />
           )}
-          contentContainerStyle={{ padding: 16 }}
+          contentContainerClassName="p-4 pb-8"
           refreshControl={
             <RefreshControl
               refreshing={loading}
               onRefresh={loadAppointments}
               tintColor="#259487"
+              colors={['#259487']}
             />
           }
           ListEmptyComponent={
@@ -185,7 +192,7 @@ export default function AppointmentsIndexScreen() {
               </Text>
               <Text className="text-xs text-gray-400 text-center leading-5">
                 {tab === 'upcoming'
-                  ? 'Busca una clínica en el buscador para ver sus médicos disponibles y agendar tu cita.'
+                  ? 'Busca una clínica en el catálogo para ver sus médicos disponibles y agendar tu cita.'
                   : 'Las citas finalizadas aparecerán aquí.'}
               </Text>
               {tab === 'upcoming' && (
@@ -198,8 +205,6 @@ export default function AppointmentsIndexScreen() {
             </View>
           }
         />
-
-        <NavBar active="appointments" />
       </View>
     </SafeAreaView>
   );

@@ -6,5 +6,6 @@ export * from './AppointmentCard';
 export * from './ClinicCard';
 export * from './DoctorCard';
 export * from './SelectModal';
-export * from './NavBar';
-export * from './useNavBar';
+export * from './ConfirmModal';
+export * from './ScreenHeader';
+export * from './TabBar';

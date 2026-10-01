@@ -1,18 +1,18 @@
-﻿import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
 import {
   ActivityIndicator,
   Alert,
+  Pressable,
   RefreshControl,
   SafeAreaView,
   ScrollView,
   Text,
-  TouchableOpacity,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
+import { Ionicons } from '@expo/vector-icons';
 import prescriptionsApi from '../../src/api/prescriptions';
 import { PrescriptionUserView } from '../../src/api/types';
-import { Badge, Button, Card, NavBar } from '../../src/components';
+import { Badge, Card, ScreenHeader } from '../../src/components';
 
 interface PrescriptionGroup {
   clinicId: number;
@@ -21,7 +21,6 @@ interface PrescriptionGroup {
 }
 
 export default function PatientPrescriptionsScreen() {
-  const router = useRouter();
   const [prescriptions, setPrescriptions] = useState<PrescriptionUserView[]>([]);
   const [loading, setLoading] = useState(false);
 
@@ -59,7 +58,7 @@ export default function PatientPrescriptionsScreen() {
     return Object.values(grouped)
       .map((g) => ({
         ...g,
-        items: g.items.sort(
+        items: [...g.items].sort(
           (a, b) => new Date(b.date_emitted).getTime() - new Date(a.date_emitted).getTime()
         ),
       }))
@@ -68,31 +67,33 @@ export default function PatientPrescriptionsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
+      {/* Encabezado Estándar Unificado */}
+      <ScreenHeader
+        title="Mis Fórmulas Médicas"
+        rightAction={
+          <Pressable
+            onPress={loadPrescriptions}
+            className="p-1.5 rounded-lg bg-gray-50 border border-gray-200 active:bg-gray-100"
+            accessibilityRole="button"
+            accessibilityLabel="Recargar fórmulas médicas"
+          >
+            <Ionicons name="reload-outline" size={18} color="#259487" />
+          </Pressable>
+        }
+      />
+
       <ScrollView
-        className="bg-gray-50"
-        contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
+        className="flex-1 bg-gray-50"
+        contentContainerClassName="p-4 pb-8"
         refreshControl={
-          <RefreshControl refreshing={loading} onRefresh={loadPrescriptions} tintColor="#259487" />
+          <RefreshControl
+            refreshing={loading}
+            onRefresh={loadPrescriptions}
+            tintColor="#259487"
+            colors={['#259487']}
+          />
         }
       >
-        <View className="flex-row items-center justify-between mb-5">
-          <TouchableOpacity
-            onPress={() => router.back()}
-            activeOpacity={0.7}
-            className="flex-row items-center bg-white border border-gray-200 px-3 py-1.5 rounded-lg"
-          >
-            <Text className="text-sm font-semibold text-neutral-700">← Volver</Text>
-          </TouchableOpacity>
-          <Text className="text-lg font-bold text-neutral-900">Mis Fórmulas Médicas</Text>
-          <TouchableOpacity
-            onPress={loadPrescriptions}
-            activeOpacity={0.7}
-            className="bg-white border border-gray-200 px-3 py-1.5 rounded-lg"
-          >
-            <Text className="text-sm font-semibold text-primary">🔄</Text>
-          </TouchableOpacity>
-        </View>
-
         <View className="mb-4 bg-teal-50 border border-teal-100 p-4 rounded-xl">
           <Text className="text-xs font-bold text-teal-800 uppercase tracking-wider mb-1">
             Recetas e Indicaciones
@@ -109,7 +110,9 @@ export default function PatientPrescriptionsScreen() {
           </Card>
         ) : groups.length === 0 ? (
           <Card className="p-8 items-center justify-center">
-            <Text className="text-3xl mb-2">📄</Text>
+            <View className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center mb-3">
+              <Ionicons name="document-text-outline" size={28} color="#9ca3af" />
+            </View>
             <Text className="text-sm font-bold text-neutral-800 mb-1">Sin Fórmulas Médicas</Text>
             <Text className="text-xs text-gray-500 text-center">
               Aún no tienes fórmulas ni recetas registradas por tus médicos.
@@ -120,10 +123,16 @@ export default function PatientPrescriptionsScreen() {
             <Card key={group.clinicId} className="mb-4 p-0 overflow-hidden">
               <View className="bg-teal-50 border-b border-teal-100 p-3.5 flex-row justify-between items-center">
                 <View className="flex-row items-center flex-1">
-                  <Text className="text-lg mr-2">🏥</Text>
+                  <View className="w-8 h-8 rounded-full bg-white items-center justify-center mr-2.5 shadow-xs">
+                    <Ionicons name="business" size={16} color="#259487" />
+                  </View>
                   <View className="flex-1">
-                    <Text className="text-xs text-teal-700 font-bold uppercase">Clínica</Text>
-                    <Text className="font-bold text-sm text-neutral-900">{group.clinicName}</Text>
+                    <Text className="text-[10px] text-teal-700 font-bold uppercase tracking-wider">
+                      Clínica
+                    </Text>
+                    <Text className="font-bold text-sm text-neutral-900" numberOfLines={1}>
+                      {group.clinicName}
+                    </Text>
                   </View>
                 </View>
                 <Badge
@@ -132,7 +141,7 @@ export default function PatientPrescriptionsScreen() {
                 />
               </View>
 
-              <View className="p-3.5 divide-y divide-gray-100">
+              <View className="p-3.5">
                 {group.items.map((item, idx) => {
                   const doctorName = [item.doctor_first_name, item.doctor_second_name, item.doctor_last_name]
                     .filter(Boolean)
@@ -147,11 +156,17 @@ export default function PatientPrescriptionsScreen() {
                   });
 
                   return (
-                    <View key={item.prescription_id || idx} className="py-3 first:pt-0 last:pb-0">
+                    <View
+                      key={item.prescription_id || idx}
+                      className={`py-3 ${idx !== 0 ? 'border-t border-gray-100' : ''}`}
+                    >
                       <View className="flex-row justify-between items-center mb-1.5">
-                        <Text className="text-xs font-bold text-primary">
-                          🗓️ {formattedDate}
-                        </Text>
+                        <View className="flex-row items-center">
+                          <Ionicons name="calendar-outline" size={13} color="#259487" />
+                          <Text className="text-xs font-bold text-primary ml-1">
+                            {formattedDate}
+                          </Text>
+                        </View>
                         <Text className="text-[11px] text-gray-500 font-medium">
                           Dr(a). {doctorName}
                         </Text>
@@ -169,8 +184,6 @@ export default function PatientPrescriptionsScreen() {
           ))
         )}
       </ScrollView>
-
-      <NavBar active="home" />
     </SafeAreaView>
   );
 }

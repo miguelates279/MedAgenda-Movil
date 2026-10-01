@@ -1,6 +1,6 @@
 import '../src/polyfills';
 import React from 'react';
-import { ActivityIndicator, StyleSheet, View } from 'react-native';
+import { ActivityIndicator, View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useAuth } from '../src/context/AuthContext';
 
@@ -9,7 +9,7 @@ export default function IndexScreen() {
 
   if (isLoading) {
     return (
-      <View style={styles.container}>
+      <View className="flex-1 items-center justify-center bg-gray-50">
         <ActivityIndicator size="large" color="#259487" />
       </View>
     );
@@ -17,12 +17,3 @@ export default function IndexScreen() {
 
   return <Redirect href="/clinics" />;
 }
-
-const styles = StyleSheet.create({
-  container: {
-    flex: 1,
-    alignItems: 'center',
-    justifyContent: 'center',
-    backgroundColor: '#f9fafb',
-  },
-});

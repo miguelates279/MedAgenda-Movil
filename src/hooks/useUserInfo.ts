@@ -3,8 +3,8 @@ import { useAuth } from '../context/AuthContext';
 
 /**
  * Hook compartido que encapsula los cálculos de información de usuario:
- * nombre completo, iniciales del avatar, texto de rol y variante de badge.
- * Se usa en useHome, useProfile y cualquier pantalla que necesite estos datos.
+ * nombre completo, iniciales del avatar, texto de rol, variante de badge y banderas booleanas.
+ * Se usa en useHome, useProfile, TabsLayout y cualquier componente que necesite estos datos.
  */
 export const useUserInfo = () => {
   const { user, roles, isAuthenticated } = useAuth();
@@ -27,6 +27,16 @@ export const useUserInfo = () => {
     [user]
   );
 
+  const isDoctor = useMemo(
+    () => isAuthenticated && !!roles?.isDoctor,
+    [isAuthenticated, roles]
+  );
+
+  const isAdmin = useMemo(
+    () => isAuthenticated && !!roles?.isAdmin,
+    [isAuthenticated, roles]
+  );
+
   const roleText = useMemo(
     () =>
       roles?.isAdmin ? 'Admin' : roles?.isDoctor ? 'Médico' : 'Paciente',
@@ -43,6 +53,8 @@ export const useUserInfo = () => {
     user,
     roles,
     isAuthenticated,
+    isDoctor,
+    isAdmin,
     fullName,
     initials,
     roleText,

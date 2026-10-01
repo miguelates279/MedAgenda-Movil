@@ -8,7 +8,7 @@ import {
   Text,
   View,
 } from 'react-native';
-import { NavBar } from '../../components';
+import { ConfirmModal } from '../../components';
 import { useProfile } from '../../hooks/useProfile';
 import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
@@ -24,7 +24,11 @@ export const ProfileScreen: React.FC = () => {
     roleBadgeVariant,
     tab,
     setTab,
+    isLogoutModalOpen,
+    isLoggingOut,
     handleLogout,
+    handleCancelLogout,
+    handleConfirmLogout,
   } = useProfile();
 
   return (
@@ -109,8 +113,19 @@ export const ProfileScreen: React.FC = () => {
         </KeyboardAvoidingView>
       )}
 
-      {/* Barra de Navegación */}
-      <NavBar active="profile" />
+      {/* Modal estético de confirmación para cerrar sesión */}
+      <ConfirmModal
+        isOpen={isLogoutModalOpen}
+        title="Cerrar Sesión"
+        message="¿Estás seguro de que deseas salir de tu cuenta de MedAgenda?"
+        confirmText="Cerrar Sesión"
+        cancelText="Cancelar"
+        variant="danger"
+        iconName="log-out-outline"
+        loading={isLoggingOut}
+        onClose={handleCancelLogout}
+        onConfirm={handleConfirmLogout}
+      />
     </SafeAreaView>
   );
 };

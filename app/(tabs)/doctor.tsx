@@ -22,7 +22,7 @@ import {
   PatientHistoryRow,
   PrescriptionDoctorView,
 } from '../../src/api/types';
-import { Badge, Button, Card, NavBar } from '../../src/components';
+import { Badge, Button, Card } from '../../src/components';
 
 export default function DoctorDashboardScreen() {
   const router = useRouter();
@@ -742,8 +742,6 @@ export default function DoctorDashboardScreen() {
           </View>
         </View>
       </Modal>
-
-      <NavBar active="doctor" />
     </SafeAreaView>
   );
 }

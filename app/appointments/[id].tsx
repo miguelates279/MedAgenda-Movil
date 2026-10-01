@@ -14,7 +14,7 @@ import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import appointmentsApi from '../../src/api/appointments';
 import { DoctorAppointmentView } from '../../src/api/types';
-import { Badge, Button, Card, Field } from '../../src/components';
+import { Badge, Button, Card, Field, ScreenHeader } from '../../src/components';
 
 interface EditAppointmentForm {
   appointment_description: string;
@@ -183,14 +183,9 @@ export default function AppointmentDetailScreen() {
         behavior={Platform.OS === 'ios' ? 'padding' : undefined}
         className="flex-1"
       >
-        <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
-          <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
-            <Text className="text-primary text-sm font-semibold">← Volver</Text>
-          </TouchableOpacity>
-          <Text className="text-lg font-bold text-neutral-900 flex-1">Gestionar Cita</Text>
-        </View>
+        <ScreenHeader title="Gestionar Cita" />
 
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <ScrollView contentContainerClassName="p-4 pb-10">
           {error ? (
             <View className="bg-red-50 border border-red-200 p-3 mb-4 rounded-md">
               <Text className="text-red-700 text-sm">{error}</Text>

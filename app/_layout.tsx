@@ -18,17 +18,12 @@ export default function RootLayout() {
           }}
         >
           <Stack.Screen name="index" />
-          <Stack.Screen name="login" />
-          <Stack.Screen name="register" />
-          <Stack.Screen name="home" />
-          <Stack.Screen name="profile" />
-          <Stack.Screen name="clinics/index" />
+          <Stack.Screen name="(tabs)" />
+          <Stack.Screen name="clinics/mine" />
           <Stack.Screen name="clinics/new" />
           <Stack.Screen name="clinics/[id]" />
-          <Stack.Screen name="appointments/index" />
           <Stack.Screen name="appointments/new" />
           <Stack.Screen name="appointments/[id]" />
-          <Stack.Screen name="doctor/index" />
           <Stack.Screen name="prescriptions/index" />
         </Stack>
       </AuthProvider>

@@ -1,14 +1,32 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
-import { useAuth } from '../context/AuthContext';
 import appointmentsApi from '../api/appointments';
 import { DoctorAppointmentView } from '../api/types';
 import { useUserInfo } from './useUserInfo';
+import { useLogout } from './useLogout';
 
 export const useHome = () => {
   const router = useRouter();
-  const { signOut, isAuthenticated } = useAuth();
-  const { user, roles, fullName, roleText: roleBadgeText } = useUserInfo();
+  const {
+    user,
+    roles,
+    isAuthenticated,
+    isDoctor,
+    isAdmin,
+    fullName,
+    roleText: roleBadgeText,
+  } = useUserInfo();
+
+  const {
+    isModalOpen: isLogoutModalOpen,
+    loading: isLoggingOut,
+    requestLogout: handleLogout,
+    cancelLogout: handleCancelLogout,
+    confirmLogout: handleConfirmLogout,
+  } = useLogout({
+    redirectTo: '/clinics',
+  });
+
   const [upcomingAppt, setUpcomingAppt] = useState<DoctorAppointmentView | null>(null);
   const [loadingAppt, setLoadingAppt] = useState(false);
 
@@ -35,17 +53,12 @@ export const useHome = () => {
     loadNextAppointment();
   }, [loadNextAppointment]);
 
-  const handleLogout = useCallback(() => {
-    signOut();
-    router.replace('/clinics' as any);
-  }, [signOut, router]);
-
   const navigateToClinics = () => router.push('/clinics' as any);
   const navigateToAppointments = () => router.push('/appointments' as any);
   const navigateToPrescriptions = () => router.push('/prescriptions' as any);
   const navigateToDoctorPanel = () => router.push('/doctor' as any);
   const navigateToNewClinic = () => router.push('/clinics/new' as any);
-  const navigateToMyClinics = () => router.push('/clinics?mode=mine' as any);
+  const navigateToMyClinics = () => router.push('/clinics/mine' as any);
   const navigateToAppointmentDetail = (appointmentId: number) =>
     router.push(`/appointments/${appointmentId}` as any);
 
@@ -53,12 +66,18 @@ export const useHome = () => {
     user,
     roles,
     isAuthenticated,
+    isDoctor,
+    isAdmin,
     fullName,
     roleBadgeText,
     upcomingAppt,
     loadingAppt,
     loadNextAppointment,
+    isLogoutModalOpen,
+    isLoggingOut,
     handleLogout,
+    handleCancelLogout,
+    handleConfirmLogout,
     navigateToClinics,
     navigateToAppointments,
     navigateToPrescriptions,

@@ -41,7 +41,7 @@ export const useRegisterForm = (options?: UseRegisterFormOptions) => {
       if (options?.onSuccess) {
         options.onSuccess();
       } else {
-        router.replace('/clinics' as any);
+        router.replace('/home' as any);
       }
     } catch (err: any) {
       setServerError(err.message || 'Error al registrar. Intenta de nuevo.');

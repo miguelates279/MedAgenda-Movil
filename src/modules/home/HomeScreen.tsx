@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
-import { Badge, Button, NavBar } from '../../components';
+import { Badge, Button, ConfirmModal } from '../../components';
 import { useHome } from '../../hooks/useHome';
 
 export const HomeScreen: React.FC = () => {
@@ -22,7 +22,11 @@ export const HomeScreen: React.FC = () => {
     upcomingAppt,
     loadingAppt,
     loadNextAppointment,
+    isLogoutModalOpen,
+    isLoggingOut,
     handleLogout,
+    handleCancelLogout,
+    handleConfirmLogout,
     navigateToClinics,
     navigateToAppointments,
     navigateToPrescriptions,
@@ -293,8 +297,19 @@ export const HomeScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Barra de Navegación */}
-      <NavBar active="home" />
+      {/* Modal estético de confirmación para cerrar sesión */}
+      <ConfirmModal
+        isOpen={isLogoutModalOpen}
+        title="Cerrar Sesión"
+        message="¿Estás seguro de que deseas salir de tu cuenta de MedAgenda?"
+        confirmText="Cerrar Sesión"
+        cancelText="Cancelar"
+        variant="danger"
+        iconName="log-out-outline"
+        loading={isLoggingOut}
+        onClose={handleCancelLogout}
+        onConfirm={handleConfirmLogout}
+      />
     </SafeAreaView>
   );
 };

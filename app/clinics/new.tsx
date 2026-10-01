@@ -1,8 +1,9 @@
 import React, { useState } from 'react';
-import { SafeAreaView, ScrollView, Text, TouchableOpacity, View } from 'react-native';
+import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
-import { Button, Field, SelectModal, SelectOption } from '../../src/components';
+import { Ionicons } from '@expo/vector-icons';
+import { Button, Field, ScreenHeader, SelectModal, SelectOption } from '../../src/components';
 import clinicsApi from '../../src/api/clinics';
 import { CreateClinicDto } from '../../src/api/types';
 import { useAuth } from '../../src/context/AuthContext';
@@ -66,38 +67,45 @@ export default function NewClinicScreen() {
 
   if (!isAuthenticated) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50 items-center justify-center p-6">
-        <Text className="text-base font-semibold text-neutral-900 text-center">
-          Debes iniciar sesión para crear una clínica.
-        </Text>
-        <Button text="Volver" onPress={() => router.back()} className="mt-4" />
+      <SafeAreaView className="flex-1 bg-white">
+        <ScreenHeader title="Nueva clínica" />
+        <View className="flex-1 items-center justify-center p-6 bg-gray-50">
+          <View className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 items-center justify-center mb-3">
+            <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
+          </View>
+          <Text className="text-base font-bold text-neutral-900 text-center mb-2">
+            Inicio de sesión requerido
+          </Text>
+          <Text className="text-xs text-gray-600 text-center max-w-[260px] mb-4">
+            Debes iniciar sesión con una cuenta autorizada para registrar una nueva clínica.
+          </Text>
+          <Button text="Volver" onPress={() => router.back()} className="min-w-[160px]" />
+        </View>
       </SafeAreaView>
     );
   }
 
   if (createdClinicId !== null) {
     return (
-      <SafeAreaView className="flex-1 bg-gray-50">
-        <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
-          <Text className="text-lg font-bold text-neutral-900">Nueva clínica</Text>
-        </View>
-        <View className="flex-1 items-center justify-center px-6">
-          <View className="w-16 h-16 rounded-full bg-green-100 items-center justify-center mb-4">
-            <Text className="text-3xl text-green-700">✓</Text>
+      <SafeAreaView className="flex-1 bg-white">
+        <ScreenHeader title="Nueva clínica" canGoBack={false} />
+        <View className="flex-1 items-center justify-center px-6 bg-gray-50">
+          <View className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 items-center justify-center mb-4">
+            <Ionicons name="checkmark-circle" size={36} color="#059669" />
           </View>
           <Text className="text-xl font-bold text-neutral-900 text-center">
             ¡Clínica creada correctamente!
           </Text>
           <Text className="text-sm text-gray-600 text-center mt-2">
-            La clínica ya fue registrada y está disponible en el listado.
+            La clínica ya fue registrada y está disponible en el catálogo de sedes.
           </Text>
           <Text className="text-xs text-gray-400 text-center mt-2">
-            Identificador: {createdClinicId}
+            Identificador: #{createdClinicId}
           </Text>
           <Button
             text="Ver clínicas"
             onPress={() => router.replace('/clinics' as any)}
-            className="mt-6 w-full"
+            className="mt-6 w-full max-w-xs"
           />
         </View>
       </SafeAreaView>
@@ -105,22 +113,22 @@ export default function NewClinicScreen() {
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-gray-50">
-      <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
-        <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
-          <Text className="text-primary text-sm font-semibold">← Volver</Text>
-        </TouchableOpacity>
-        <Text className="text-lg font-bold text-neutral-900">Nueva clínica</Text>
-      </View>
+    <SafeAreaView className="flex-1 bg-white">
+      {/* Encabezado Estándar Unificado */}
+      <ScreenHeader title="Nueva clínica" />
 
-      <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 32 }}>
-        <Text className="text-sm text-gray-600 mb-4">
-          Completa la información básica de la clínica y su ubicación.
+      <ScrollView
+        className="flex-1 bg-gray-50"
+        contentContainerClassName="p-4 pb-8"
+        keyboardShouldPersistTaps="handled"
+      >
+        <Text className="text-xs text-gray-600 mb-4">
+          Completa la información básica de la clínica y su ubicación geográfica.
         </Text>
 
         {submitError ? (
           <View className="bg-red-50 border border-red-200 p-3 mb-4 rounded-md">
-            <Text className="text-red-700 text-sm">{submitError}</Text>
+            <Text className="text-red-700 text-xs font-medium">{submitError}</Text>
           </View>
         ) : null}
 
@@ -128,10 +136,11 @@ export default function NewClinicScreen() {
           control={control}
           name="clinic_name"
           label="Nombre de la clínica *"
-          placeholder="Clínica Central"
+          placeholder="Centro Médico Santa Fe"
           rules={{
             required: 'El nombre es obligatorio',
-            maxLength: { value: 25, message: 'Máximo 25 caracteres' },
+            minLength: { value: 3, message: 'Mínimo 3 caracteres' },
+            maxLength: { value: 30, message: 'Máximo 30 caracteres' },
           }}
         />
         <Field
@@ -163,81 +172,97 @@ export default function NewClinicScreen() {
           control={control}
           name="clinic_description"
           label="Descripción"
-          placeholder="Información adicional"
+          placeholder="Información adicional o servicios ofrecidos"
           multiline
           numberOfLines={4}
         />
 
-        <Text className="text-sm font-medium mb-1 text-gray-700">Ubicación *</Text>
-        <TouchableOpacity
-          className="border border-gray-300 rounded-md px-3 py-2 mb-2 bg-white"
+        <Text className="text-xs font-semibold mb-1 text-gray-700">Ubicación Geográfica *</Text>
+        <Pressable
+          className="border border-gray-300 rounded-md px-3 py-2.5 mb-2.5 bg-white active:bg-gray-50"
           onPress={() => setModalType('country')}
-          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Seleccionar país"
         >
           <Text className="text-[11px] text-gray-600 font-medium uppercase">País</Text>
           <Text className="text-sm text-neutral-900 mt-0.5">
             {selectedCountry?.country_name || 'Selecciona un país'}
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className={`border rounded-md px-3 py-2 mb-2 bg-white ${
-            countryId ? 'border-gray-300' : 'border-gray-200 bg-gray-100'
+        </Pressable>
+
+        <Pressable
+          className={`border rounded-md px-3 py-2.5 mb-2.5 ${
+            countryId ? 'border-gray-300 bg-white active:bg-gray-50' : 'border-gray-200 bg-gray-100'
           }`}
           onPress={() => countryId && setModalType('state')}
           disabled={!countryId}
-          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Seleccionar departamento o estado"
         >
           <Text className="text-[11px] text-gray-600 font-medium uppercase">Estado / Depto</Text>
           <Text className={`text-sm mt-0.5 ${countryId ? 'text-neutral-900' : 'text-gray-400'}`}>
             {selectedState?.state_name || 'Selecciona un estado'}
           </Text>
-        </TouchableOpacity>
-        <TouchableOpacity
-          className={`border rounded-md px-3 py-2 mb-4 bg-white ${
-            stateId ? 'border-gray-300' : 'border-gray-200 bg-gray-100'
+        </Pressable>
+
+        <Pressable
+          className={`border rounded-md px-3 py-2.5 mb-4 ${
+            stateId ? 'border-gray-300 bg-white active:bg-gray-50' : 'border-gray-200 bg-gray-100'
           }`}
           onPress={() => stateId && setModalType('city')}
           disabled={!stateId}
-          activeOpacity={0.7}
+          accessibilityRole="button"
+          accessibilityLabel="Seleccionar ciudad"
         >
           <Text className="text-[11px] text-gray-600 font-medium uppercase">Ciudad</Text>
           <Text className={`text-sm mt-0.5 ${stateId ? 'text-neutral-900' : 'text-gray-400'}`}>
             {selectedCity?.city_name || 'Selecciona una ciudad'}
           </Text>
-        </TouchableOpacity>
+        </Pressable>
 
         <Button
-          text={isSubmitting ? 'Guardando...' : 'Crear clínica'}
+          text={isSubmitting ? 'Guardando...' : 'Crear Clínica'}
           onPress={handleSubmit(onSubmit)}
           loading={isSubmitting}
-          disabled={isSubmitting}
+          className="mt-2"
+        />
+
+        <SelectModal
+          title="Selecciona un país"
+          items={countryOptions}
+          selectedValue={countryId}
+          isOpen={modalType === 'country'}
+          onClose={() => setModalType(null)}
+          onSelect={(selected) => {
+            setCountryId(selected);
+            setModalType(null);
+          }}
+        />
+
+        <SelectModal
+          title="Selecciona un estado"
+          items={stateOptions}
+          selectedValue={stateId}
+          isOpen={modalType === 'state'}
+          onClose={() => setModalType(null)}
+          onSelect={(selected) => {
+            setStateId(selected);
+            setModalType(null);
+          }}
+        />
+
+        <SelectModal
+          title="Selecciona una ciudad"
+          items={cityOptions}
+          selectedValue={cityId}
+          isOpen={modalType === 'city'}
+          onClose={() => setModalType(null)}
+          onSelect={(selected) => {
+            setCityId(selected);
+            setModalType(null);
+          }}
         />
       </ScrollView>
-
-      <SelectModal
-        title="Selecciona un país"
-        items={countryOptions}
-        selectedValue={countryId}
-        isOpen={modalType === 'country'}
-        onClose={() => setModalType(null)}
-        onSelect={setCountryId}
-      />
-      <SelectModal
-        title="Selecciona un estado"
-        items={stateOptions}
-        selectedValue={stateId}
-        isOpen={modalType === 'state'}
-        onClose={() => setModalType(null)}
-        onSelect={setStateId}
-      />
-      <SelectModal
-        title="Selecciona una ciudad"
-        items={cityOptions}
-        selectedValue={cityId}
-        isOpen={modalType === 'city'}
-        onClose={() => setModalType(null)}
-        onSelect={setCityId}
-      />
     </SafeAreaView>
   );
 }

@@ -11,7 +11,7 @@ import {
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import clinicsApi from '../../src/api/clinics';
 import { Clinic, ClinicScheduleRules, PublicDoctor } from '../../src/api/types';
-import { Badge, Button, Card, DoctorCard } from '../../src/components';
+import { Badge, Button, Card, DoctorCard, ScreenHeader } from '../../src/components';
 import { useAuth } from '../../src/context/AuthContext';
 
 export default function ClinicDetailScreen() {
@@ -104,17 +104,12 @@ export default function ClinicDetailScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-1 bg-gray-50">
-        <View className="flex-row items-center px-4 py-3 bg-white border-b border-gray-200">
-          <TouchableOpacity onPress={() => router.back()} className="py-1 pr-3" activeOpacity={0.7}>
-            <Text className="text-primary text-sm font-semibold">← Volver</Text>
-          </TouchableOpacity>
-          <Text className="text-base font-bold text-neutral-900 flex-1" numberOfLines={1}>
-            {clinic?.clinic_name || 'Detalles de la Clínica'}
-          </Text>
-        </View>
+      <ScreenHeader title={clinic?.clinic_name || 'Detalles de la Clínica'} />
 
-        <ScrollView contentContainerStyle={{ padding: 16 }}>
+      <ScrollView
+        className="flex-1 bg-gray-50"
+        contentContainerClassName="p-4 pb-8"
+      >
           {error ? (
             <View className="bg-red-50 border border-red-200 p-3 mb-4 rounded-md">
               <Text className="text-red-700 text-sm">{error}</Text>
@@ -209,7 +204,6 @@ export default function ClinicDetailScreen() {
             )}
           </View>
         </ScrollView>
-      </View>
     </SafeAreaView>
   );
 }
