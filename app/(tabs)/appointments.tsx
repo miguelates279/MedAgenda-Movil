@@ -1,5 +1,6 @@
-import {AppointmentsTabScreen} from '../../src/modules/appointments/Appointments';
+import React from 'react';
+import { AppointmentsScreen } from '../../src/screens/appointments';
 
-export default function appointments() {
-  return <AppointmentsTabScreen />;
+export default function AppointmentsTabRoute() {
+  return <AppointmentsScreen />;
 }

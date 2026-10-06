@@ -1,5 +1,6 @@
-import {DoctorDashboardScreen} from '../../src/modules/doctor/Doctor';
+import React from 'react';
+import { DoctorDashboardScreen } from '../../src/screens/doctor';
 
-export default function doctor() {
+export default function DoctorTabRoute() {
   return <DoctorDashboardScreen />;
 }

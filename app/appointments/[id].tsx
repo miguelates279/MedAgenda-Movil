@@ -1,11 +1,6 @@
-import { useLocalSearchParams} from 'expo-router';
-import AppointmentDetailScreen from '../../src/modules/appointments/AppointmentDetail';
+import React from 'react';
+import { AppointmentDetailScreen } from '../../src/screens/appointments';
 
-
-export default function appointmentdetails() {
-  const { id } = useLocalSearchParams<{ id: string }>();
-  const appointmentId = Number(id);
-
-  return <AppointmentDetailScreen {appointment_id: appointmentId} />;
-
+export default function AppointmentDetailRoute() {
+  return <AppointmentDetailScreen />;
 }

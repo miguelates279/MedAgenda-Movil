@@ -1,4 +1,4 @@
-import React, { useCallback, useEffect, useState } from 'react';
+import React from 'react';
 import {
   FlatList,
   Pressable,
@@ -8,94 +8,43 @@ import {
   TextInput,
   View,
 } from 'react-native';
-import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
-import { useAuth } from '../../context/AuthContext';
-import appointmentsApi from '../../api/appointments';
-import { DoctorAppointmentView } from '../../api/types';
-import { AppointmentCard, Button } from '../../components';
+import { AppointmentCard, Button, ScreenHeader } from '../../components';
+import { useAppointmentsScreen } from './useAppointmentsScreen';
 
-export default function AppointmentsTabScreen() {
-  const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const [appointments, setAppointments] = useState<DoctorAppointmentView[]>([]);
-  const [loading, setLoading] = useState(true);
-  const [search, setSearch] = useState('');
-  const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
-  const [error, setError] = useState<string | null>(null);
-
-  const loadAppointments = useCallback(async () => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    try {
-      const data = await appointmentsApi.getPatientAppointments();
-      setAppointments(data || []);
-    } catch (err: any) {
-      setError(err.message || 'Error al cargar las citas');
-    } finally {
-      setLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  useEffect(() => {
-    loadAppointments();
-  }, [loadAppointments]);
-
-  const now = new Date();
-
-  const filteredAppointments = appointments
-    .filter((appt) => {
-      const apptDate = new Date(appt.start_date_time);
-      if (tab === 'upcoming') {
-        return apptDate >= now;
-      }
-      return apptDate < now;
-    })
-    .filter((appt) => {
-      if (!search.trim()) return true;
-      const term = search.toLowerCase();
-      const doctorName = `${appt.first_name} ${appt.first_last_name}`.toLowerCase();
-      const clinicName = (appt.clinic_name || '').toLowerCase();
-      const desc = (appt.appointment_description || '').toLowerCase();
-      return (
-        doctorName.includes(term) ||
-        clinicName.includes(term) ||
-        desc.includes(term)
-      );
-    })
-    .sort((a, b) => {
-      const timeA = new Date(a.start_date_time).getTime();
-      const timeB = new Date(b.start_date_time).getTime();
-      return tab === 'upcoming' ? timeA - timeB : timeB - timeA;
-    });
+export function AppointmentsScreen() {
+  const {
+    router,
+    isAuthenticated,
+    loading,
+    search,
+    setSearch,
+    tab,
+    setTab,
+    error,
+    loadAppointments,
+    filteredAppointments,
+  } = useAppointmentsScreen();
 
   if (!isAuthenticated) {
     return (
       <SafeAreaView className="flex-1 bg-white">
-        <View className="flex-1 bg-gray-50">
-          <View className="px-4 py-3 bg-white border-b border-gray-200">
-            <Text className="text-xl font-bold text-neutral-900">Mis Citas</Text>
+        <ScreenHeader title="Mis Citas" canGoBack={false} />
+        <View className="flex-1 items-center justify-center p-8 bg-gray-50">
+          <View className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 items-center justify-center mb-3">
+            <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
           </View>
-          <View className="p-8 items-center justify-center flex-1">
-            <View className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 items-center justify-center mb-3">
-              <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
-            </View>
-            <Text className="text-base font-bold text-neutral-900 mb-1.5 text-center">
-              Inicia sesión para ver tus citas
-            </Text>
-            <Text className="text-xs text-gray-500 text-center leading-5 max-w-[280px]">
-              Debes tener una sesión activa para consultar tu historial y próximas citas médicas.
-            </Text>
-            <Button
-              text="Iniciar Sesión / Registrarse"
-              onPress={() => router.push('/profile' as any)}
-              className="mt-4"
-            />
-          </View>
+          <Text className="text-base font-bold text-neutral-900 mb-1.5 text-center">
+            Inicia sesión para ver tus citas
+          </Text>
+          <Text className="text-xs text-gray-500 text-center leading-5 max-w-[280px]">
+            Debes tener una sesión activa para consultar tu historial y próximas citas médicas.
+          </Text>
+          <Button
+            text="Iniciar Sesión / Registrarse"
+            onPress={() => router.push('/profile' as any)}
+            className="mt-4"
+          />
         </View>
       </SafeAreaView>
     );
@@ -103,16 +52,19 @@ export default function AppointmentsTabScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-1 bg-gray-50">
-        <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
-          <Text className="text-xl font-bold text-neutral-900">Mis Citas</Text>
+      <ScreenHeader
+        title="Mis Citas"
+        canGoBack={false}
+        rightAction={
           <Button
             text="+ Agendar en Clínica"
             onPress={() => router.push('/clinics' as any)}
-            className="py-1.5 px-3"
+            className="py-1 px-2.5 text-xs"
           />
-        </View>
+        }
+      />
 
+      <View className="flex-1 bg-gray-50">
         <View className="px-4 py-2.5 bg-white border-b border-gray-200">
           <TextInput
             value={search}
@@ -210,4 +162,4 @@ export default function AppointmentsTabScreen() {
   );
 }
 
-export {AppointmentsTabScreen};
+export default AppointmentsScreen;

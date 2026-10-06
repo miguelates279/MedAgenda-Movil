@@ -17,14 +17,12 @@ export const HomeScreen: React.FC = () => {
     user,
     roles,
     isAuthenticated,
-    fullName,
     roleBadgeText,
     upcomingAppt,
     loadingAppt,
     loadNextAppointment,
     isLogoutModalOpen,
     isLoggingOut,
-    handleLogout,
     handleCancelLogout,
     handleConfirmLogout,
     navigateToClinics,
@@ -297,7 +295,7 @@ export const HomeScreen: React.FC = () => {
         </View>
       </ScrollView>
 
-      {/* Modal estético de confirmación para cerrar sesión */}
+      {/* Modal de confirmación para cerrar sesión */}
       <ConfirmModal
         isOpen={isLogoutModalOpen}
         title="Cerrar Sesión"

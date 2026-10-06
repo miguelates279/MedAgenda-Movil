@@ -43,6 +43,18 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         loading={loading}
         className="mt-1"
       />
+
+      <Pressable
+        onPress={onSwitchToRegister}
+        className="mt-4 py-2 items-center active:opacity-70"
+        accessibilityRole="button"
+        accessibilityLabel="Cambiar a registro"
+      >
+        <Text className="text-xs text-gray-600">
+          ¿No tienes cuenta?{' '}
+          <Text className="text-primary font-semibold">Regístrate</Text>
+        </Text>
+      </Pressable>
     </View>
   );
 };

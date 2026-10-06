@@ -14,7 +14,7 @@ import { Button, ClinicCard, SelectModal, SelectOption } from '../../components'
 import { Clinic } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
 
-export default function ClinicsTabScreen() {
+export function ClinicsScreen() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
   const {
@@ -303,4 +303,4 @@ export default function ClinicsTabScreen() {
   );
 }
 
-export { ClinicsTabScreen };
+export default ClinicsScreen;

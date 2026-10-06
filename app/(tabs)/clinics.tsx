@@ -1,5 +1,6 @@
-import ClinicsTabScreen from "../../src/modules/clinic/Clinic";
+import React from 'react';
+import { ClinicsScreen } from '../../src/screens/clinics';
 
-export default function clinics() {
-  return <ClinicsTabScreen />;
+export default function ClinicsTabRoute() {
+  return <ClinicsScreen />;
 }
