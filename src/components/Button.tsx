@@ -8,6 +8,8 @@ import {
   ViewStyle,
 } from 'react-native';
 
+import { tokens } from '../theme/tokens';
+
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline';
 
 export interface ButtonProps {
@@ -26,24 +28,24 @@ const variantClassNames: Record<
   { base: string; pressed: string; text: string }
 > = {
   primary: {
-    base: 'bg-primary border-0',
-    pressed: 'bg-[#4682B4]',
+    base: 'bg-med-primary border-0',
+    pressed: 'bg-med-secondary',
     text: 'text-white',
   },
   secondary: {
-    base: 'bg-gray-100 border border-gray-200',
+    base: 'bg-med-surface-muted border border-med-border-light',
     pressed: 'bg-gray-200',
-    text: 'text-neutral-900',
+    text: 'text-med-text-main',
   },
   danger: {
-    base: 'bg-red-800 border-0',
+    base: 'bg-med-error-text border-0',
     pressed: 'bg-red-900',
     text: 'text-white',
   },
   outline: {
-    base: 'bg-white border border-gray-300',
-    pressed: 'bg-gray-50 border-primary',
-    text: 'text-primary',
+    base: 'bg-med-bg border border-med-border',
+    pressed: 'bg-med-surface border-med-primary',
+    text: 'text-med-primary',
   },
 };
 
@@ -73,7 +75,11 @@ export const Button: React.FC<ButtonProps> = ({
         loading ? (
           <ActivityIndicator
             size="small"
-            color={variant === 'outline' || variant === 'secondary' ? '#259487' : '#ffffff'}
+            color={
+              variant === 'outline' || variant === 'secondary'
+                ? tokens.colors.primary
+                : tokens.colors.bg
+            }
           />
         ) : (
           <Text

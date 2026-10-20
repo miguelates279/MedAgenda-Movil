@@ -21,28 +21,28 @@ const variantClassNames: Record<
   { container: string; text: string }
 > = {
   primary: {
-    container: 'bg-[#e6f4f2] border-[#b2dfdb]',
-    text: 'text-primary',
+    container: 'bg-med-primary-light border-med-border-light',
+    text: 'text-med-primary',
   },
   success: {
-    container: 'bg-emerald-50 border-emerald-200',
-    text: 'text-emerald-800',
+    container: 'bg-med-success-badge-bg border-med-success-border',
+    text: 'text-med-success-badge-text',
   },
   error: {
-    container: 'bg-red-50 border-red-200',
-    text: 'text-red-800',
+    container: 'bg-med-error-badge-bg border-med-error-border',
+    text: 'text-med-error-badge-text',
   },
   warning: {
-    container: 'bg-amber-50 border-amber-200',
-    text: 'text-amber-800',
+    container: 'bg-med-warning-badge-bg border-med-warning-border',
+    text: 'text-med-warning-badge-text',
   },
   info: {
-    container: 'bg-blue-50 border-blue-200',
-    text: 'text-blue-800',
+    container: 'bg-med-info-badge-bg border-med-info-border',
+    text: 'text-med-info-badge-text',
   },
   neutral: {
-    container: 'bg-gray-100 border-gray-200',
-    text: 'text-gray-600',
+    container: 'bg-med-surface-muted border-med-border-light',
+    text: 'text-med-text-muted',
   },
 };
 

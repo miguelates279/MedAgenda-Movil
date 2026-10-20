@@ -13,7 +13,7 @@ export const Card: React.FC<CardProps> = ({ children, className = '', style, onP
     return (
       <Pressable
         onPress={onPress}
-        className={`bg-white border border-gray-200 rounded-lg p-4 my-1.5 shadow-sm active:bg-gray-50 active:opacity-90 ${className}`}
+        className={`bg-med-bg border border-med-border-light rounded-med-lg p-4 my-1.5 shadow-med-sm active:bg-med-surface active:opacity-90 ${className}`}
         style={style}
       >
         {children}
@@ -23,7 +23,7 @@ export const Card: React.FC<CardProps> = ({ children, className = '', style, onP
 
   return (
     <View
-      className={`bg-white border border-gray-200 rounded-lg p-4 my-1.5 shadow-sm ${className}`}
+      className={`bg-med-bg border border-med-border-light rounded-med-lg p-4 my-1.5 shadow-med-sm ${className}`}
       style={style}
     >
       {children}

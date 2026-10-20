@@ -38,6 +38,8 @@ export type FieldProps<
   inputStyle?: StyleProp<TextStyle>;
 };
 
+import { tokens } from '../theme/tokens';
+
 export function Field<
   TFieldValues extends FieldValues,
   TName extends FieldPath<TFieldValues>,
@@ -70,7 +72,7 @@ export function Field<
       render={({ field, fieldState }) => (
         <View className={`w-full mb-3 ${className}`} style={containerStyle}>
           {label ? (
-            <Text className="text-sm font-medium mb-1 text-gray-700">{label}</Text>
+            <Text className="text-sm font-medium mb-1 text-med-text-muted">{label}</Text>
           ) : null}
 
           <TextInput
@@ -82,7 +84,7 @@ export function Field<
             }}
             onFocus={() => setIsFocused(true)}
             placeholder={placeholder}
-            placeholderTextColor="#9ca3af"
+            placeholderTextColor={tokens.colors.textLight}
             keyboardType={keyboardType}
             secureTextEntry={secureTextEntry}
             autoCapitalize={autoCapitalize}
@@ -90,16 +92,16 @@ export function Field<
             editable={editable}
             multiline={multiline}
             numberOfLines={numberOfLines}
-            className={`border rounded-md px-3 py-2 text-sm bg-white text-neutral-900 ${
-              isFocused ? 'border-primary' : 'border-gray-300'
-            } ${fieldState.error ? 'border-red-300 bg-red-50' : ''} ${
-              !editable ? 'bg-gray-100 text-gray-400' : ''
+            className={`border rounded-med-md px-3 py-2 text-sm bg-med-bg text-med-text-main ${
+              isFocused ? 'border-med-primary' : 'border-med-border'
+            } ${fieldState.error ? 'border-med-error-border bg-med-error-bg' : ''} ${
+              !editable ? 'bg-med-surface-muted text-med-text-light' : ''
             }`}
             style={inputStyle}
           />
 
           {fieldState.error ? (
-            <Text className="mt-1 text-xs text-red-700">{fieldState.error.message}</Text>
+            <Text className="mt-1 text-xs text-med-error-text">{fieldState.error.message}</Text>
           ) : null}
         </View>
       )}
