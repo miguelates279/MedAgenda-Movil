@@ -7,7 +7,16 @@ import { useAuth } from '../context/AuthContext';
  * Se usa en useHome, useProfile, TabsLayout y cualquier componente que necesite estos datos.
  */
 export const useUserInfo = () => {
-  const { user, roles, isAuthenticated } = useAuth();
+  const {
+    user,
+    roles,
+    isAuthenticated,
+    activeMode,
+    availableModes,
+    adminClinics,
+    isResolvingModes,
+    modeResolutionError,
+  } = useAuth();
 
   const fullName = useMemo(
     () =>
@@ -59,6 +68,11 @@ export const useUserInfo = () => {
     initials,
     roleText,
     roleBadgeVariant,
+    activeMode,
+    availableModes,
+    adminClinics,
+    isResolvingModes,
+    modeResolutionError,
   };
 };
 

@@ -99,6 +99,13 @@ export interface Clinic {
 
 export type UserClinic = Record<string, unknown>;
 
+export interface AdminClinic {
+  clinic_id: number;
+  clinic_name: string;
+  role_within_clinic: 'Admin' | 'Owner';
+  role_description: string | null;
+}
+
 export interface CreateClinicDto {
   clinic_name: string;
   clinic_address: string;
