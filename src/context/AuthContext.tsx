@@ -234,14 +234,29 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const signIn = async (dto: LoginDto): Promise<LoginResponse> => {
     setIsLoading(true);
-    const sessionId = ++authSessionRef.current;
-    const resolutionGen = ++roleResolutionGenRef.current;
+    const startSessionId = authSessionRef.current;
+    let sessionId: number | null = null;
+    let resolutionGen: number | null = null;
 
     try {
       const res = await authApi.login(dto);
-      if (!isMountedRef.current || sessionId !== authSessionRef.current) {
+      if (!isMountedRef.current || authSessionRef.current !== startSessionId) {
         throw new Error('Authentication session invalidated.');
       }
+
+      // New login credentials accepted: establish new session and reset previous account state
+      sessionId = ++authSessionRef.current;
+      resolutionGen = ++roleResolutionGenRef.current;
+
+      hasResolvedModesRef.current = false;
+      manualActiveModeRef.current = null;
+      setUser(null);
+      setRoles(null);
+      setActiveModeState(null);
+      setAvailableModes([]);
+      setAdminClinics([]);
+      setModeResolutionError(null);
+
       setAuthToken(res.token);
 
       let isDoctor = res.isDoctor;
@@ -282,8 +297,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
       return { ...res, isDoctor };
     } finally {
-      if (isMountedRef.current && sessionId === authSessionRef.current) {
-        setIsLoading(false);
+      if (isMountedRef.current) {
+        if (sessionId === null || sessionId === authSessionRef.current) {
+          setIsLoading(false);
+        }
       }
     }
   };
