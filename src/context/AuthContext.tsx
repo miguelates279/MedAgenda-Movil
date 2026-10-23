@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useState, useRef, useCallback } from 'react';
+import React, {
+  createContext,
+  useContext,
+  useState,
+  useRef,
+  useCallback,
+  useEffect,
+} from 'react';
 import apiClient from '../api/client';
 import authApi from '../api/auth';
 import adminApi from '../api/admin';
@@ -52,8 +59,23 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Tracks explicit manual mode selection by the user across role refreshes
   const manualActiveModeRef = useRef<AppMode | null>(null);
 
-  // Monotonically increasing session counter to cancel/discard stale async results
+  // Tracks whether capabilities have been successfully resolved at least once
+  const hasResolvedModesRef = useRef<boolean>(false);
+
+  // Monotonically increasing session counter (increments on every signIn and signOut)
   const authSessionRef = useRef<number>(0);
+
+  // Monotonically increasing generation counter for role resolutions (prevents out-of-order refreshes)
+  const roleResolutionGenRef = useRef<number>(0);
+
+  // Mounted status to prevent React state updates after unmount
+  const isMountedRef = useRef<boolean>(true);
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
 
   const setAuthToken = (newToken: string | null) => {
     setTokenState(newToken);
@@ -68,18 +90,28 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   /**
    * Resolves available modes and admin clinics from backend capabilities.
-   * Guarded against stale async results using the session counter.
+   * Concurrency-guarded by session ID and resolution generation ID.
    */
   const resolveRolesAndModes = async (
     sessionId: number,
+    resolutionGen: number,
     isDoctorCapability: boolean
   ): Promise<void> => {
+    if (!isMountedRef.current) return;
     setIsResolvingModes(true);
     setModeResolutionError(null);
 
     try {
       const clinics = await adminApi.getMyClinics();
-      if (sessionId !== authSessionRef.current) return;
+
+      // Ensure this response matches the current session and resolution generation
+      if (
+        !isMountedRef.current ||
+        sessionId !== authSessionRef.current ||
+        resolutionGen !== roleResolutionGenRef.current
+      ) {
+        return;
+      }
 
       const verifiedClinics = Array.isArray(clinics) ? clinics : [];
       const hasAdminClinics = verifiedClinics.length > 0;
@@ -92,13 +124,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         modes.push('admin');
       }
 
+      hasResolvedModesRef.current = true;
       setAdminClinics(verifiedClinics);
       setRoles({ isAdmin: hasAdminClinics, isDoctor: isDoctorCapability });
       setAvailableModes(modes);
       setModeResolutionError(null);
 
       // Mode selection:
-      // Maintain user's manually selected valid mode if still available, otherwise recalculate default:
+      // Maintain user's manually selected valid mode if still available, otherwise recalculate default
       let nextMode: AppMode;
       if (manualActiveModeRef.current && modes.includes(manualActiveModeRef.current)) {
         nextMode = manualActiveModeRef.current;
@@ -108,30 +141,35 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
       setActiveModeState(nextMode);
     } catch (error: any) {
-      if (sessionId !== authSessionRef.current) return;
+      if (
+        !isMountedRef.current ||
+        sessionId !== authSessionRef.current ||
+        resolutionGen !== roleResolutionGenRef.current
+      ) {
+        return;
+      }
 
       const errorMessage =
         error?.message || 'Error al obtener clínicas de administración.';
       setModeResolutionError(errorMessage);
-      setAdminClinics([]);
-      setRoles({ isAdmin: false, isDoctor: isDoctorCapability });
 
-      const modes: AppMode[] = ['patient'];
-      if (isDoctorCapability) {
-        modes.push('doctor');
-      }
-      setAvailableModes(modes);
-
-      let nextMode: AppMode;
-      if (manualActiveModeRef.current && modes.includes(manualActiveModeRef.current)) {
-        nextMode = manualActiveModeRef.current;
+      if (!hasResolvedModesRef.current) {
+        // Initial resolution failed: do NOT expose a supposedly verified active mode or guessed capabilities
+        setAdminClinics([]);
+        setRoles(null);
+        setAvailableModes([]);
+        setActiveModeState(null);
       } else {
-        manualActiveModeRef.current = null;
-        nextMode = computeDefaultMode(modes);
+        // Refresh failed after previous success: preserve last successfully verified capabilities.
+        // Do NOT replace valid admin access with a guessed patient-only result.
+        // modeResolutionError remains set for error/retry presentation.
       }
-      setActiveModeState(nextMode);
     } finally {
-      if (sessionId === authSessionRef.current) {
+      if (
+        isMountedRef.current &&
+        sessionId === authSessionRef.current &&
+        resolutionGen === roleResolutionGenRef.current
+      ) {
         setIsResolvingModes(false);
       }
     }
@@ -162,14 +200,24 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       return;
     }
     const sessionId = authSessionRef.current;
+    const resolutionGen = ++roleResolutionGenRef.current;
+
     let isDoc = roles?.isDoctor ?? false;
     try {
       isDoc = await doctorsApi.isUserDoctorAnywhere();
     } catch {
-      // Retain previously reported doctor capability on network error
+      // Retain previously verified doctor capability on network error
     }
-    if (sessionId !== authSessionRef.current) return;
-    await resolveRolesAndModes(sessionId, isDoc);
+
+    if (
+      !isMountedRef.current ||
+      sessionId !== authSessionRef.current ||
+      resolutionGen !== roleResolutionGenRef.current
+    ) {
+      return;
+    }
+
+    await resolveRolesAndModes(sessionId, resolutionGen, isDoc);
   };
 
   const refreshProfile = async (): Promise<void> => {
@@ -177,11 +225,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const sessionId = authSessionRef.current;
     try {
       const profile = await authApi.getProfile();
-      if (sessionId !== authSessionRef.current) return;
+      if (!isMountedRef.current || sessionId !== authSessionRef.current) return;
       setUser(profile);
-      const isDoc = await doctorsApi.isUserDoctorAnywhere().catch(() => roles?.isDoctor ?? false);
-      if (sessionId !== authSessionRef.current) return;
-      setRoles((prev) => ({ isAdmin: prev?.isAdmin ?? false, isDoctor: isDoc }));
     } catch (error) {
       console.warn('Failed to load user profile:', error);
     }
@@ -190,27 +235,33 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const signIn = async (dto: LoginDto): Promise<LoginResponse> => {
     setIsLoading(true);
     const sessionId = ++authSessionRef.current;
+    const resolutionGen = ++roleResolutionGenRef.current;
+
     try {
       const res = await authApi.login(dto);
-      if (sessionId !== authSessionRef.current) {
+      if (!isMountedRef.current || sessionId !== authSessionRef.current) {
         throw new Error('Authentication session invalidated.');
       }
       setAuthToken(res.token);
 
       let isDoctor = res.isDoctor;
       if (isDoctor === undefined) {
-        isDoctor = await doctorsApi.isUserDoctorAnywhere().catch(() => false);
+        try {
+          isDoctor = await doctorsApi.isUserDoctorAnywhere();
+        } catch {
+          isDoctor = false;
+        }
       }
-      if (sessionId !== authSessionRef.current) {
+      if (!isMountedRef.current || sessionId !== authSessionRef.current) {
         throw new Error('Authentication session invalidated.');
       }
 
       // Fetch profile and resolve modes concurrently.
-      // Mode resolution completes before signIn finishes, ensuring no routing before modes are ready.
+      // Mode resolution finishes before signIn returns.
       const profilePromise = authApi
         .getProfile()
         .then((profile) => {
-          if (sessionId === authSessionRef.current) {
+          if (isMountedRef.current && sessionId === authSessionRef.current) {
             setUser(profile);
           }
           return profile;
@@ -220,13 +271,18 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return null;
         });
 
-      const modePromise = resolveRolesAndModes(sessionId, isDoctor);
+      const modePromise = resolveRolesAndModes(sessionId, resolutionGen, isDoctor);
 
       await Promise.all([profilePromise, modePromise]);
 
+      // Recheck session validity after all async login/profile/mode work before reporting success
+      if (!isMountedRef.current || sessionId !== authSessionRef.current) {
+        throw new Error('Authentication session invalidated.');
+      }
+
       return { ...res, isDoctor };
     } finally {
-      if (sessionId === authSessionRef.current) {
+      if (isMountedRef.current && sessionId === authSessionRef.current) {
         setIsLoading(false);
       }
     }
@@ -237,21 +293,26 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     try {
       await authApi.register(dto);
     } finally {
-      setIsLoading(false);
+      if (isMountedRef.current) {
+        setIsLoading(false);
+      }
     }
   };
 
   const signOut = () => {
     authSessionRef.current += 1;
+    roleResolutionGenRef.current += 1;
     setAuthToken(null);
     setUser(null);
     setRoles(null);
     setActiveModeState(null);
     setAvailableModes([]);
     setAdminClinics([]);
+    setIsLoading(false);
     setIsResolvingModes(false);
     setModeResolutionError(null);
     manualActiveModeRef.current = null;
+    hasResolvedModesRef.current = false;
   };
 
   return (

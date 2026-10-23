@@ -6,3 +6,4 @@ export * from './useLoginForm';
 export * from './useRegisterForm';
 export * from './useClinicSearch';
 export * from './useDoctorSchedule';
+export * from './useAppMode';
