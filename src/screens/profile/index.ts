@@ -2,3 +2,4 @@ export * from './ProfileScreen';
 export * from './components/LoginForm';
 export * from './components/RegisterForm';
 export * from './components/UserProfileView';
+export * from './components/ModeSelector';

@@ -14,7 +14,7 @@ import { useAuth } from '../../context/AuthContext';
 
 export function useDoctorDashboard() {
   const router = useRouter();
-  const { user, roles, isAuthenticated } = useAuth();
+  const { user, activeMode, isAuthenticated } = useAuth();
 
   const [loading, setLoading] = useState(false);
   const [appointments, setAppointments] = useState<DoctorAppointmentView[]>([]);
@@ -40,13 +40,10 @@ export function useDoctorDashboard() {
   const [editPrescriptionText, setEditPrescriptionText] = useState('');
   const [updatingPrescription, setUpdatingPrescription] = useState(false);
 
-  useEffect(() => {
-    if (!isAuthenticated || !roles?.isDoctor) {
-      router.replace('/home' as any);
-    }
-  }, [isAuthenticated, roles, router]);
-
   const loadDashboardData = useCallback(async () => {
+    if (!isAuthenticated || activeMode !== 'doctor') {
+      return;
+    }
     setLoading(true);
     try {
       const [apptsData, historiesData, doctorPrescriptionsData, userClinicsData] = await Promise.all([
@@ -89,7 +86,7 @@ export function useDoctorDashboard() {
     } finally {
       setLoading(false);
     }
-  }, []);
+  }, [isAuthenticated, activeMode]);
 
   useEffect(() => {
     loadDashboardData();

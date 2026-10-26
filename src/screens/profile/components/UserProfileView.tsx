@@ -3,6 +3,8 @@ import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Badge } from '../../../components';
 import { UserProfile } from '../../../api/types';
+import { AppMode } from '../../../context/AuthContext';
+import { ModeSelector } from './ModeSelector';
 
 export interface UserProfileViewProps {
   user: UserProfile;
@@ -10,6 +12,9 @@ export interface UserProfileViewProps {
   initials: string;
   roleText: string;
   roleBadgeVariant: 'primary' | 'info' | 'success';
+  activeMode: AppMode | null;
+  availableModes: AppMode[];
+  onSelectMode: (mode: AppMode) => void;
   onLogout: () => void;
 }
 
@@ -19,6 +24,9 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
   initials,
   roleText,
   roleBadgeVariant,
+  activeMode,
+  availableModes,
+  onSelectMode,
   onLogout,
 }) => {
   return (
@@ -42,8 +50,15 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
           {user.user_email_address}
         </Text>
 
-        <Badge text={roleText} variant={roleBadgeVariant} />
+        <Badge text={'Cuenta: ' + roleText} variant={roleBadgeVariant} />
       </View>
+
+      {/* Selector de Modo de Aplicación (solo si hay 2 o más modos disponibles) */}
+      <ModeSelector
+        activeMode={activeMode}
+        availableModes={availableModes}
+        onSelectMode={onSelectMode}
+      />
 
       {/* Información de la Cuenta */}
       <View className="bg-white rounded-lg border border-gray-200 shadow-sm mb-4">

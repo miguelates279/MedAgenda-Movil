@@ -26,7 +26,8 @@ export const useLoginForm = (options?: UseLoginFormOptions) => {
       if (options?.onSuccess) {
         options.onSuccess();
       } else {
-        router.replace('/home' as any);
+        // Enrutador central '/' dirigirá a la vista de inicio del modo activo verificado
+        router.replace('/' as any);
       }
     } catch (err: any) {
       setServerError(err.message || 'Credenciales incorrectas.');

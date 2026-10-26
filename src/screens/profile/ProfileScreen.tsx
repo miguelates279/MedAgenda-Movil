@@ -22,6 +22,9 @@ export const ProfileScreen: React.FC = () => {
     initials,
     roleText,
     roleBadgeVariant,
+    activeMode,
+    availableModes,
+    handleSelectMode,
     tab,
     setTab,
     isLogoutModalOpen,
@@ -45,6 +48,9 @@ export const ProfileScreen: React.FC = () => {
           initials={initials}
           roleText={roleText}
           roleBadgeVariant={roleBadgeVariant}
+          activeMode={activeMode}
+          availableModes={availableModes}
+          onSelectMode={handleSelectMode}
           onLogout={handleLogout}
         />
       ) : (

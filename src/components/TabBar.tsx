@@ -32,10 +32,16 @@ const TAB_CONFIG: Record<string, TabConfig> = {
     inactiveIcon: 'business-outline',
   },
   doctor: {
-    label: 'Doctor',
+    label: 'Inicio',
     iconFamily: 'MaterialCommunityIcons',
     activeIcon: 'stethoscope',
     inactiveIcon: 'stethoscope',
+  },
+  admin: {
+    label: 'Inicio',
+    iconFamily: 'Ionicons',
+    activeIcon: 'shield-checkmark',
+    inactiveIcon: 'shield-checkmark-outline',
   },
   profile: {
     label: 'Perfil',
@@ -60,7 +66,7 @@ export const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
         {state.routes.map((route: any, index: number) => {
           const { options } = descriptors[route.key];
 
-          // Si href es null, la pestaña está oculta (ej. doctor para pacientes)
+          // Si href es null, la pestaña está oculta
           if (options.href === null) {
             return null;
           }
@@ -73,6 +79,7 @@ export const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
             inactiveIcon: 'ellipse-outline',
           };
 
+          const displayLabel = options.title || config.label;
           const iconColor = isFocused ? BRAND_PRIMARY : TEXT_MUTED;
           const iconName = isFocused ? config.activeIcon : config.inactiveIcon;
 
@@ -94,7 +101,7 @@ export const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
               onPress={onPress}
               accessibilityRole="tab"
               accessibilityState={{ selected: isFocused }}
-              accessibilityLabel={config.label}
+              accessibilityLabel={displayLabel}
               className="flex-1 items-center justify-center relative py-1"
             >
               {({ pressed }) => (
@@ -133,7 +140,7 @@ export const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
                         : 'text-gray-600 font-medium'
                     }`}
                   >
-                    {config.label}
+                    {displayLabel}
                   </Text>
                 </View>
               )}
