@@ -6,6 +6,7 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
+import { Alert } from 'react-native';
 import apiClient from '../api/client';
 import authApi from '../api/auth';
 import adminApi from '../api/admin';
@@ -65,25 +66,81 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   // Tracks whether capabilities have been successfully resolved at least once
   const hasResolvedModesRef = useRef<boolean>(false);
 
-  // Monotonically increasing session counter (increments on every signIn and signOut)
+  // Monotonically increasing session counter (increments on every signIn, signOut, and session invalidation)
   const authSessionRef = useRef<number>(0);
+
+  // Synchronous ref tracking active token for stale response comparison
+  const tokenRef = useRef<string | null>(null);
+  tokenRef.current = token;
 
   // Monotonically increasing generation counter for role resolutions (prevents out-of-order refreshes)
   const roleResolutionGenRef = useRef<number>(0);
 
+  // Track session ID for which session-expired feedback alert was displayed to guarantee at most once per session
+  const lastAlertedSessionRef = useRef<number>(-1);
+
   // Mounted status to prevent React state updates after unmount
   const isMountedRef = useRef<boolean>(true);
-  useEffect(() => {
-    isMountedRef.current = true;
-    return () => {
-      isMountedRef.current = false;
-    };
-  }, []);
 
   const setAuthToken = (newToken: string | null) => {
     setTokenState(newToken);
-    apiClient.setToken(newToken);
+    tokenRef.current = newToken;
+    apiClient.setSession(newToken, authSessionRef.current);
   };
+
+  // Centralized HTTP 401 unauthorized session subscription
+  useEffect(() => {
+    isMountedRef.current = true;
+
+    const unsubscribe = apiClient.onUnauthorized(({ sessionId, token: unauthorizedToken }) => {
+      if (!isMountedRef.current) return;
+
+      // Stale session verification: only invalidate if the event matches the active session
+      if (
+        sessionId !== authSessionRef.current ||
+        unauthorizedToken !== tokenRef.current ||
+        !tokenRef.current
+      ) {
+        return;
+      }
+
+      // Idempotency check: display expiration feedback and invalidate at most once per session
+      if (lastAlertedSessionRef.current === sessionId) {
+        return;
+      }
+      lastAlertedSessionRef.current = sessionId;
+
+      // Atomically invalidate active session and advance generation
+      const newSessionId = ++authSessionRef.current;
+      roleResolutionGenRef.current += 1;
+      apiClient.setSession(null, newSessionId);
+
+      setTokenState(null);
+      tokenRef.current = null;
+      setUser(null);
+      setRoles(null);
+      setActiveModeState(null);
+      availableModesRef.current = [];
+      setAvailableModes([]);
+      setAdminClinics([]);
+      setIsLoading(false);
+      setIsResolvingModes(false);
+      setModeResolutionError(null);
+      manualActiveModeRef.current = null;
+      hasResolvedModesRef.current = false;
+
+      // Single Spanish feedback alert for genuine session expiration
+      Alert.alert(
+        'Sesión expirada',
+        'Tu sesión ha expirado. Inicia sesión nuevamente para continuar.'
+      );
+    });
+
+    return () => {
+      isMountedRef.current = false;
+      unsubscribe();
+    };
+  }, []);
 
   const computeDefaultMode = (modes: AppMode[]): AppMode => {
     if (modes.includes('admin')) return 'admin';
@@ -113,7 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sessionId !== authSessionRef.current ||
         resolutionGen !== roleResolutionGenRef.current
       ) {
-        return [];
+        throw new Error('Role resolution canceled: session invalidated or superseded.');
       }
 
       const verifiedClinics = Array.isArray(clinics) ? clinics : [];
@@ -151,7 +208,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sessionId !== authSessionRef.current ||
         resolutionGen !== roleResolutionGenRef.current
       ) {
-        return [];
+        throw error;
       }
 
       const errorMessage =
@@ -184,7 +241,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   const setActiveMode = useCallback(
     (mode: AppMode) => {
-      if (!token) {
+      if (!tokenRef.current) {
         console.warn('Cannot set active mode when unauthenticated');
         return;
       }
@@ -202,11 +259,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       manualActiveModeRef.current = mode;
       setActiveModeState(mode);
     },
-    [token, availableModes]
+    [availableModes]
   );
 
   const refreshRoleAccess = async (): Promise<AdminClinic[]> => {
-    if (!token && !apiClient.getToken()) {
+    if (!tokenRef.current && !apiClient.getToken()) {
       console.warn('Cannot refresh role access when unauthenticated');
       return [];
     }
@@ -215,7 +272,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
     let isDoc = roles?.isDoctor ?? false;
     try {
-      isDoc = await doctorsApi.isUserDoctorAnywhere();
+      const isDocResult = await doctorsApi.isUserDoctorAnywhere();
+      if (
+        isMountedRef.current &&
+        sessionId === authSessionRef.current &&
+        resolutionGen === roleResolutionGenRef.current
+      ) {
+        isDoc = isDocResult;
+      }
     } catch {
       // Retain previously verified doctor capability on network error
     }
@@ -225,14 +289,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sessionId !== authSessionRef.current ||
       resolutionGen !== roleResolutionGenRef.current
     ) {
-      return [];
+      throw new Error('Role resolution canceled: session invalidated or superseded.');
     }
 
     return await resolveRolesAndModes(sessionId, resolutionGen, isDoc);
   };
 
   const refreshProfile = async (): Promise<void> => {
-    if (!token && !apiClient.getToken()) {
+    if (!tokenRef.current && !apiClient.getToken()) {
       throw new Error('No hay sesión autenticada activa.');
     }
     const sessionId = authSessionRef.current;
@@ -334,9 +398,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   };
 
   const signOut = () => {
-    authSessionRef.current += 1;
+    const newSessionId = ++authSessionRef.current;
     roleResolutionGenRef.current += 1;
-    setAuthToken(null);
+    apiClient.setSession(null, newSessionId);
+    setTokenState(null);
+    tokenRef.current = null;
     setUser(null);
     setRoles(null);
     setActiveModeState(null);

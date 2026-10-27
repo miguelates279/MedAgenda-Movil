@@ -1,5 +1,5 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert } from 'react-native';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
+import { Alert, AppState, AppStateStatus } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import clinicsApi from '../../api/clinics';
 import doctorsApi from '../../api/doctors';
@@ -44,11 +44,21 @@ export function useDoctorDashboard() {
   // Fecha de referencia local para cálculos de agenda de hoy y filtros por rango
   const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
 
+  // Refs para control de ciclo de vida, prevención de peticiones duplicadas y soporte de medianoche
+  const isFocusedRef = useRef<boolean>(false);
+  const lastFetchTimeRef = useRef<number>(0);
+  const lastFetchDayStringRef = useRef<string>(new Date().toDateString());
+  const midnightTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null);
+
   const loadDashboardData = useCallback(async () => {
     if (!isAuthenticated || activeMode !== 'doctor') {
       return;
     }
-    setCurrentDate(new Date());
+    const now = new Date();
+    setCurrentDate(now);
+    lastFetchTimeRef.current = Date.now();
+    lastFetchDayStringRef.current = now.toDateString();
+
     setLoading(true);
     setAppointmentsError(null);
     try {
@@ -102,12 +112,88 @@ export function useDoctorDashboard() {
     }
   }, [isAuthenticated, activeMode]);
 
-  // Recargar datos y recalcular fecha local al enfocar la pantalla del doctor (Fix 4)
+  /**
+   * Programa una única verificación al ocurrir la medianoche local para refrescar la fecha y la agenda
+   * cuando la aplicación permanece abierta continuamente en primer plano sin polling recurrente.
+   */
+  const scheduleMidnightCheck = useCallback(() => {
+    if (midnightTimerRef.current) {
+      clearTimeout(midnightTimerRef.current);
+      midnightTimerRef.current = null;
+    }
+
+    const now = new Date();
+    const nextMidnight = new Date(
+      now.getFullYear(),
+      now.getMonth(),
+      now.getDate() + 1,
+      0,
+      0,
+      1
+    );
+    const msUntilMidnight = Math.max(1000, nextMidnight.getTime() - now.getTime());
+
+    midnightTimerRef.current = setTimeout(() => {
+      if (isFocusedRef.current && isAuthenticated && activeMode === 'doctor') {
+        const rolloverDate = new Date();
+        setCurrentDate(rolloverDate);
+        loadDashboardData();
+        scheduleMidnightCheck();
+      }
+    }, msUntilMidnight);
+  }, [isAuthenticated, activeMode, loadDashboardData]);
+
+  /**
+   * Ciclo de vida extendido de la pantalla de Médico (Carryover A):
+   * - Recalcula la fecha local y actualiza citas al enfocar la pantalla.
+   * - Detecta reactivación desde segundo plano (AppState) y refresca la agenda si el día cambió o expiró el umbral.
+   * - Evita peticiones duplicadas entre eventos simultáneos de enfoque y retorno a primer plano.
+   * - Limpia temporizadores y suscripciones al desenfocar o desmontar la pantalla.
+   */
   useFocusEffect(
     useCallback(() => {
-      setCurrentDate(new Date());
-      loadDashboardData();
-    }, [loadDashboardData])
+      isFocusedRef.current = true;
+      const now = new Date();
+      setCurrentDate(now);
+
+      const timeSinceLastFetch = Date.now() - lastFetchTimeRef.current;
+      const dayChanged = now.toDateString() !== lastFetchDayStringRef.current;
+
+      // Cargar inmediatamente si han pasado más de 2500ms o si cambió el día calendario local
+      if (timeSinceLastFetch > 2500 || dayChanged) {
+        loadDashboardData();
+      }
+
+      scheduleMidnightCheck();
+
+      // Suscripción al ciclo de vida de primer plano (AppState)
+      const handleAppStateChange = (nextAppState: AppStateStatus) => {
+        if (nextAppState === 'active') {
+          const resumeDate = new Date();
+          setCurrentDate(resumeDate);
+
+          const resumeElapsed = Date.now() - lastFetchTimeRef.current;
+          const resumeDayChanged = resumeDate.toDateString() !== lastFetchDayStringRef.current;
+
+          // Solo recargar si hubo transición significativa de tiempo o rollover de día local
+          if (resumeElapsed > 2500 || resumeDayChanged) {
+            loadDashboardData();
+          }
+          scheduleMidnightCheck();
+        }
+      };
+
+      const subscription = AppState.addEventListener('change', handleAppStateChange);
+
+      return () => {
+        isFocusedRef.current = false;
+        subscription.remove();
+        if (midnightTimerRef.current) {
+          clearTimeout(midnightTimerRef.current);
+          midnightTimerRef.current = null;
+        }
+      };
+    }, [loadDashboardData, scheduleMidnightCheck])
   );
 
   const todayFormattedDate = useMemo(() => {
@@ -420,3 +506,5 @@ export function useDoctorDashboard() {
     handleDeletePrescription,
   };
 }
+
+export default useDoctorDashboard;

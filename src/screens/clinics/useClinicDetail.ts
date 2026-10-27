@@ -23,6 +23,7 @@ export function useClinicDetail() {
   const [rules, setRules] = useState<ClinicScheduleRules | null>(null);
   const [loading, setLoading] = useState(true);
   const [deleting, setDeleting] = useState(false);
+  const [isDeletedLocally, setIsDeletedLocally] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
   // ID del doctor para agendamiento pendiente tras confirmar cambio al modo Paciente (Fix 3)
@@ -43,12 +44,13 @@ export function useClinicDetail() {
   // Verificación estricta de propiedad clínica (Deliverable D - 8.1):
   // Solo se muestra control de eliminación si está autenticado, en activeMode === 'admin',
   // la clínica figura en adminClinics verificadas y su rol es 'Owner'.
+  // Al confirmarse la eliminación local, el control se retira inmediatamente sin esperar al refresco.
   const isOwner = useMemo(() => {
-    if (!isAuthenticated || activeMode !== 'admin') return false;
+    if (isDeletedLocally || !isAuthenticated || activeMode !== 'admin') return false;
     return adminClinics.some(
       (c) => c.clinic_id === clinicId && c.role_within_clinic === 'Owner'
     );
-  }, [isAuthenticated, activeMode, adminClinics, clinicId]);
+  }, [isDeletedLocally, isAuthenticated, activeMode, adminClinics, clinicId]);
 
   useEffect(() => {
     if (!clinicId) return;
@@ -136,7 +138,7 @@ export function useClinicDetail() {
     } as any);
   };
 
-  // Separación estricta de eliminación de clínica y sincronización de roles (Fix 2)
+  // Separación estricta de eliminación de clínica y sincronización de roles (Fix 2 & Stage 4 Carryover B)
   const handleDelete = () => {
     Alert.alert(
       'Eliminar clínica',
@@ -158,13 +160,20 @@ export function useClinicDetail() {
               return;
             }
 
-            // 2. El DELETE fue exitoso. Desactivar deleting de inmediato.
+            // 2. El DELETE fue exitoso. Desactivar deleting y retirar acción de gestión de inmediato.
+            setIsDeletedLocally(true);
             setDeleting(false);
 
             // 3. Sincronizar membresías y capacidades de rol de forma separada
             const syncRoleAccess = async () => {
+              if (!isAuthenticated || activeMode !== 'admin') {
+                return;
+              }
               try {
                 const refreshedClinics = await refreshRoleAccess();
+                if (!isAuthenticated || activeMode !== 'admin') {
+                  return;
+                }
                 const verifiedList = Array.isArray(refreshedClinics) ? refreshedClinics : [];
                 if (verifiedList.length > 0) {
                   // Aún cuenta con otras sedes administrables: preservar la experiencia admin
@@ -174,6 +183,15 @@ export function useClinicDetail() {
                   router.replace('/' as any);
                 }
               } catch (syncErr: any) {
+                if (
+                  syncErr?.message?.includes('canceled') ||
+                  syncErr?.message?.includes('invalidated') ||
+                  syncErr?.message?.includes('superseded') ||
+                  !isAuthenticated ||
+                  activeMode !== 'admin'
+                ) {
+                  return;
+                }
                 // Al fallar la sincronización, NUNCA asumir 0 clínicas restantes ni reportar fallo de eliminación
                 Alert.alert(
                   'Clínica eliminada',

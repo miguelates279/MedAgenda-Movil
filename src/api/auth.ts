@@ -8,10 +8,15 @@ import {
 
 export const authApi = {
   async login(dto: LoginDto): Promise<LoginResponse> {
-    return apiClient.post<LoginResponse>('/auth/login', {
-      email: dto.email.trim().toLowerCase(),
-      password: dto.password,
-    });
+    return apiClient.post<LoginResponse>(
+      '/auth/login',
+      {
+        email: dto.email.trim().toLowerCase(),
+        password: dto.password,
+      },
+      undefined,
+      { skipAuth: true }
+    );
   },
 
   async register(dto: CreateUserDto): Promise<void> {
@@ -31,7 +36,9 @@ export const authApi = {
       delete payload.second_name;
     }
 
-    return apiClient.post<void>('/users/register', payload);
+    return apiClient.post<void>('/users/register', payload, undefined, {
+      skipAuth: true,
+    });
   },
 
   async getProfile(): Promise<UserProfile> {

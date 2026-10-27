@@ -26,8 +26,14 @@ export function useMyClinics() {
     setError(null);
     try {
       const data = await adminApi.getMyClinics();
+      if (!isAuthenticated || activeMode !== 'admin') {
+        return;
+      }
       setAdminClinics(Array.isArray(data) ? data : []);
     } catch (err: any) {
+      if (!isAuthenticated || activeMode !== 'admin') {
+        return;
+      }
       setError(err?.message || 'No se pudieron cargar tus clínicas de administración.');
     } finally {
       setLoading(false);
@@ -39,10 +45,16 @@ export function useMyClinics() {
   }, [loadAdminClinics]);
 
   const handleSyncRoles = useCallback(async () => {
+    if (!isAuthenticated || activeMode !== 'admin') {
+      return;
+    }
     setIsSyncing(true);
     setSyncError(null);
     try {
       const updatedClinics = await refreshRoleAccess();
+      if (!isAuthenticated || activeMode !== 'admin') {
+        return;
+      }
       const verifiedList = Array.isArray(updatedClinics) ? updatedClinics : [];
       setAdminClinics(verifiedList);
       if (verifiedList.length === 0) {
@@ -50,6 +62,15 @@ export function useMyClinics() {
         router.replace('/' as any);
       }
     } catch (syncErr: any) {
+      if (
+        syncErr?.message?.includes('canceled') ||
+        syncErr?.message?.includes('invalidated') ||
+        syncErr?.message?.includes('superseded') ||
+        !isAuthenticated ||
+        activeMode !== 'admin'
+      ) {
+        return;
+      }
       // Advertencia precisa de sincronización separada de errores de eliminación
       setSyncError(
         syncErr?.message ||
@@ -58,10 +79,10 @@ export function useMyClinics() {
     } finally {
       setIsSyncing(false);
     }
-  }, [refreshRoleAccess, router]);
+  }, [refreshRoleAccess, router, isAuthenticated, activeMode]);
 
   const confirmDelete = async () => {
-    if (!clinicPendingDelete) return;
+    if (!clinicPendingDelete || !isAuthenticated || activeMode !== 'admin') return;
     const cid = clinicPendingDelete.clinic_id;
     setDeleting(true);
     setError(null);

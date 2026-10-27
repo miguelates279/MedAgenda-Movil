@@ -1,26 +1,120 @@
-import { ApiErrorResponse } from './types';
+import type { ApiErrorResponse } from './types';
 
 export const BASE_URL = 'https://med-agenda-1-three.vercel.app';
 
-class ApiClient {
+export interface RequestOptions extends RequestInit {
+  skipAuth?: boolean;
+}
+
+export type UnauthorizedHandler = (session: {
+  sessionId: number;
+  token: string;
+}) => void;
+
+export class ApiClient {
   private baseUrl: string;
   private token: string | null = null;
+  private sessionId: number = 0;
+  private unauthorizedListener: UnauthorizedHandler | null = null;
 
   constructor(baseUrl: string = BASE_URL) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
   }
 
-  setToken(token: string | null) {
+  setToken(token: string | null, sessionId?: number) {
     this.token = token;
+    if (typeof sessionId === 'number') {
+      this.sessionId = sessionId;
+    }
+  }
+
+  setSession(token: string | null, sessionId: number) {
+    this.token = token;
+    this.sessionId = sessionId;
   }
 
   getToken(): string | null {
     return this.token;
   }
 
-  async request<T>(endpoint: string, options: RequestInit = {}): Promise<T> {
+  getSessionId(): number {
+    return this.sessionId;
+  }
+
+  onUnauthorized(listener: UnauthorizedHandler): () => void {
+    this.unauthorizedListener = listener;
+    return () => {
+      if (this.unauthorizedListener === listener) {
+        this.unauthorizedListener = null;
+      }
+    };
+  }
+
+  private isKnownPermissionDeniedResponse(data: any): boolean {
+    if (!data || typeof data !== 'object') {
+      return false;
+    }
+    const exactMessage = "You don't have permission to access this functionality.";
+    if (data.message === exactMessage) {
+      return true;
+    }
+    if (Array.isArray(data.message) && data.message.includes(exactMessage)) {
+      return true;
+    }
+    return false;
+  }
+
+  private handleUnauthorizedResponse(
+    cleanEndpoint: string,
+    dispatchedToken: string | null,
+    dispatchedSessionId: number,
+    data: any
+  ) {
+    // 1. Never invalidate for requests dispatched without a bearer token (guest/public)
+    if (!dispatchedToken) {
+      return;
+    }
+
+    // 2. Never invalidate for public auth endpoints (/auth/login, /users/register)
+    if (cleanEndpoint === '/auth/login' || cleanEndpoint === '/users/register') {
+      return;
+    }
+
+    // 3. Known backend RolesGuard authorization misclassification (HTTP 401 instead of 403)
+    if (this.isKnownPermissionDeniedResponse(data)) {
+      return;
+    }
+
+    // 4. Stale session protection: only invalidate if the request originated from the current active session
+    if (
+      this.token !== dispatchedToken ||
+      this.sessionId !== dispatchedSessionId
+    ) {
+      return;
+    }
+
+    // 5. Notify the active AuthProvider subscriber safely
+    try {
+      this.unauthorizedListener?.({
+        sessionId: dispatchedSessionId,
+        token: dispatchedToken,
+      });
+    } catch (err) {
+      console.error('Error executing unauthorized listener:', err);
+    }
+  }
+
+  async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
     const cleanEndpoint = endpoint.startsWith('/') ? endpoint : `/${endpoint}`;
     const url = `${this.baseUrl}${cleanEndpoint}`;
+
+    const isAuthEndpoint =
+      cleanEndpoint === '/auth/login' || cleanEndpoint === '/users/register';
+    const shouldAttachToken =
+      !options.skipAuth && !isAuthEndpoint && !!this.token;
+
+    const dispatchedToken = shouldAttachToken ? this.token : null;
+    const dispatchedSessionId = this.sessionId;
 
     const headers: Record<string, string> = {
       'Content-Type': 'application/json',
@@ -28,16 +122,25 @@ class ApiClient {
       ...((options.headers as Record<string, string>) || {}),
     };
 
-    if (this.token) {
-      headers['Authorization'] = `Bearer ${this.token}`;
+    if (dispatchedToken) {
+      headers['Authorization'] = `Bearer ${dispatchedToken}`;
+    } else {
+      delete headers['Authorization'];
     }
 
     try {
-      console.log('API FETCHING:', url, options);
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        console.log(`[API] ${options.method || 'GET'} ${cleanEndpoint}`);
+      }
+
       const response = await fetch(url, {
         ...options,
         headers,
       });
+
+      if (typeof __DEV__ !== 'undefined' && __DEV__) {
+        console.log(`[API] ${response.status} ${cleanEndpoint}`);
+      }
 
       const responseText = await response.text();
       let data: any = null;
@@ -51,6 +154,15 @@ class ApiClient {
       }
 
       if (!response.ok) {
+        if (response.status === 401) {
+          this.handleUnauthorizedResponse(
+            cleanEndpoint,
+            dispatchedToken,
+            dispatchedSessionId,
+            data
+          );
+        }
+
         let errorMessage = 'An error occurred with the request.';
 
         if (data && typeof data === 'object') {
@@ -80,35 +192,42 @@ class ApiClient {
       if (err.status) {
         throw err;
       }
-      throw new Error(err.message || 'Network request failed. Please check your internet connection.');
+      throw new Error(
+        err.message ||
+          'Network request failed. Please check your internet connection.'
+      );
     }
   }
 
-  get<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
+  get<T>(endpoint: string, headers?: Record<string, string>, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
+      ...options,
       method: 'GET',
       headers,
     });
   }
 
-  post<T>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
+  post<T>(endpoint: string, body?: any, headers?: Record<string, string>, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
+      ...options,
       method: 'POST',
       body: body ? JSON.stringify(body) : undefined,
       headers,
     });
   }
 
-  put<T>(endpoint: string, body?: any, headers?: Record<string, string>): Promise<T> {
+  put<T>(endpoint: string, body?: any, headers?: Record<string, string>, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
+      ...options,
       method: 'PUT',
       body: body ? JSON.stringify(body) : undefined,
       headers,
     });
   }
 
-  delete<T>(endpoint: string, headers?: Record<string, string>): Promise<T> {
+  delete<T>(endpoint: string, headers?: Record<string, string>, options?: RequestOptions): Promise<T> {
     return this.request<T>(endpoint, {
+      ...options,
       method: 'DELETE',
       headers,
     });

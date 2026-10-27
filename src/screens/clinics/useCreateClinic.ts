@@ -68,6 +68,7 @@ export function useCreateClinic() {
       setRoleVerificationError(null);
       try {
         const verifiedClinics = await refreshRoleAccess();
+        if (!isAuthenticated) return;
         const createdClinic = (Array.isArray(verifiedClinics) ? verifiedClinics : []).find(
           (c) => c.clinic_id === clinicId
         );
@@ -92,6 +93,14 @@ export function useCreateClinic() {
         // 3. Redirigir a través del enrutador central '/' hacia el Administrator Home.
         router.replace('/' as any);
       } catch (err: any) {
+        if (
+          err?.message?.includes('canceled') ||
+          err?.message?.includes('invalidated') ||
+          err?.message?.includes('superseded') ||
+          !isAuthenticated
+        ) {
+          return;
+        }
         setRoleVerificationError(
           err?.message || 'Error al verificar las membresías de administración tras la creación.'
         );
@@ -99,7 +108,7 @@ export function useCreateClinic() {
         setIsVerifyingRole(false);
       }
     },
-    [refreshRoleAccess, setActiveMode, router]
+    [refreshRoleAccess, setActiveMode, router, isAuthenticated]
   );
 
   const onSubmit = async (data: ClinicFormValues) => {
