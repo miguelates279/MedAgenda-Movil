@@ -9,6 +9,8 @@ export interface UseAppModeResult {
   modeResolutionError: string | null;
   setActiveMode: (mode: AppMode) => void;
   refreshRoleAccess: () => Promise<AdminClinic[]>;
+  removeAdminClinic: (clinicId: number) => void;
+  getSessionId: () => number;
 }
 
 /**
@@ -24,6 +26,8 @@ export const useAppMode = (): UseAppModeResult => {
     modeResolutionError,
     setActiveMode,
     refreshRoleAccess,
+    removeAdminClinic,
+    getSessionId,
   } = useAuth();
 
   return {
@@ -34,6 +38,8 @@ export const useAppMode = (): UseAppModeResult => {
     modeResolutionError,
     setActiveMode,
     refreshRoleAccess,
+    removeAdminClinic,
+    getSessionId,
   };
 };
 

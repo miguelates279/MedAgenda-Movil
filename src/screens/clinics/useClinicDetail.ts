@@ -16,6 +16,8 @@ export function useClinicDetail() {
     adminClinics,
     setActiveMode,
     refreshRoleAccess,
+    removeAdminClinic,
+    getSessionId,
   } = useAuth();
 
   const [clinic, setClinic] = useState<Clinic | null>(null);
@@ -54,7 +56,7 @@ export function useClinicDetail() {
 
   useEffect(() => {
     if (!clinicId) return;
-    let active = true;
+    const currentSessionId = getSessionId();
 
     (async () => {
       setLoading(true);
@@ -65,22 +67,22 @@ export function useClinicDetail() {
           clinicsApi.getClinicDoctors(clinicId),
           clinicsApi.getClinicScheduleRules(clinicId).catch(() => null),
         ]);
-        if (active) {
+        if (getSessionId() === currentSessionId) {
           setClinic(cData);
           setDoctors(dList);
           setRules(rData);
         }
       } catch (err: any) {
-        if (active) setError(err.message || 'Error al cargar detalles de la clínica');
+        if (getSessionId() === currentSessionId) {
+          setError(err.message || 'Error al cargar detalles de la clínica');
+        }
       } finally {
-        if (active) setLoading(false);
+        if (getSessionId() === currentSessionId) {
+          setLoading(false);
+        }
       }
     })();
-
-    return () => {
-      active = false;
-    };
-  }, [clinicId]);
+  }, [clinicId, getSessionId]);
 
   // Manejo coherente de agendamiento público según modo y sesión (Fix 3)
   const handleBookWithDoctor = (doctorId: number) => {
@@ -149,6 +151,7 @@ export function useClinicDetail() {
           text: 'Eliminar',
           style: 'destructive',
           onPress: async () => {
+            const targetSessionId = getSessionId();
             setDeleting(true);
 
             // 1. Ejecutar DELETE en el backend
@@ -160,18 +163,22 @@ export function useClinicDetail() {
               return;
             }
 
-            // 2. El DELETE fue exitoso. Desactivar deleting y retirar acción de gestión de inmediato.
+            // Verify active session generation has not changed while awaiting DELETE
+            if (getSessionId() !== targetSessionId) return;
+
+            // 2. El DELETE fue exitoso: retirar la clínica de AuthContext y de la vista inmediatamente
             setIsDeletedLocally(true);
+            removeAdminClinic(clinicId);
             setDeleting(false);
 
             // 3. Sincronizar membresías y capacidades de rol de forma separada
             const syncRoleAccess = async () => {
-              if (!isAuthenticated || activeMode !== 'admin') {
+              if (getSessionId() !== targetSessionId) {
                 return;
               }
               try {
                 const refreshedClinics = await refreshRoleAccess();
-                if (!isAuthenticated || activeMode !== 'admin') {
+                if (getSessionId() !== targetSessionId) {
                   return;
                 }
                 const verifiedList = Array.isArray(refreshedClinics) ? refreshedClinics : [];
@@ -184,11 +191,10 @@ export function useClinicDetail() {
                 }
               } catch (syncErr: any) {
                 if (
+                  getSessionId() !== targetSessionId ||
                   syncErr?.message?.includes('canceled') ||
                   syncErr?.message?.includes('invalidated') ||
-                  syncErr?.message?.includes('superseded') ||
-                  !isAuthenticated ||
-                  activeMode !== 'admin'
+                  syncErr?.message?.includes('superseded')
                 ) {
                   return;
                 }

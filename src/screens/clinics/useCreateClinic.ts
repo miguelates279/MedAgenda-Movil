@@ -11,7 +11,7 @@ export type ClinicFormValues = Omit<CreateClinicDto, 'clinic_city_id'>;
 
 export function useCreateClinic() {
   const router = useRouter();
-  const { isAuthenticated, refreshRoleAccess, setActiveMode } = useAuth();
+  const { isAuthenticated, refreshRoleAccess, setActiveMode, getSessionId } = useAuth();
   const {
     countries,
     states,
@@ -64,11 +64,13 @@ export function useCreateClinic() {
    */
   const verifyRoleAndTransition = useCallback(
     async (clinicId: number) => {
+      const targetSessionId = getSessionId();
       setIsVerifyingRole(true);
       setRoleVerificationError(null);
       try {
         const verifiedClinics = await refreshRoleAccess();
-        if (!isAuthenticated) return;
+        // Guard against stale closures: verify active session generation
+        if (getSessionId() !== targetSessionId) return;
         const createdClinic = (Array.isArray(verifiedClinics) ? verifiedClinics : []).find(
           (c) => c.clinic_id === clinicId
         );
@@ -94,10 +96,10 @@ export function useCreateClinic() {
         router.replace('/' as any);
       } catch (err: any) {
         if (
+          getSessionId() !== targetSessionId ||
           err?.message?.includes('canceled') ||
           err?.message?.includes('invalidated') ||
-          err?.message?.includes('superseded') ||
-          !isAuthenticated
+          err?.message?.includes('superseded')
         ) {
           return;
         }
@@ -105,10 +107,12 @@ export function useCreateClinic() {
           err?.message || 'Error al verificar las membresías de administración tras la creación.'
         );
       } finally {
-        setIsVerifyingRole(false);
+        if (getSessionId() === targetSessionId) {
+          setIsVerifyingRole(false);
+        }
       }
     },
-    [refreshRoleAccess, setActiveMode, router, isAuthenticated]
+    [refreshRoleAccess, setActiveMode, router, getSessionId]
   );
 
   const onSubmit = async (data: ClinicFormValues) => {
@@ -117,18 +121,23 @@ export function useCreateClinic() {
       return;
     }
 
+    const currentSessionId = getSessionId();
     setSubmitError(null);
     setIsSubmitting(true);
     try {
       const response = await clinicsApi.createClinic({ ...data, clinic_city_id: cityId });
+      if (getSessionId() !== currentSessionId) return;
       const newClinicId = response.clinic_id;
       setCreatedClinicId(newClinicId);
       // Iniciar inmediatamente la verificación de membresía y transición de rol
       await verifyRoleAndTransition(newClinicId);
     } catch (error: any) {
+      if (getSessionId() !== currentSessionId) return;
       setSubmitError(error?.message || 'No se pudo crear la clínica.');
     } finally {
-      setIsSubmitting(false);
+      if (getSessionId() === currentSessionId) {
+        setIsSubmitting(false);
+      }
     }
   };
 

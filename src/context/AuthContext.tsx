@@ -40,6 +40,8 @@ export interface AuthContextType {
   modeResolutionError: string | null;
   setActiveMode: (mode: AppMode) => void;
   refreshRoleAccess: () => Promise<AdminClinic[]>;
+  removeAdminClinic: (clinicId: number) => void;
+  getSessionId: () => number;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -81,6 +83,13 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
 
   // Mounted status to prevent React state updates after unmount
   const isMountedRef = useRef<boolean>(true);
+
+  const getSessionId = useCallback(() => authSessionRef.current, []);
+
+  const removeAdminClinic = useCallback((clinicId: number) => {
+    if (!isMountedRef.current || !tokenRef.current) return;
+    setAdminClinics((prev) => prev.filter((c) => c.clinic_id !== clinicId));
+  }, []);
 
   const setAuthToken = (newToken: string | null) => {
     setTokenState(newToken);
@@ -435,6 +444,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         modeResolutionError,
         setActiveMode,
         refreshRoleAccess,
+        removeAdminClinic,
+        getSessionId,
       }}
     >
       {children}

@@ -17,6 +17,10 @@ export class ApiClient {
   private sessionId: number = 0;
   private unauthorizedListener: UnauthorizedHandler | null = null;
 
+  // Single controlled validity check tracker to avoid duplicate probes or storms
+  private validatingPromise: Promise<void> | null = null;
+  private validatingSessionId: number = -1;
+
   constructor(baseUrl: string = BASE_URL) {
     this.baseUrl = baseUrl.replace(/\/+$/, '');
   }
@@ -64,6 +68,85 @@ export class ApiClient {
     return false;
   }
 
+  private notifyUnauthorized(sessionId: number, token: string) {
+    if (this.token !== token || this.sessionId !== sessionId) {
+      return;
+    }
+
+    try {
+      this.unauthorizedListener?.({
+        sessionId,
+        token,
+      });
+    } catch (err) {
+      console.error('Error executing unauthorized listener:', err);
+    }
+  }
+
+  /**
+   * Executes a controlled authentication validity check against GET /users/profile using raw fetch.
+   * - Bypasses recursive request() interceptors.
+   * - Deduplicates concurrent checks for the same active session.
+   * - Distinguishes ambiguous HTTP 401 permission denials (e.g. ClinicsService.addMemberToClinic)
+   *   from genuine expired or invalid JWT sessions.
+   */
+  private scheduleTokenValidityCheck(token: string, sessionId: number) {
+    if (this.validatingPromise && this.validatingSessionId === sessionId) {
+      return;
+    }
+
+    this.validatingSessionId = sessionId;
+    this.validatingPromise = (async () => {
+      try {
+        const isValid = await this.verifyTokenWithProfile(token);
+
+        // Ensure session has not changed or been invalidated while probe was in-flight
+        if (this.token !== token || this.sessionId !== sessionId) {
+          return;
+        }
+
+        if (!isValid) {
+          // Token is genuinely invalid or expired
+          this.notifyUnauthorized(sessionId, token);
+        }
+        // If isValid is true, token remains valid; 401 was a permission denial; session preserved
+      } finally {
+        if (this.validatingSessionId === sessionId) {
+          this.validatingPromise = null;
+          this.validatingSessionId = -1;
+        }
+      }
+    })();
+  }
+
+  private async verifyTokenWithProfile(token: string): Promise<boolean> {
+    const probeUrl = `${this.baseUrl}/users/profile`;
+    try {
+      const probeResponse = await fetch(probeUrl, {
+        method: 'GET',
+        headers: {
+          'Content-Type': 'application/json',
+          Accept: 'application/json',
+          Authorization: `Bearer ${token}`,
+        },
+      });
+
+      if (probeResponse.status === 200) {
+        return true;
+      }
+
+      if (probeResponse.status === 401) {
+        return false;
+      }
+
+      // Non-401 HTTP errors (e.g. 500, 502) are not proof of expiration
+      return true;
+    } catch {
+      // Network failures during validation must NOT be mistaken for proof of expiration
+      return true;
+    }
+  }
+
   private handleUnauthorizedResponse(
     cleanEndpoint: string,
     dispatchedToken: string | null,
@@ -93,15 +176,16 @@ export class ApiClient {
       return;
     }
 
-    // 5. Notify the active AuthProvider subscriber safely
-    try {
-      this.unauthorizedListener?.({
-        sessionId: dispatchedSessionId,
-        token: dispatchedToken,
-      });
-    } catch (err) {
-      console.error('Error executing unauthorized listener:', err);
+    // 5. If the failed endpoint is /users/profile, it only has JwtAuthGuard and no role guard;
+    // a 401 here is definitively an expired/invalid token. Invalidate directly without recursive probe.
+    if (cleanEndpoint === '/users/profile') {
+      this.notifyUnauthorized(dispatchedSessionId, dispatchedToken);
+      return;
     }
+
+    // 6. Ambiguous 401: Backend can return generic UnauthorizedException() for clinic authorization denial
+    // (e.g. ClinicsService.addMemberToClinic()). Run a single controlled token-validity check.
+    this.scheduleTokenValidityCheck(dispatchedToken, dispatchedSessionId);
   }
 
   async request<T>(endpoint: string, options: RequestOptions = {}): Promise<T> {
