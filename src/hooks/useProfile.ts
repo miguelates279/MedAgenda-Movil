@@ -1,9 +1,9 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useUserInfo } from './useUserInfo';
 import { useLogout } from './useLogout';
 import { useAppMode } from './useAppMode';
-import { AppMode } from '../context/AuthContext';
+import { AppMode, useAuth } from '../context/AuthContext';
 
 export type ProfileAuthTab = 'login' | 'register';
 
@@ -24,19 +24,38 @@ export const useProfile = () => {
   } = useUserInfo();
 
   const { activeMode, availableModes, setActiveMode } = useAppMode();
+  const { refreshProfile } = useAuth();
+
+  const [loadingProfile, setLoadingProfile] = useState<boolean>(false);
+  const [profileError, setProfileError] = useState<string | null>(null);
+  const hasAttemptedInitialFetchRef = useRef<boolean>(false);
+
+  const handleRetryProfile = useCallback(async () => {
+    setLoadingProfile(true);
+    setProfileError(null);
+    try {
+      await refreshProfile();
+    } catch (err: any) {
+      setProfileError(err?.message || 'No se pudo cargar la información del perfil.');
+    } finally {
+      setLoadingProfile(false);
+    }
+  }, [refreshProfile]);
+
+  useEffect(() => {
+    if (isAuthenticated && !user && !hasAttemptedInitialFetchRef.current) {
+      hasAttemptedInitialFetchRef.current = true;
+      handleRetryProfile();
+    }
+  }, [isAuthenticated, user, handleRetryProfile]);
 
   const handleSelectMode = useCallback(
     (newMode: AppMode) => {
       if (newMode === activeMode) return;
       if (!availableModes.includes(newMode)) return;
       setActiveMode(newMode);
-      if (newMode === 'doctor') {
-        router.replace('/doctor' as any);
-      } else if (newMode === 'admin') {
-        router.replace('/admin' as any);
-      } else {
-        router.replace('/home' as any);
-      }
+      // Enrutador central '/' gestiona de forma determinista la redirección al destino según el modo activo
+      router.replace('/' as any);
     },
     [activeMode, availableModes, setActiveMode, router]
   );
@@ -50,6 +69,8 @@ export const useProfile = () => {
   } = useLogout({
     onSuccess: () => {
       setTab('login');
+      hasAttemptedInitialFetchRef.current = false;
+      setProfileError(null);
     },
   });
 
@@ -66,6 +87,9 @@ export const useProfile = () => {
     activeMode,
     availableModes,
     handleSelectMode,
+    loadingProfile,
+    profileError,
+    handleRetryProfile,
     tab,
     setTab,
     isLogoutModalOpen,

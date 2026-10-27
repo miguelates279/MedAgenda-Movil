@@ -8,24 +8,25 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, ClinicCard, ConfirmModal, ScreenHeader } from '../../components';
+import { Badge, Button, Card, ConfirmModal, ScreenHeader } from '../../components';
 import { useMyClinics } from './useMyClinics';
 
 export function MyClinicsScreen() {
   const {
     router,
     isAuthenticated,
-    userClinics,
+    activeMode,
+    adminClinics,
     loading,
     error,
     clinicPendingDelete,
     setClinicPendingDelete,
     deleting,
-    loadUserClinics,
+    loadAdminClinics,
     confirmDelete,
   } = useMyClinics();
 
-  if (!isAuthenticated) {
+  if (!isAuthenticated || activeMode !== 'admin') {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <ScreenHeader title="Mis Clínicas" />
@@ -34,14 +35,14 @@ export function MyClinicsScreen() {
             <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
           </View>
           <Text className="text-base font-bold text-neutral-900 text-center mb-2">
-            Inicio de sesión requerido
+            Acceso Administrativo Requerido
           </Text>
           <Text className="text-xs text-gray-600 text-center max-w-[260px] mb-4">
-            Debes iniciar sesión para consultar y gestionar tus clínicas registradas.
+            Esta sección es exclusiva para la gestión de sedes clínicas en el modo Administrador.
           </Text>
           <Button
-            text="Iniciar Sesión / Registrarse"
-            onPress={() => router.push('/profile' as any)}
+            text="Volver al inicio"
+            onPress={() => router.replace('/' as any)}
             className="min-w-[200px]"
           />
         </View>
@@ -69,7 +70,7 @@ export function MyClinicsScreen() {
       <View className="flex-1 bg-gray-50">
         <View className="bg-white border-b border-gray-200 px-4 py-3">
           <Text className="text-xs text-gray-600">
-            Administra las sedes de las que eres propietario. Puedes ver sus detalles o eliminarlas.
+            Sedes asignadas para administración directa. Solo puedes eliminar las sedes de las que eres propietario verificado.
           </Text>
         </View>
 
@@ -80,31 +81,78 @@ export function MyClinicsScreen() {
         ) : null}
 
         <FlatList
-          data={userClinics}
+          data={adminClinics}
           keyExtractor={(item) => String(item.clinic_id)}
           contentContainerClassName="p-4 pb-8"
           refreshControl={
             <RefreshControl
               refreshing={loading}
-              onRefresh={loadUserClinics}
+              onRefresh={loadAdminClinics}
               tintColor="#259487"
               colors={['#259487']}
             />
           }
-          renderItem={({ item }) => (
-            <ClinicCard
-              clinic={item}
-              onPress={() => router.push(`/clinics/${item.clinic_id}` as any)}
-              className="mb-3"
-              footer={
-                <Button
-                  text="Eliminar clínica"
-                  variant="danger"
-                  onPress={() => setClinicPendingDelete(item)}
-                />
-              }
-            />
-          )}
+          renderItem={({ item }) => {
+            const isOwner = item.role_within_clinic === 'Owner';
+
+            return (
+              <Card className="mb-3">
+                <Pressable
+                  onPress={() => router.push(`/clinics/${item.clinic_id}` as any)}
+                  className="active:opacity-90"
+                  accessibilityRole="button"
+                  accessibilityLabel={`Ver detalles de ${item.clinic_name}`}
+                >
+                  <View className="flex-row justify-between items-start mb-1.5">
+                    <Text className="text-base font-bold text-neutral-900 flex-1 mr-2">
+                      {item.clinic_name}
+                    </Text>
+                    <Badge
+                      text={isOwner ? 'Propietario' : 'Administrador'}
+                      variant={isOwner ? 'primary' : 'info'}
+                    />
+                  </View>
+
+                  <View className="flex-row items-center mb-1">
+                    <Ionicons name="business-outline" size={14} color="#4b5563" />
+                    <Text className="text-xs text-gray-600 ml-1">
+                      Sede ID #{item.clinic_id}
+                    </Text>
+                  </View>
+
+                  {item.role_description ? (
+                    <Text className="text-xs text-gray-500 mt-0.5" numberOfLines={2}>
+                      {item.role_description}
+                    </Text>
+                  ) : null}
+                </Pressable>
+
+                <View className="mt-3 pt-2.5 border-t border-gray-100 flex-row justify-between items-center">
+                  <Pressable
+                    onPress={() => router.push(`/clinics/${item.clinic_id}` as any)}
+                    className="flex-row items-center"
+                    accessibilityRole="button"
+                    accessibilityLabel={`Ver detalles de ${item.clinic_name}`}
+                  >
+                    <Text className="text-xs font-semibold text-primary mr-1">
+                      Ver detalles
+                    </Text>
+                    <Ionicons name="chevron-forward" size={14} color="#259487" />
+                  </Pressable>
+
+                  {/* Únicamente se muestra control de eliminación si el usuario es Owner verificado */}
+                  {isOwner && (
+                    <Button
+                      text="Eliminar clínica"
+                      variant="danger"
+                      className="py-1 px-3"
+                      onPress={() => setClinicPendingDelete(item)}
+                    />
+                  )}
+                </View>
+              </Card>
+            );
+          }}
           ListEmptyComponent={
             <View className="py-12 px-6 items-center justify-center">
               {loading ? (
@@ -115,13 +163,13 @@ export function MyClinicsScreen() {
                     <Ionicons name="business-outline" size={28} color="#9ca3af" />
                   </View>
                   <Text className="text-base font-bold text-neutral-900 mb-1 text-center">
-                    Aún no tienes clínicas
+                    Sin sedes asignadas
                   </Text>
                   <Text className="text-xs text-gray-500 text-center max-w-[260px] mb-4">
-                    Registra tu primera clínica médica para empezar a asignar médicos y gestionar citas.
+                    No tienes sedes vinculadas para administración. Puedes registrar una nueva sede clínica.
                   </Text>
                   <Button
-                    text="Crear mi primera clínica"
+                    text="Registrar nueva clínica"
                     onPress={() => router.push('/clinics/new' as any)}
                     className="min-w-[200px]"
                   />

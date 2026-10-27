@@ -1,39 +1,40 @@
 import { useCallback, useEffect, useState } from 'react';
 import { useRouter } from 'expo-router';
+import adminApi from '../../api/admin';
 import clinicsApi from '../../api/clinics';
-import { Clinic } from '../../api/types';
+import { AdminClinic } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
 
 export function useMyClinics() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
-  const [userClinics, setUserClinics] = useState<Clinic[]>([]);
+  const { isAuthenticated, activeMode, refreshRoleAccess } = useAuth();
+  const [adminClinics, setAdminClinics] = useState<AdminClinic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
 
-  const [clinicPendingDelete, setClinicPendingDelete] = useState<Clinic | null>(null);
+  const [clinicPendingDelete, setClinicPendingDelete] = useState<AdminClinic | null>(null);
   const [deleting, setDeleting] = useState(false);
 
-  const loadUserClinics = useCallback(async () => {
-    if (!isAuthenticated) {
+  const loadAdminClinics = useCallback(async () => {
+    if (!isAuthenticated || activeMode !== 'admin') {
       setLoading(false);
       return;
     }
     setLoading(true);
     setError(null);
     try {
-      const data = await clinicsApi.getUserClinics();
-      setUserClinics(data || []);
+      const data = await adminApi.getMyClinics();
+      setAdminClinics(Array.isArray(data) ? data : []);
     } catch (err: any) {
-      setError(err.message || 'No se pudieron cargar tus clínicas.');
+      setError(err?.message || 'No se pudieron cargar tus clínicas de administración.');
     } finally {
       setLoading(false);
     }
-  }, [isAuthenticated]);
+  }, [isAuthenticated, activeMode]);
 
   useEffect(() => {
-    loadUserClinics();
-  }, [loadUserClinics]);
+    loadAdminClinics();
+  }, [loadAdminClinics]);
 
   const confirmDelete = async () => {
     if (!clinicPendingDelete) return;
@@ -41,10 +42,12 @@ export function useMyClinics() {
     setDeleting(true);
     try {
       await clinicsApi.deleteClinic(cid);
-      setUserClinics((prev) => prev.filter((item) => item.clinic_id !== cid));
+      setAdminClinics((prev) => prev.filter((item) => item.clinic_id !== cid));
       setClinicPendingDelete(null);
+      // Sincronizar capacidades de rol en AuthContext en segundo plano
+      refreshRoleAccess().catch(() => {});
     } catch (err: any) {
-      setError(err.message || 'No se pudo eliminar la clínica.');
+      setError(err?.message || 'No se pudo eliminar la clínica.');
     } finally {
       setDeleting(false);
     }
@@ -53,13 +56,16 @@ export function useMyClinics() {
   return {
     router,
     isAuthenticated,
-    userClinics,
+    activeMode,
+    adminClinics,
     loading,
     error,
     clinicPendingDelete,
     setClinicPendingDelete,
     deleting,
-    loadUserClinics,
+    loadAdminClinics,
     confirmDelete,
   };
 }
+
+export default useMyClinics;

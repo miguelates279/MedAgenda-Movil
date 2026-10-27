@@ -87,7 +87,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
               }`}
               className={`flex-1 py-2.5 px-2 rounded-md border items-center justify-center flex-row gap-1.5 min-h-[44px] ${
                 isActive
-                  ? 'bg-primary border-primary'
+                  ? 'bg-primary-dark border-primary-dark active:opacity-90'
                   : 'bg-white border-gray-300 active:bg-gray-100'
               }`}
             >
@@ -97,8 +97,8 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
                 color={isActive ? '#ffffff' : '#4b5563'}
               />
               <Text
-                className={`text-xs font-semibold ${
-                  isActive ? 'text-white font-bold' : 'text-neutral-900'
+                className={`text-xs ${
+                  isActive ? 'text-white font-bold' : 'text-neutral-900 font-semibold'
                 }`}
               >
                 {config.label}
