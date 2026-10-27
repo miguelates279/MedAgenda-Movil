@@ -19,6 +19,9 @@ export function MyClinicsScreen() {
     adminClinics,
     loading,
     error,
+    syncError,
+    isSyncing,
+    handleRetrySync,
     clinicPendingDelete,
     setClinicPendingDelete,
     deleting,
@@ -77,6 +80,28 @@ export function MyClinicsScreen() {
         {error ? (
           <View className="bg-red-50 border border-red-200 p-3 m-4 rounded-md">
             <Text className="text-red-700 text-xs font-medium">{error}</Text>
+          </View>
+        ) : null}
+
+        {syncError ? (
+          <View className="bg-amber-50 border border-amber-200 p-3.5 m-4 mb-2 rounded-md">
+            <View className="flex-row items-center mb-1">
+              <Ionicons name="alert-circle-outline" size={16} color="#b45309" />
+              <Text className="text-xs font-bold text-amber-800 ml-1.5">
+                Sincronización pendiente
+              </Text>
+            </View>
+            <Text className="text-xs text-amber-700 leading-relaxed mb-2.5">
+              {syncError}
+            </Text>
+            <Button
+              text={isSyncing ? 'Sincronizando...' : 'Reintentar sincronización'}
+              variant="outline"
+              loading={isSyncing}
+              disabled={isSyncing}
+              onPress={handleRetrySync}
+              className="py-1 px-3 self-start"
+            />
           </View>
         ) : null}
 

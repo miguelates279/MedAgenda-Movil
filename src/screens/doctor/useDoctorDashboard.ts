@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import { Alert } from 'react-native';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import clinicsApi from '../../api/clinics';
 import doctorsApi from '../../api/doctors';
 import prescriptionsApi from '../../api/prescriptions';
@@ -41,10 +41,14 @@ export function useDoctorDashboard() {
   const [editPrescriptionText, setEditPrescriptionText] = useState('');
   const [updatingPrescription, setUpdatingPrescription] = useState(false);
 
+  // Fecha de referencia local para cálculos de agenda de hoy y filtros por rango
+  const [currentDate, setCurrentDate] = useState<Date>(() => new Date());
+
   const loadDashboardData = useCallback(async () => {
     if (!isAuthenticated || activeMode !== 'doctor') {
       return;
     }
+    setCurrentDate(new Date());
     setLoading(true);
     setAppointmentsError(null);
     try {
@@ -98,26 +102,28 @@ export function useDoctorDashboard() {
     }
   }, [isAuthenticated, activeMode]);
 
-  useEffect(() => {
-    loadDashboardData();
-  }, [loadDashboardData]);
+  // Recargar datos y recalcular fecha local al enfocar la pantalla del doctor (Fix 4)
+  useFocusEffect(
+    useCallback(() => {
+      setCurrentDate(new Date());
+      loadDashboardData();
+    }, [loadDashboardData])
+  );
 
   const todayFormattedDate = useMemo(() => {
-    const now = new Date();
-    const formatted = now.toLocaleDateString('es-ES', {
+    const formatted = currentDate.toLocaleDateString('es-ES', {
       weekday: 'long',
       year: 'numeric',
       month: 'long',
       day: 'numeric',
     });
     return formatted.charAt(0).toUpperCase() + formatted.slice(1);
-  }, []);
+  }, [currentDate]);
 
   const todayAppointments = useMemo(() => {
-    const now = new Date();
-    const todayYear = now.getFullYear();
-    const todayMonth = now.getMonth();
-    const todayDate = now.getDate();
+    const todayYear = currentDate.getFullYear();
+    const todayMonth = currentDate.getMonth();
+    const todayDate = currentDate.getDate();
 
     return (Array.isArray(appointments) ? appointments : [])
       .filter((a) => {
@@ -133,11 +139,11 @@ export function useDoctorDashboard() {
         (a, b) =>
           new Date(a.start_date_time).getTime() - new Date(b.start_date_time).getTime()
       );
-  }, [appointments]);
+  }, [appointments, currentDate]);
 
   const upcomingAppointments = useMemo(() => {
-    const now = new Date();
-    const maxDate = new Date();
+    const now = currentDate;
+    const maxDate = new Date(now.getTime());
     maxDate.setDate(maxDate.getDate() + rangeDays);
 
     return appointments
@@ -148,7 +154,7 @@ export function useDoctorDashboard() {
         return start >= now && start <= maxDate;
       })
       .sort((a, b) => new Date(a.start_date_time).getTime() - new Date(b.start_date_time).getTime());
-  }, [appointments, rangeDays]);
+  }, [appointments, rangeDays, currentDate]);
 
   const appointmentsByClinic = useMemo(() => {
     const grouped: Record<

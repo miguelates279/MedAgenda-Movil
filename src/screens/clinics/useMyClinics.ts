@@ -11,6 +11,8 @@ export function useMyClinics() {
   const [adminClinics, setAdminClinics] = useState<AdminClinic[]>([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState<string | null>(null);
+  const [syncError, setSyncError] = useState<string | null>(null);
+  const [isSyncing, setIsSyncing] = useState(false);
 
   const [clinicPendingDelete, setClinicPendingDelete] = useState<AdminClinic | null>(null);
   const [deleting, setDeleting] = useState(false);
@@ -36,27 +38,51 @@ export function useMyClinics() {
     loadAdminClinics();
   }, [loadAdminClinics]);
 
-  const confirmDelete = async () => {
-    if (!clinicPendingDelete) return;
-    const cid = clinicPendingDelete.clinic_id;
-    setDeleting(true);
+  const handleSyncRoles = useCallback(async () => {
+    setIsSyncing(true);
+    setSyncError(null);
     try {
-      await clinicsApi.deleteClinic(cid);
-      setClinicPendingDelete(null);
-      // Sincronizar capacidades de rol en AuthContext
       const updatedClinics = await refreshRoleAccess();
       const verifiedList = Array.isArray(updatedClinics) ? updatedClinics : [];
       setAdminClinics(verifiedList);
       if (verifiedList.length === 0) {
-        // Al no quedar clínicas administrables, Stage 1 revoca el modo Admin.
-        // Redirigir a través del enrutador central '/' para no dejar al usuario en una ruta bloqueada.
+        // Al confirmarse cero membresías verificadas, el modo Admin se revoca y redirige vía '/'
         router.replace('/' as any);
       }
-    } catch (err: any) {
-      setError(err?.message || 'No se pudo eliminar la clínica.');
+    } catch (syncErr: any) {
+      // Advertencia precisa de sincronización separada de errores de eliminación
+      setSyncError(
+        syncErr?.message ||
+          'La clínica fue eliminada, pero ocurrió un problema al sincronizar los permisos de administración. Puedes reintentar la sincronización.'
+      );
     } finally {
-      setDeleting(false);
+      setIsSyncing(false);
     }
+  }, [refreshRoleAccess, router]);
+
+  const confirmDelete = async () => {
+    if (!clinicPendingDelete) return;
+    const cid = clinicPendingDelete.clinic_id;
+    setDeleting(true);
+    setError(null);
+    setSyncError(null);
+
+    // 1. Ejecutar DELETE en el backend
+    try {
+      await clinicsApi.deleteClinic(cid);
+    } catch (deleteErr: any) {
+      setError(deleteErr?.message || 'No se pudo eliminar la clínica.');
+      setDeleting(false);
+      return;
+    }
+
+    // 2. El DELETE fue exitoso: retirar inmediatamente la clínica del listado local y limpiar selección
+    setAdminClinics((prev) => prev.filter((item) => item.clinic_id !== cid));
+    setClinicPendingDelete(null);
+    setDeleting(false);
+
+    // 3. Sincronizar capacidades de rol de forma separada sin repetir el DELETE ante fallo
+    await handleSyncRoles();
   };
 
   return {
@@ -66,6 +92,9 @@ export function useMyClinics() {
     adminClinics,
     loading,
     error,
+    syncError,
+    isSyncing,
+    handleRetrySync: handleSyncRoles,
     clinicPendingDelete,
     setClinicPendingDelete,
     deleting,

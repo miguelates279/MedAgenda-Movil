@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import appointmentsApi from '../api/appointments';
 import { DoctorAppointmentView } from '../api/types';
 import { useAuth } from '../context/AuthContext';
@@ -33,38 +33,60 @@ export const useHome = () => {
   const [loadingAppt, setLoadingAppt] = useState(false);
   const [apptError, setApptError] = useState<string | null>(null);
 
-  // Prevenir mostrar citas desactualizadas al cambiar de sesión/token
-  const lastTokenRef = useRef<string | null>(token);
+  // Referencias para rastrear sesión y generación de peticiones independientemente de closures asíncronos
+  const activeTokenRef = useRef<string | null>(token);
+  const activeAuthRef = useRef<boolean>(isAuthenticated);
+  const requestGenRef = useRef<number>(0);
+
+  // Sincronizar en cada render la sesión actual en refs mutables
+  activeTokenRef.current = token;
+  activeAuthRef.current = isAuthenticated;
+
+  // Limpiar citas y cancelar peticiones pendientes ante cambio de sesión o cierre de sesión
+  const prevTokenRef = useRef<string | null>(token);
   useEffect(() => {
-    if (lastTokenRef.current !== token) {
-      lastTokenRef.current = token;
+    if (prevTokenRef.current !== token) {
+      prevTokenRef.current = token;
+      requestGenRef.current += 1;
       setUpcomingAppt(null);
       setApptError(null);
+      setLoadingAppt(false);
     }
   }, [token]);
 
   const loadNextAppointment = useCallback(async () => {
-    if (!isAuthenticated) {
+    if (!activeAuthRef.current || !activeTokenRef.current) {
+      requestGenRef.current += 1;
       setUpcomingAppt(null);
       setApptError(null);
       setLoadingAppt(false);
       return;
     }
 
+    const currentToken = activeTokenRef.current;
+    const currentGen = ++requestGenRef.current;
+
     setLoadingAppt(true);
     setApptError(null);
-    const requestToken = token;
 
     try {
       const list = await appointmentsApi.getPatientAppointments();
-      if (requestToken !== token) return;
+
+      // Descartar si cambió la sesión o si una petición posterior ya fue emitida
+      if (
+        activeTokenRef.current !== currentToken ||
+        !activeAuthRef.current ||
+        currentGen !== requestGenRef.current
+      ) {
+        return;
+      }
 
       const now = Date.now();
       const validList = Array.isArray(list) ? list : [];
       const upcoming = validList
         .filter((a) => {
           const startTime = new Date(a.start_date_time).getTime();
-          // Cita futura: debe tener timestamp válido y su hora de inicio aún no debe haber transcurrido
+          // Cita futura: timestamp numérico válido y hora de inicio aún no transcurrida
           return !isNaN(startTime) && startTime >= now;
         })
         .sort(
@@ -74,17 +96,33 @@ export const useHome = () => {
 
       setUpcomingAppt(upcoming || null);
     } catch (err: any) {
-      if (requestToken !== token) return;
+      if (
+        activeTokenRef.current !== currentToken ||
+        !activeAuthRef.current ||
+        currentGen !== requestGenRef.current
+      ) {
+        return;
+      }
       setUpcomingAppt(null);
       setApptError(err?.message || 'No se pudieron cargar tus citas médicas.');
     } finally {
-      setLoadingAppt(false);
+      // Proteger el estado de carga: peticiones desactualizadas no deben desactivar la carga de una más nueva
+      if (
+        activeTokenRef.current === currentToken &&
+        activeAuthRef.current &&
+        currentGen === requestGenRef.current
+      ) {
+        setLoadingAppt(false);
+      }
     }
-  }, [isAuthenticated, token]);
+  }, []);
 
-  useEffect(() => {
-    loadNextAppointment();
-  }, [loadNextAppointment]);
+  // Recargar al montar o volver a enfocar la pantalla de Inicio
+  useFocusEffect(
+    useCallback(() => {
+      loadNextAppointment();
+    }, [loadNextAppointment])
+  );
 
   const navigateToClinics = () => router.push('/clinics' as any);
   const navigateToAppointments = () => router.push('/appointments' as any);
