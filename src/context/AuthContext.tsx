@@ -38,7 +38,7 @@ export interface AuthContextType {
   isResolvingModes: boolean;
   modeResolutionError: string | null;
   setActiveMode: (mode: AppMode) => void;
-  refreshRoleAccess: () => Promise<void>;
+  refreshRoleAccess: () => Promise<AdminClinic[]>;
 }
 
 const AuthContext = createContext<AuthContextType | undefined>(undefined);
@@ -55,6 +55,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [adminClinics, setAdminClinics] = useState<AdminClinic[]>([]);
   const [isResolvingModes, setIsResolvingModes] = useState<boolean>(false);
   const [modeResolutionError, setModeResolutionError] = useState<string | null>(null);
+
+  // Ref tracking current available modes synchronously to avoid render lag in transition callbacks
+  const availableModesRef = useRef<AppMode[]>([]);
 
   // Tracks explicit manual mode selection by the user across role refreshes
   const manualActiveModeRef = useRef<AppMode | null>(null);
@@ -96,8 +99,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     sessionId: number,
     resolutionGen: number,
     isDoctorCapability: boolean
-  ): Promise<void> => {
-    if (!isMountedRef.current) return;
+  ): Promise<AdminClinic[]> => {
+    if (!isMountedRef.current) return [];
     setIsResolvingModes(true);
     setModeResolutionError(null);
 
@@ -110,7 +113,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         sessionId !== authSessionRef.current ||
         resolutionGen !== roleResolutionGenRef.current
       ) {
-        return;
+        return [];
       }
 
       const verifiedClinics = Array.isArray(clinics) ? clinics : [];
@@ -125,6 +128,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       }
 
       hasResolvedModesRef.current = true;
+      availableModesRef.current = modes;
       setAdminClinics(verifiedClinics);
       setRoles({ isAdmin: hasAdminClinics, isDoctor: isDoctorCapability });
       setAvailableModes(modes);
@@ -140,13 +144,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         nextMode = computeDefaultMode(modes);
       }
       setActiveModeState(nextMode);
+      return verifiedClinics;
     } catch (error: any) {
       if (
         !isMountedRef.current ||
         sessionId !== authSessionRef.current ||
         resolutionGen !== roleResolutionGenRef.current
       ) {
-        return;
+        return [];
       }
 
       const errorMessage =
@@ -157,6 +162,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Initial resolution failed: do NOT expose a supposedly verified active mode or guessed capabilities
         setAdminClinics([]);
         setRoles(null);
+        availableModesRef.current = [];
         setAvailableModes([]);
         setActiveModeState(null);
       } else {
@@ -164,6 +170,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         // Do NOT replace valid admin access with a guessed patient-only result.
         // modeResolutionError remains set for error/retry presentation.
       }
+      throw error;
     } finally {
       if (
         isMountedRef.current &&
@@ -181,10 +188,14 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
         console.warn('Cannot set active mode when unauthenticated');
         return;
       }
-      if (!availableModes.includes(mode)) {
+      const currentAvailable =
+        availableModesRef.current.length > 0
+          ? availableModesRef.current
+          : availableModes;
+      if (!currentAvailable.includes(mode)) {
         console.warn(
           `Cannot set active mode to "${mode}". Available modes:`,
-          availableModes
+          currentAvailable
         );
         return;
       }
@@ -194,10 +205,10 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     [token, availableModes]
   );
 
-  const refreshRoleAccess = async (): Promise<void> => {
+  const refreshRoleAccess = async (): Promise<AdminClinic[]> => {
     if (!token && !apiClient.getToken()) {
       console.warn('Cannot refresh role access when unauthenticated');
-      return;
+      return [];
     }
     const sessionId = authSessionRef.current;
     const resolutionGen = ++roleResolutionGenRef.current;
@@ -214,14 +225,16 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sessionId !== authSessionRef.current ||
       resolutionGen !== roleResolutionGenRef.current
     ) {
-      return;
+      return [];
     }
 
-    await resolveRolesAndModes(sessionId, resolutionGen, isDoc);
+    return await resolveRolesAndModes(sessionId, resolutionGen, isDoc);
   };
 
   const refreshProfile = async (): Promise<void> => {
-    if (!token && !apiClient.getToken()) return;
+    if (!token && !apiClient.getToken()) {
+      throw new Error('No hay sesión autenticada activa.');
+    }
     const sessionId = authSessionRef.current;
     try {
       const profile = await authApi.getProfile();
@@ -229,6 +242,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(profile);
     } catch (error) {
       console.warn('Failed to load user profile:', error);
+      if (sessionId === authSessionRef.current) {
+        throw error;
+      }
     }
   };
 
@@ -253,6 +269,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       setUser(null);
       setRoles(null);
       setActiveModeState(null);
+      availableModesRef.current = [];
       setAvailableModes([]);
       setAdminClinics([]);
       setModeResolutionError(null);
@@ -286,7 +303,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
           return null;
         });
 
-      const modePromise = resolveRolesAndModes(sessionId, resolutionGen, isDoctor);
+      const modePromise = resolveRolesAndModes(sessionId, resolutionGen, isDoctor).catch(() => []);
 
       await Promise.all([profilePromise, modePromise]);
 
@@ -323,6 +340,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     setUser(null);
     setRoles(null);
     setActiveModeState(null);
+    availableModesRef.current = [];
     setAvailableModes([]);
     setAdminClinics([]);
     setIsLoading(false);

@@ -1,5 +1,12 @@
 import React from 'react';
-import { Pressable, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import {
+  ActivityIndicator,
+  Pressable,
+  SafeAreaView,
+  ScrollView,
+  Text,
+  View,
+} from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Field, ScreenHeader, SelectModal } from '../../components';
 import { useCreateClinic } from './useCreateClinic';
@@ -13,6 +20,9 @@ export function CreateClinicScreen() {
     isSubmitting,
     submitError,
     createdClinicId,
+    isVerifyingRole,
+    roleVerificationError,
+    handleRetryVerification,
     modalType,
     setModalType,
     countryId,
@@ -54,25 +64,59 @@ export function CreateClinicScreen() {
     return (
       <SafeAreaView className="flex-1 bg-white">
         <ScreenHeader title="Nueva clínica" canGoBack={false} />
-        <View className="flex-1 items-center justify-center px-6 bg-gray-50">
-          <View className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 items-center justify-center mb-4">
-            <Ionicons name="checkmark-circle" size={36} color="#059669" />
+        {isVerifyingRole ? (
+          <View className="flex-1 items-center justify-center px-6 bg-gray-50">
+            <ActivityIndicator size="large" color="#259487" className="mb-4" />
+            <Text className="text-lg font-bold text-neutral-900 text-center">
+              Verificando permisos de administración...
+            </Text>
+            <Text className="text-xs text-gray-600 text-center mt-2 max-w-xs leading-relaxed">
+              Tu clínica #{createdClinicId} fue creada con éxito. Estamos confirmando tu rol de Propietario para habilitar el Modo Administrador.
+            </Text>
           </View>
-          <Text className="text-xl font-bold text-neutral-900 text-center">
-            ¡Clínica creada correctamente!
-          </Text>
-          <Text className="text-sm text-gray-600 text-center mt-2">
-            La clínica ya fue registrada y está disponible en el catálogo de sedes.
-          </Text>
-          <Text className="text-xs text-gray-400 text-center mt-2">
-            Identificador: #{createdClinicId}
-          </Text>
-          <Button
-            text="Ver clínicas"
-            onPress={() => router.replace('/clinics' as any)}
-            className="mt-6 w-full max-w-xs"
-          />
-        </View>
+        ) : (
+          <View className="flex-1 items-center justify-center px-6 bg-gray-50">
+            <View className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 items-center justify-center mb-3">
+              <Ionicons name="checkmark-circle" size={36} color="#059669" />
+            </View>
+            <Text className="text-xl font-bold text-neutral-900 text-center">
+              ¡Clínica creada correctamente!
+            </Text>
+            <Text className="text-xs text-gray-500 text-center mt-1">
+              Identificador asignado: #{createdClinicId}
+            </Text>
+
+            {roleVerificationError ? (
+              <View className="w-full max-w-xs bg-amber-50 border border-amber-200 rounded-md p-3.5 mt-4 mb-4">
+                <View className="flex-row items-center mb-1">
+                  <Ionicons name="alert-circle-outline" size={16} color="#b45309" />
+                  <Text className="text-xs font-bold text-amber-800 ml-1.5">
+                    Verificación de rol pendiente
+                  </Text>
+                </View>
+                <Text className="text-xs text-amber-700 leading-relaxed">
+                  {roleVerificationError}
+                </Text>
+              </View>
+            ) : null}
+
+            <View className="w-full max-w-xs gap-3 mt-4">
+              <Button
+                text="Reintentar verificación de acceso"
+                onPress={handleRetryVerification}
+                loading={isVerifyingRole}
+                disabled={isVerifyingRole}
+                className="w-full"
+              />
+              <Button
+                text="Ir al inicio"
+                variant="outline"
+                onPress={() => router.replace('/' as any)}
+                className="w-full"
+              />
+            </View>
+          </View>
+        )}
       </SafeAreaView>
     );
   }

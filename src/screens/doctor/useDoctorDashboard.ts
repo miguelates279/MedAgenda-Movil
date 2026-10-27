@@ -18,6 +18,7 @@ export function useDoctorDashboard() {
 
   const [loading, setLoading] = useState(false);
   const [appointments, setAppointments] = useState<DoctorAppointmentView[]>([]);
+  const [appointmentsError, setAppointmentsError] = useState<string | null>(null);
   const [patientHistories, setPatientHistories] = useState<PatientHistoryRow[]>([]);
   const [prescriptions, setPrescriptions] = useState<PrescriptionDoctorView[]>([]);
   const [doctorClinics, setDoctorClinics] = useState<{ clinicId: number; clinicName: string }[]>([]);
@@ -45,15 +46,24 @@ export function useDoctorDashboard() {
       return;
     }
     setLoading(true);
+    setAppointmentsError(null);
     try {
-      const [apptsData, historiesData, doctorPrescriptionsData, userClinicsData] = await Promise.all([
-        doctorsApi.getDoctorAppointments().catch(() => []),
+      let apptsData: DoctorAppointmentView[] = [];
+      let apptsErr: string | null = null;
+      try {
+        apptsData = await doctorsApi.getDoctorAppointments();
+      } catch (err: any) {
+        apptsErr = err?.message || 'No se pudieron cargar las citas del médico.';
+      }
+
+      const [historiesData, doctorPrescriptionsData, userClinicsData] = await Promise.all([
         doctorsApi.getDoctorPatientHistories().catch(() => []),
         prescriptionsApi.getDoctorPrescriptions().catch(() => []),
         clinicsApi.getUserClinics().catch(() => []),
       ]);
 
       setAppointments(apptsData || []);
+      setAppointmentsError(apptsErr);
       setPatientHistories(historiesData || []);
       setPrescriptions(doctorPrescriptionsData || []);
 
@@ -91,6 +101,39 @@ export function useDoctorDashboard() {
   useEffect(() => {
     loadDashboardData();
   }, [loadDashboardData]);
+
+  const todayFormattedDate = useMemo(() => {
+    const now = new Date();
+    const formatted = now.toLocaleDateString('es-ES', {
+      weekday: 'long',
+      year: 'numeric',
+      month: 'long',
+      day: 'numeric',
+    });
+    return formatted.charAt(0).toUpperCase() + formatted.slice(1);
+  }, []);
+
+  const todayAppointments = useMemo(() => {
+    const now = new Date();
+    const todayYear = now.getFullYear();
+    const todayMonth = now.getMonth();
+    const todayDate = now.getDate();
+
+    return (Array.isArray(appointments) ? appointments : [])
+      .filter((a) => {
+        const start = new Date(a.start_date_time);
+        if (isNaN(start.getTime())) return false;
+        return (
+          start.getFullYear() === todayYear &&
+          start.getMonth() === todayMonth &&
+          start.getDate() === todayDate
+        );
+      })
+      .sort(
+        (a, b) =>
+          new Date(a.start_date_time).getTime() - new Date(b.start_date_time).getTime()
+      );
+  }, [appointments]);
 
   const upcomingAppointments = useMemo(() => {
     const now = new Date();
@@ -338,6 +381,9 @@ export function useDoctorDashboard() {
   return {
     user,
     loading,
+    appointmentsError,
+    todayAppointments,
+    todayFormattedDate,
     rangeDays,
     setRangeDays,
     patientQuery,

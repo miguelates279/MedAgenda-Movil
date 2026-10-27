@@ -1,6 +1,8 @@
 import React from 'react';
 import {
+  ActivityIndicator,
   Pressable,
+  RefreshControl,
   SafeAreaView,
   ScrollView,
   Text,
@@ -14,6 +16,9 @@ export const AdminLandingScreen: React.FC = () => {
   const {
     user,
     adminClinics,
+    isResolvingModes,
+    modeResolutionError,
+    handleRefresh,
     navigateToMyClinics,
     navigateToNewClinic,
     navigateToClinicDetail,
@@ -40,8 +45,16 @@ export const AdminLandingScreen: React.FC = () => {
       <ScrollView
         className="flex-1 bg-gray-50"
         contentContainerClassName="p-4 pb-8"
+        refreshControl={
+          <RefreshControl
+            refreshing={isResolvingModes}
+            onRefresh={handleRefresh}
+            tintColor="#259487"
+            colors={['#259487']}
+          />
+        }
       >
-        {/* Tarjeta de Bienvenida */}
+        {/* Tarjeta de Bienvenida y Contexto de Administración */}
         <View className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm mb-4">
           <Text className="text-xs text-gray-600">Sesión Administrativa</Text>
           <Text className="text-base font-bold text-neutral-900 mt-0.5">
@@ -51,6 +64,27 @@ export const AdminLandingScreen: React.FC = () => {
             Desde este espacio puedes gestionar las sedes clínicas asignadas a tu cargo, consultar sus detalles o registrar nuevas sedes.
           </Text>
         </View>
+
+        {/* Error en resolución de capacidades/sedes */}
+        {modeResolutionError ? (
+          <View className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+            <View className="flex-row items-center mb-1">
+              <Ionicons name="alert-circle-outline" size={16} color="#991b1b" />
+              <Text className="text-xs font-bold text-red-800 ml-1.5">
+                Error de sincronización de permisos
+              </Text>
+            </View>
+            <Text className="text-xs text-red-700 mb-3 leading-relaxed">
+              {modeResolutionError}
+            </Text>
+            <Button
+              text="Reintentar verificación"
+              variant="outline"
+              onPress={handleRefresh}
+              className="py-1 px-3 self-start"
+            />
+          </View>
+        ) : null}
 
         {/* Sección de Sedes Clínicas Asignadas */}
         <View className="mb-4">
@@ -71,7 +105,14 @@ export const AdminLandingScreen: React.FC = () => {
             )}
           </View>
 
-          {adminClinics.length === 0 ? (
+          {isResolvingModes && adminClinics.length === 0 && !modeResolutionError ? (
+            <Card className="items-center p-6">
+              <ActivityIndicator size="small" color="#259487" />
+              <Text className="text-xs text-gray-500 mt-2">
+                Cargando sedes administrativas...
+              </Text>
+            </Card>
+          ) : adminClinics.length === 0 ? (
             <Card className="items-center p-6">
               <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-3">
                 <Ionicons name="business-outline" size={24} color="#9ca3af" />
@@ -89,46 +130,49 @@ export const AdminLandingScreen: React.FC = () => {
               />
             </Card>
           ) : (
-            adminClinics.map((clinic) => (
-              <Card key={clinic.clinic_id} className="mb-3">
-                <View className="flex-row justify-between items-start mb-2">
-                  <View className="flex-1 mr-2">
-                    <Text className="text-sm font-bold text-neutral-900">
-                      {clinic.clinic_name}
-                    </Text>
-                    <View className="flex-row items-center mt-1">
-                      <Ionicons name="business-outline" size={13} color="#4b5563" />
-                      <Text className="text-xs text-gray-600 ml-1">
-                        Sede ID #{clinic.clinic_id}
+            adminClinics.map((clinic) => {
+              const isOwner = clinic.role_within_clinic === 'Owner';
+              return (
+                <Card key={clinic.clinic_id} className="mb-3">
+                  <View className="flex-row justify-between items-start mb-2">
+                    <View className="flex-1 mr-2">
+                      <Text className="text-sm font-bold text-neutral-900">
+                        {clinic.clinic_name}
                       </Text>
+                      <View className="flex-row items-center mt-1">
+                        <Ionicons name="business-outline" size={13} color="#4b5563" />
+                        <Text className="text-xs text-gray-600 ml-1">
+                          Sede ID #{clinic.clinic_id}
+                        </Text>
+                      </View>
+                      {clinic.role_description ? (
+                        <Text className="text-xs text-gray-500 mt-1">
+                          {clinic.role_description}
+                        </Text>
+                      ) : null}
                     </View>
-                    {clinic.role_description ? (
-                      <Text className="text-xs text-gray-500 mt-1">
-                        {clinic.role_description}
-                      </Text>
-                    ) : null}
+                    <Badge
+                      text={isOwner ? 'Propietario' : 'Administrador'}
+                      variant={isOwner ? 'primary' : 'info'}
+                    />
                   </View>
-                  <Badge
-                    text={clinic.role_within_clinic === 'Owner' ? 'Propietario' : 'Admin'}
-                    variant={clinic.role_within_clinic === 'Owner' ? 'primary' : 'info'}
-                  />
-                </View>
 
-                <View className="flex-row items-center justify-between mt-3 pt-2.5 border-t border-gray-100">
-                  <Pressable
-                    onPress={() => navigateToClinicDetail(clinic.clinic_id)}
-                    className="flex-row items-center"
-                    accessibilityRole="button"
-                    accessibilityLabel={`Ver detalles de ${clinic.clinic_name}`}
-                  >
-                    <Text className="text-xs font-semibold text-primary mr-1">
-                      Ver detalles de sede
-                    </Text>
-                    <Ionicons name="chevron-forward" size={14} color="#259487" />
-                  </Pressable>
-                </View>
-              </Card>
-            ))
+                  <View className="flex-row items-center justify-between mt-3 pt-2.5 border-t border-gray-100">
+                    <Pressable
+                      onPress={() => navigateToClinicDetail(clinic.clinic_id)}
+                      className="flex-row items-center"
+                      accessibilityRole="button"
+                      accessibilityLabel={`Ver detalles de ${clinic.clinic_name}`}
+                    >
+                      <Text className="text-xs font-semibold text-primary mr-1">
+                        Ver detalles de sede
+                      </Text>
+                      <Ionicons name="chevron-forward" size={14} color="#259487" />
+                    </Pressable>
+                  </View>
+                </Card>
+              );
+            })
           )}
         </View>
 

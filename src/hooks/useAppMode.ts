@@ -8,7 +8,7 @@ export interface UseAppModeResult {
   isResolvingModes: boolean;
   modeResolutionError: string | null;
   setActiveMode: (mode: AppMode) => void;
-  refreshRoleAccess: () => Promise<void>;
+  refreshRoleAccess: () => Promise<AdminClinic[]>;
 }
 
 /**

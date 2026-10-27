@@ -165,8 +165,13 @@ export const ProfileScreen: React.FC = () => {
 
           <ScrollView
             className="flex-1 bg-gray-50"
-            contentContainerClassName="p-4"
+            contentContainerClassName="p-4 pb-10"
+            keyboardShouldPersistTaps="handled"
           >
+            <Text className="text-xs text-gray-600 mb-4 leading-4">
+              Inicia sesión para agendar citas médicas, consultar tus recetas y ver tu historial.
+            </Text>
+
             {tab === 'login' ? (
               <LoginForm onSwitchToRegister={() => setTab('register')} />
             ) : (

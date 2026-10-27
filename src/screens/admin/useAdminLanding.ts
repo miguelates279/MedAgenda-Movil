@@ -4,8 +4,20 @@ import { useAppMode, useUserInfo } from '../../hooks';
 
 export const useAdminLanding = () => {
   const router = useRouter();
-  const { adminClinics, activeMode } = useAppMode();
+  const {
+    adminClinics,
+    activeMode,
+    isResolvingModes,
+    modeResolutionError,
+    refreshRoleAccess,
+  } = useAppMode();
   const { user } = useUserInfo();
+
+  const handleRefresh = useCallback(async () => {
+    try {
+      await refreshRoleAccess();
+    } catch {}
+  }, [refreshRoleAccess]);
 
   const navigateToMyClinics = useCallback(() => {
     router.push('/clinics/mine' as any);
@@ -26,6 +38,9 @@ export const useAdminLanding = () => {
     user,
     activeMode,
     adminClinics,
+    isResolvingModes,
+    modeResolutionError,
+    handleRefresh,
     navigateToMyClinics,
     navigateToNewClinic,
     navigateToClinicDetail,

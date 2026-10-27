@@ -2,6 +2,7 @@ import React from 'react';
 import { Pressable, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Badge } from '../../../components';
+import { useRouter } from 'expo-router';
 import { UserProfile } from '../../../api/types';
 import { AppMode } from '../../../context/AuthContext';
 import { ModeSelector } from './ModeSelector';
@@ -29,6 +30,7 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
   onSelectMode,
   onLogout,
 }) => {
+  const router = useRouter();
   return (
     <ScrollView
       className="flex-1 bg-gray-50"
@@ -99,6 +101,25 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
           <Text className="text-xs text-neutral-900 font-semibold max-w-[65%] text-right">
             {user.user_email_address}
           </Text>
+        </View>
+      </View>
+
+      {/* Registro de nueva sede clínica (Onboarding para crear clínica) */}
+      <View className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-4">
+        <View className="flex-row items-center justify-between">
+          <View className="flex-1 pr-3">
+            <Text className="text-xs font-bold text-primary uppercase">Profesionales y Sedes</Text>
+            <Text className="text-sm font-bold text-neutral-900 mt-0.5">Registrar una clínica</Text>
+            <Text className="text-xs text-gray-600 mt-0.5">Registra tu sede para administrar citas y personal de salud.</Text>
+          </View>
+          <Pressable
+            onPress={() => router.push('/clinics/new' as any)}
+            className="py-2 px-3 bg-teal-50 border border-teal-200 rounded-md active:bg-teal-100"
+            accessibilityRole="button"
+            accessibilityLabel="Registrar una clínica"
+          >
+            <Text className="text-xs font-bold text-primary">Registrar</Text>
+          </Pressable>
         </View>
       </View>
 

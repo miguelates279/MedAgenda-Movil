@@ -11,7 +11,7 @@ import { useClinicDetail } from './useClinicDetail';
 
 export function ClinicDetailScreen() {
   const {
-    roles,
+    isOwner,
     clinic,
     doctors,
     rules,
@@ -68,7 +68,7 @@ export function ClinicDetailScreen() {
               </Text>
             ) : null}
 
-            {roles?.isAdmin ? (
+            {isOwner ? (
               <Button
                 text={deleting ? 'Eliminando...' : 'Eliminar clínica'}
                 variant="danger"

@@ -1,4 +1,4 @@
-import { useState } from 'react';
+import { useCallback, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import clinicsApi from '../../api/clinics';
@@ -11,7 +11,7 @@ export type ClinicFormValues = Omit<CreateClinicDto, 'clinic_city_id'>;
 
 export function useCreateClinic() {
   const router = useRouter();
-  const { isAuthenticated } = useAuth();
+  const { isAuthenticated, refreshRoleAccess, setActiveMode } = useAuth();
   const {
     countries,
     states,
@@ -28,6 +28,8 @@ export function useCreateClinic() {
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdClinicId, setCreatedClinicId] = useState<number | null>(null);
+  const [isVerifyingRole, setIsVerifyingRole] = useState(false);
+  const [roleVerificationError, setRoleVerificationError] = useState<string | null>(null);
 
   const { control, handleSubmit } = useForm<ClinicFormValues>({
     defaultValues: {
@@ -55,6 +57,51 @@ export function useCreateClinic() {
     value: item.city_id,
   }));
 
+  /**
+   * Verifica que la nueva clínica aparezca en las membresías administrativas del backend,
+   * confirma el rol de Owner y realiza la transición al Modo Administrador (Deliverable E).
+   * NO repite el POST de creación.
+   */
+  const verifyRoleAndTransition = useCallback(
+    async (clinicId: number) => {
+      setIsVerifyingRole(true);
+      setRoleVerificationError(null);
+      try {
+        const verifiedClinics = await refreshRoleAccess();
+        const createdClinic = (Array.isArray(verifiedClinics) ? verifiedClinics : []).find(
+          (c) => c.clinic_id === clinicId
+        );
+
+        if (!createdClinic) {
+          setRoleVerificationError(
+            'La clínica fue creada correctamente, pero aún no se refleja en tus membresías de administración. Reintenta la verificación de acceso.'
+          );
+          return;
+        }
+
+        if (createdClinic.role_within_clinic !== 'Owner') {
+          setRoleVerificationError(
+            'La clínica fue creada, pero tu rol reportado no es Propietario. Reintenta la verificación.'
+          );
+          return;
+        }
+
+        // 1. Membresía de propietario verificada.
+        // 2. Seleccionar modo administrador solo tras refresco exitoso.
+        setActiveMode('admin');
+        // 3. Redirigir a través del enrutador central '/' hacia el Administrator Home.
+        router.replace('/' as any);
+      } catch (err: any) {
+        setRoleVerificationError(
+          err?.message || 'Error al verificar las membresías de administración tras la creación.'
+        );
+      } finally {
+        setIsVerifyingRole(false);
+      }
+    },
+    [refreshRoleAccess, setActiveMode, router]
+  );
+
   const onSubmit = async (data: ClinicFormValues) => {
     if (!cityId) {
       setSubmitError('Selecciona una ciudad para registrar la clínica.');
@@ -65,13 +112,22 @@ export function useCreateClinic() {
     setIsSubmitting(true);
     try {
       const response = await clinicsApi.createClinic({ ...data, clinic_city_id: cityId });
-      setCreatedClinicId(response.clinic_id);
+      const newClinicId = response.clinic_id;
+      setCreatedClinicId(newClinicId);
+      // Iniciar inmediatamente la verificación de membresía y transición de rol
+      await verifyRoleAndTransition(newClinicId);
     } catch (error: any) {
-      setSubmitError(error.message || 'No se pudo crear la clínica.');
+      setSubmitError(error?.message || 'No se pudo crear la clínica.');
     } finally {
       setIsSubmitting(false);
     }
   };
+
+  const handleRetryVerification = useCallback(() => {
+    if (createdClinicId !== null) {
+      verifyRoleAndTransition(createdClinicId);
+    }
+  }, [createdClinicId, verifyRoleAndTransition]);
 
   return {
     router,
@@ -81,6 +137,9 @@ export function useCreateClinic() {
     isSubmitting,
     submitError,
     createdClinicId,
+    isVerifyingRole,
+    roleVerificationError,
+    handleRetryVerification,
     modalType,
     setModalType,
     countryId,
@@ -98,3 +157,5 @@ export function useCreateClinic() {
     onSubmit,
   };
 }
+
+export default useCreateClinic;

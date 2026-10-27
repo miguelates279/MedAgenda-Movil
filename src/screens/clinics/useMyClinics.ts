@@ -42,10 +42,16 @@ export function useMyClinics() {
     setDeleting(true);
     try {
       await clinicsApi.deleteClinic(cid);
-      setAdminClinics((prev) => prev.filter((item) => item.clinic_id !== cid));
       setClinicPendingDelete(null);
-      // Sincronizar capacidades de rol en AuthContext en segundo plano
-      refreshRoleAccess().catch(() => {});
+      // Sincronizar capacidades de rol en AuthContext
+      const updatedClinics = await refreshRoleAccess();
+      const verifiedList = Array.isArray(updatedClinics) ? updatedClinics : [];
+      setAdminClinics(verifiedList);
+      if (verifiedList.length === 0) {
+        // Al no quedar clínicas administrables, Stage 1 revoca el modo Admin.
+        // Redirigir a través del enrutador central '/' para no dejar al usuario en una ruta bloqueada.
+        router.replace('/' as any);
+      }
     } catch (err: any) {
       setError(err?.message || 'No se pudo eliminar la clínica.');
     } finally {

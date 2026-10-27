@@ -12,11 +12,15 @@ import {
 } from 'react-native';
 import { Badge, Button, Card } from '../../components';
 import { useDoctorDashboard } from './useDoctorDashboard';
+import { TodayAgendaSection } from './components/TodayAgendaSection';
 
 export function DoctorDashboardScreen() {
   const {
     user,
     loading,
+    appointmentsError,
+    todayAppointments,
+    todayFormattedDate,
     rangeDays,
     setRangeDays,
     patientQuery,
@@ -68,6 +72,15 @@ export function DoctorDashboardScreen() {
             <Text className="text-primary font-bold text-xs">🔄 Recargar</Text>
           </TouchableOpacity>
         </View>
+
+        {/* 1. Sección Principal y Prominente: Agenda de Hoy */}
+        <TodayAgendaSection
+          todayAppointments={todayAppointments}
+          todayFormattedDate={todayFormattedDate}
+          loading={loading}
+          error={appointmentsError}
+          onRetry={loadDashboardData}
+        />
 
         <View className="mb-5 bg-white p-4 rounded-xl border border-gray-200 shadow-sm">
           <Text className="text-xs font-bold text-primary uppercase tracking-wider mb-1">Rango de Tiempo</Text>
