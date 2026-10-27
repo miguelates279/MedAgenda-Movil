@@ -166,11 +166,13 @@ export function useMyClinics() {
     deletedClinicIdsRef.current.add(cid);
     listRequestGenRef.current += 1;
 
-    // b) Retirar inmediatamente la clínica del listado local y del AuthContext compartido
+    // b) Retirar inmediatamente la clínica del listado local y del AuthContext compartido,
+    // y reconciliar el estado de carga de la petición de listado invalidada
     setAdminClinics((prev) => prev.filter((item) => item.clinic_id !== cid));
     removeAdminClinic(cid);
     setClinicPendingDelete(null);
     setDeleting(false);
+    setLoading(false);
 
     // 3. Sincronizar capacidades de rol de forma separada sin repetir el DELETE ante fallo
     await handleSyncRoles(targetSessionId);
