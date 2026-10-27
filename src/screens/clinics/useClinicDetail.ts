@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useMemo, useState } from 'react';
+import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import clinicsApi from '../../api/clinics';
@@ -31,6 +31,9 @@ export function useClinicDetail() {
   // ID del doctor para agendamiento pendiente tras confirmar cambio al modo Paciente (Fix 3)
   const [pendingBookingDoctorId, setPendingBookingDoctorId] = useState<number | null>(null);
 
+  // Request generation counter to guard against race conditions across clinic navigation
+  const requestGenRef = useRef<number>(0);
+
   // Navegar a la ruta protegida de agendamiento solo tras haber completado la transición al modo Paciente
   useEffect(() => {
     if (pendingBookingDoctorId !== null && activeMode === 'patient') {
@@ -56,32 +59,52 @@ export function useClinicDetail() {
 
   useEffect(() => {
     if (!clinicId) return;
+    let active = true;
     const currentSessionId = getSessionId();
+    const currentGen = ++requestGenRef.current;
+    const targetClinicId = clinicId;
 
     (async () => {
       setLoading(true);
       setError(null);
       try {
         const [cData, dList, rData] = await Promise.all([
-          clinicsApi.getClinicDetails(clinicId),
-          clinicsApi.getClinicDoctors(clinicId),
-          clinicsApi.getClinicScheduleRules(clinicId).catch(() => null),
+          clinicsApi.getClinicDetails(targetClinicId),
+          clinicsApi.getClinicDoctors(targetClinicId),
+          clinicsApi.getClinicScheduleRules(targetClinicId).catch(() => null),
         ]);
-        if (getSessionId() === currentSessionId) {
+        // Guard against unmount, session switch, or navigation to another clinicId
+        if (
+          active &&
+          getSessionId() === currentSessionId &&
+          currentGen === requestGenRef.current
+        ) {
           setClinic(cData);
           setDoctors(dList);
           setRules(rData);
         }
       } catch (err: any) {
-        if (getSessionId() === currentSessionId) {
+        if (
+          active &&
+          getSessionId() === currentSessionId &&
+          currentGen === requestGenRef.current
+        ) {
           setError(err.message || 'Error al cargar detalles de la clínica');
         }
       } finally {
-        if (getSessionId() === currentSessionId) {
+        if (
+          active &&
+          getSessionId() === currentSessionId &&
+          currentGen === requestGenRef.current
+        ) {
           setLoading(false);
         }
       }
     })();
+
+    return () => {
+      active = false;
+    };
   }, [clinicId, getSessionId]);
 
   // Manejo coherente de agendamiento público según modo y sesión (Fix 3)

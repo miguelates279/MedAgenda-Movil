@@ -1,4 +1,4 @@
-import { useCallback, useEffect, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import adminApi from '../../api/admin';
 import clinicsApi from '../../api/clinics';
@@ -23,28 +23,66 @@ export function useMyClinics() {
   const [clinicPendingDelete, setClinicPendingDelete] = useState<AdminClinic | null>(null);
   const [deleting, setDeleting] = useState(false);
 
+  // Lifecyle and race-condition guards
+  const listRequestGenRef = useRef<number>(0);
+  const deletedClinicIdsRef = useRef<Set<number>>(new Set());
+  const lastSessionIdRef = useRef<number>(getSessionId());
+  const isMountedRef = useRef<boolean>(true);
+
+  useEffect(() => {
+    isMountedRef.current = true;
+    return () => {
+      isMountedRef.current = false;
+    };
+  }, []);
+
   const loadAdminClinics = useCallback(async () => {
     const currentSessionId = getSessionId();
+    if (currentSessionId !== lastSessionIdRef.current) {
+      lastSessionIdRef.current = currentSessionId;
+      deletedClinicIdsRef.current.clear();
+    }
+
     if (!isAuthenticated || activeMode !== 'admin') {
       setLoading(false);
       return;
     }
+
+    const currentGen = ++listRequestGenRef.current;
     setLoading(true);
     setError(null);
+
     try {
       const data = await adminApi.getMyClinics();
-      // Guard against stale closures across await: verify active session generation
-      if (getSessionId() !== currentSessionId) {
+
+      // Guard against stale responses: unmounted, session changed, or superseded by a newer request/delete
+      if (
+        !isMountedRef.current ||
+        getSessionId() !== currentSessionId ||
+        currentGen !== listRequestGenRef.current
+      ) {
         return;
       }
-      setAdminClinics(Array.isArray(data) ? data : []);
+
+      const list = Array.isArray(data) ? data : [];
+      // Ensure no previously deleted clinic in this session is restored by a delayed response
+      const filteredList = list.filter((c) => !deletedClinicIdsRef.current.has(c.clinic_id));
+      setAdminClinics(filteredList);
     } catch (err: any) {
-      if (getSessionId() !== currentSessionId) {
+      if (
+        !isMountedRef.current ||
+        getSessionId() !== currentSessionId ||
+        currentGen !== listRequestGenRef.current
+      ) {
         return;
       }
       setError(err?.message || 'No se pudieron cargar tus clínicas de administración.');
     } finally {
-      if (getSessionId() === currentSessionId) {
+      if (
+        isMountedRef.current &&
+        getSessionId() === currentSessionId &&
+        currentGen === listRequestGenRef.current
+      ) {
         setLoading(false);
       }
     }
@@ -57,25 +95,29 @@ export function useMyClinics() {
   const handleSyncRoles = useCallback(
     async (expectedSessionId?: number) => {
       const targetSessionId = expectedSessionId ?? getSessionId();
-      if (getSessionId() !== targetSessionId) {
+      if (!isMountedRef.current || getSessionId() !== targetSessionId) {
         return;
       }
       setIsSyncing(true);
       setSyncError(null);
       try {
         const updatedClinics = await refreshRoleAccess();
-        // Guard against stale closures: verify active session generation
-        if (getSessionId() !== targetSessionId) {
+        // Guard against stale closures: verify active session generation and unmounted state
+        if (!isMountedRef.current || getSessionId() !== targetSessionId) {
           return;
         }
         const verifiedList = Array.isArray(updatedClinics) ? updatedClinics : [];
-        setAdminClinics(verifiedList);
-        if (verifiedList.length === 0) {
+        const filteredList = verifiedList.filter(
+          (c) => !deletedClinicIdsRef.current.has(c.clinic_id)
+        );
+        setAdminClinics(filteredList);
+        if (filteredList.length === 0) {
           // Al confirmarse cero membresías verificadas, el modo Admin se revoca y redirige vía '/'
           router.replace('/' as any);
         }
       } catch (syncErr: any) {
         if (
+          !isMountedRef.current ||
           getSessionId() !== targetSessionId ||
           syncErr?.message?.includes('canceled') ||
           syncErr?.message?.includes('invalidated') ||
@@ -89,7 +131,7 @@ export function useMyClinics() {
             'La clínica fue eliminada, pero ocurrió un problema al sincronizar los permisos de administración. Puedes reintentar la sincronización.'
         );
       } finally {
-        if (getSessionId() === targetSessionId) {
+        if (isMountedRef.current && getSessionId() === targetSessionId) {
           setIsSyncing(false);
         }
       }
@@ -117,9 +159,14 @@ export function useMyClinics() {
     }
 
     // Verify session has not been invalidated or switched while awaiting DELETE
-    if (getSessionId() !== targetSessionId) return;
+    if (!isMountedRef.current || getSessionId() !== targetSessionId) return;
 
-    // 2. El DELETE fue exitoso: retirar inmediatamente la clínica del listado local y del AuthContext compartido
+    // 2. El DELETE fue exitoso:
+    // a) Registrar en deletedClinicIdsRef e invalidar peticiones de listado pendientes
+    deletedClinicIdsRef.current.add(cid);
+    listRequestGenRef.current += 1;
+
+    // b) Retirar inmediatamente la clínica del listado local y del AuthContext compartido
     setAdminClinics((prev) => prev.filter((item) => item.clinic_id !== cid));
     removeAdminClinic(cid);
     setClinicPendingDelete(null);
