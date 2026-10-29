@@ -29,18 +29,27 @@ Estilo elegido: **Clean Clinical UI / Flat 2.0** (diseño de superficies limpias
 
 - [x] Elegir el estilo y justificarlo en el documento.
 - [x] Tokens (colores por rol si ayudan, radios, sombras) centralizados en `tailwind.config.js`, `dict_styles.md` y `src/theme/tokens.ts`.
-- [ ] Componentes base: tarjeta de cita (con su estado), tarjeta de clínica/médico, botón, campo de texto, badge de estado.
+- [x] Componentes base: tarjeta de cita (con su estado), tarjeta de clínica/médico, botón, campo de texto, badge de estado.
 - [ ] Aplicado a: buscador, agendamiento, mis citas, dashboard del doctor, recetas, admin.
-- [ ] Contraste 4.5:1 y estados presionado/deshabilitado.
+- [x] Contraste 4.5:1 y estados presionado/deshabilitado.
 - [ ] Probado en Android e iOS.
+
+### Tabla de Rol → Pantallas y Rutas Protegidas
+
+| Rol | Pantalla de Inicio | Pestañas (Tabs) Visibles | Rutas Adicionales Protegidas | Funcionalidades y Alcance por Rol |
+| :--- | :--- | :--- | :--- | :--- |
+| **Invitado** (No autenticado) | `/clinics` (Catálogo público) | Clínicas (`/clinics`), Perfil (`/profile`) | Ninguna (rutas privadas bloqueadas) | Búsqueda pública de clínicas y doctores, formulario de login y registro |
+| **Paciente** | `/home` (Próxima Cita) | Inicio (`/home`), Citas (`/appointments`), Clínicas (`/clinics`), Perfil (`/profile`) | `/appointments/new`<br>`/appointments/[id]`<br>`/prescriptions/index` | Visualización de próxima cita, agendamiento de turnos, consulta de historial de citas y recetas médicas |
+| **Médico** | `/doctor` (Agenda de Hoy) | Inicio (`/doctor`), Perfil (`/profile`) | Modales de prescripción en `/doctor` | Consulta de agenda del día (`TodayAgendaSection`), estadísticas de atención, expedición y edición de recetas médicas |
+| **Administrador de Clínica** | `/admin` (Resumen de Sedes) | Inicio (`/admin`), Perfil (`/profile`) | `/clinics/mine`<br>`/clinics/new`<br>`/clinics/[id]` | Métricas y estado de clínicas a cargo, registro de nueva clínica, configuración de sedes y médicos asociados |
 
 ### Fase 1 · Ordenar la app por rol (20 oct – 2 nov)
 
-<!-- - [ ] Escribir en el documento la tabla rol → pantallas (paciente, médico, administrador de clínica). -->
-- [ ] Navegación por rol con `Stack.Protected` / tabs distintas: cada rol ve solo lo suyo desde el inicio.
-- [ ] Mover cada función a la sección del rol que la usa (lo que el equipo identificó como "no tiene sentido").
-- [ ] Pantalla de inicio por rol (paciente: próxima cita; médico: agenda de hoy; admin: resumen de la clínica).
-- [ ] Cerrar sesión automáticamente si el backend responde 401.
+- [x] Escribir en el documento la tabla rol → pantallas (paciente, médico, administrador de clínica).
+- [x] Navegación por rol con `Stack.Protected` / tabs distintas: cada rol ve solo lo suyo desde el inicio.
+- [x] Mover cada función a la sección del rol que la usa (lo que el equipo identificó como "no tiene sentido").
+- [x] Pantalla de inicio por rol (paciente: próxima cita; médico: agenda de hoy; admin: resumen de la clínica).
+- [x] Cerrar sesión automáticamente si el backend responde 401.
 
 ### Fase 2 · Clínicas y despacho de citas (3 – 16 nov)
 
