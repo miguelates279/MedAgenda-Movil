@@ -3,7 +3,7 @@ import React from 'react';
 import '../global.css';
 import { Stack } from 'expo-router';
 import { StatusBar } from 'expo-status-bar';
-import { SafeAreaProvider } from 'react-native-safe-area-context';
+import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 
 function RootNavigation() {
@@ -45,7 +45,9 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AuthProvider>
         <StatusBar style="dark" />
-        <RootNavigation />
+        <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }} edges={['top']}>
+          <RootNavigation />
+        </SafeAreaView>
       </AuthProvider>
     </SafeAreaProvider>
   );
