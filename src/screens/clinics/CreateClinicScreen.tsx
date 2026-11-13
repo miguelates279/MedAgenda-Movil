@@ -190,7 +190,7 @@ export function CreateClinicScreen() {
           accessibilityRole="button"
           accessibilityLabel="Seleccionar país"
         >
-          <Text className="text-[11px] text-gray-600 font-medium uppercase">País</Text>
+          <Text className="text-xs text-gray-600 font-semibold uppercase">País</Text>
           <Text className="text-sm text-neutral-900 mt-0.5">
             {selectedCountry?.country_name || 'Selecciona un país'}
           </Text>
@@ -205,7 +205,7 @@ export function CreateClinicScreen() {
           accessibilityRole="button"
           accessibilityLabel="Seleccionar departamento o estado"
         >
-          <Text className="text-[11px] text-gray-600 font-medium uppercase">Estado / Depto</Text>
+          <Text className="text-xs text-gray-600 font-semibold uppercase">Estado / Depto</Text>
           <Text className={`text-sm mt-0.5 ${countryId ? 'text-neutral-900' : 'text-gray-400'}`}>
             {selectedState?.state_name || 'Selecciona un estado'}
           </Text>
@@ -220,7 +220,7 @@ export function CreateClinicScreen() {
           accessibilityRole="button"
           accessibilityLabel="Seleccionar ciudad"
         >
-          <Text className="text-[11px] text-gray-600 font-medium uppercase">Ciudad</Text>
+          <Text className="text-xs text-gray-600 font-semibold uppercase">Ciudad</Text>
           <Text className={`text-sm mt-0.5 ${stateId ? 'text-neutral-900' : 'text-gray-400'}`}>
             {selectedCity?.city_name || 'Selecciona una ciudad'}
           </Text>

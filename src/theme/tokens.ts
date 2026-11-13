@@ -65,12 +65,12 @@ export const tokens = {
   },
 
   fontSize: {
-    xs: 12,
-    sm: 14,
-    base: 16,
-    lg: 18,
-    xl: 20,
-    '2xl': 24,
+    xs: 14,
+    sm: 15.5,
+    base: 16.5,
+    lg: 18.5,
+    xl: 20.5,
+    '2xl': 24.5,
   },
 
   spacing: {

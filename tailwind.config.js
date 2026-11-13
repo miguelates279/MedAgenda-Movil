@@ -6,6 +6,10 @@ module.exports = {
   presets: [require("nativewind/preset")],
   theme: {
     extend: {
+      fontSize: {
+        xs: ['14px', { lineHeight: '20px' }],
+        sm: ['15.5px', { lineHeight: '22px' }],
+      },
       colors: {
         // Mantener compatibilidad existente
         primary: {

@@ -52,12 +52,12 @@ Este diccionario de estilos funciona como la **Única Fuente de Verdad** (Single
 ### 2.2 Tamaños (Font Sizes)
 | Token Name | Value (px) | Value (rem) | Ejemplo de Aplicación |
 | :--- | :--- | :--- | :--- |
-| `font.size.xs` | `12px` | `0.75rem` | Insignias, hora o subtexto de turnos. |
-| `font.size.sm` | `14px` | `0.875rem` | Etiquetas de formulario, botones, subtítulos. |
-| `font.size.base`| `16px` | `1rem` | Texto de cuerpo principal, campos de entrada. |
-| `font.size.lg` | `18px` | `1.125rem` | Subtítulos intermedios, títulos secundarios. |
-| `font.size.xl` | `20px` | `1.25rem` | Títulos en tarjetas principales. |
-| `font.size.2xl`| `24px` | `1.5rem` | Títulos de pantallas de control y secciones. |
+| `font.size.xs` | `14px` | `0.875rem` | Insignias, hora o subtexto de turnos. |
+| `font.size.sm` | `15.5px` | `0.96875rem` | Etiquetas de formulario, botones, subtítulos. |
+| `font.size.base`| `16.5px` | `1.03125rem` | Texto de cuerpo principal, campos de entrada. |
+| `font.size.lg` | `18.5px` | `1.15625rem` | Subtítulos intermedios, títulos secundarios. |
+| `font.size.xl` | `20.5px` | `1.28125rem` | Títulos en tarjetas principales. |
+| `font.size.2xl`| `24.5px` | `1.53125rem` | Títulos de pantallas de control y secciones. |
 
 ### 2.3 Pesos (Font Weights)
 * `font.weight.normal`: `400` (Cuerpo principal, contenido largo)

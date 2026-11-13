@@ -101,7 +101,7 @@ export function NewAppointmentScreen() {
               <View className="flex-row items-start mb-2">
                 <Text className="text-lg mr-2 mt-0.5">🏢</Text>
                 <View className="flex-1">
-                  <Text className="text-[11px] text-gray-500 uppercase font-medium">Clínica</Text>
+                  <Text className="text-xs text-gray-500 uppercase font-semibold">Clínica</Text>
                   <Text className="text-sm font-bold text-neutral-900">
                     {clinic?.clinic_name || `Clínica #${clinicId}`}
                   </Text>
@@ -114,7 +114,7 @@ export function NewAppointmentScreen() {
               <View className="flex-row items-start border-t border-teal-100/70 pt-2 mt-1">
                 <Text className="text-lg mr-2 mt-0.5">👨‍⚕️</Text>
                 <View className="flex-1">
-                  <Text className="text-[11px] text-gray-500 uppercase font-medium">Especialista</Text>
+                  <Text className="text-xs text-gray-500 uppercase font-semibold">Especialista</Text>
                   <Text className="text-sm font-bold text-neutral-900">
                     Dr(a). {doctorFullName}
                     <Text className="text-primary font-semibold">{doctorSpecialtyName}</Text>
@@ -166,7 +166,7 @@ export function NewAppointmentScreen() {
                     }`}
                   >
                     <Text
-                      className={`text-[10px] font-medium uppercase ${
+                      className={`text-xs font-semibold uppercase ${
                         isSelected ? 'text-white' : 'text-gray-500'
                       }`}
                     >

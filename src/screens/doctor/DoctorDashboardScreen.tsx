@@ -271,8 +271,8 @@ export function DoctorDashboardScreen() {
                     <Text className="text-base font-bold text-neutral-900">{group.patientName}</Text>
                     <View className="flex-row flex-wrap gap-1 mt-1">
                       {group.clinics.map((c) => (
-                        <View key={c.clinicId} className="bg-gray-100 px-2 py-0.5 rounded-full">
-                          <Text className="text-[10px] text-gray-700">{c.clinicName}</Text>
+                        <View key={c.clinicId} className="bg-gray-100 px-2.5 py-0.5 rounded-full">
+                          <Text className="text-xs font-medium text-gray-700">{c.clinicName}</Text>
                         </View>
                       ))}
                     </View>
@@ -314,7 +314,7 @@ export function DoctorDashboardScreen() {
                                 >
                                   <View className="flex-row items-center gap-1">
                                     <Ionicons name="pencil-outline" size={12} color="#259487" />
-                                    <Text className="text-[11px] font-semibold text-primary">Editar</Text>
+                                    <Text className="text-xs font-semibold text-primary">Editar</Text>
                                   </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity
@@ -324,7 +324,7 @@ export function DoctorDashboardScreen() {
                                 >
                                   <View className="flex-row items-center gap-1">
                                     <Ionicons name="trash-outline" size={12} color="#dc2626" />
-                                    <Text className="text-[11px] font-semibold text-red-600">Eliminar</Text>
+                                    <Text className="text-xs font-semibold text-red-600">Eliminar</Text>
                                   </View>
                                 </TouchableOpacity>
                               </>
@@ -350,7 +350,7 @@ export function DoctorDashboardScreen() {
                         <Ionicons name="calendar-outline" size={12} color="#4b5563" />
                         <Text className="text-xs text-gray-600 font-medium ml-1">{rec.displayDate}</Text>
                       </View>
-                        <Text className="text-[11px] text-gray-500">{rec.clinicName}</Text>
+                        <Text className="text-xs text-gray-500 font-medium">{rec.clinicName}</Text>
                       </View>
                     ))}
                   </View>

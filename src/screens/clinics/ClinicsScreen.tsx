@@ -129,7 +129,7 @@ export function ClinicsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Seleccionar país"
           >
-            <Text className="text-[11px] text-gray-600 font-medium uppercase">País *</Text>
+            <Text className="text-xs text-gray-600 font-semibold uppercase">País *</Text>
             <Text className="text-sm text-neutral-900 mt-0.5 font-medium">
               {selectedCountry ? selectedCountry.country_name : 'Selecciona un país'}
             </Text>
@@ -145,7 +145,7 @@ export function ClinicsScreen() {
               accessibilityRole="button"
               accessibilityLabel="Seleccionar departamento o estado"
             >
-              <Text className="text-[11px] text-gray-600 font-medium uppercase">Estado / Depto</Text>
+              <Text className="text-xs text-gray-600 font-semibold uppercase">Estado / Depto</Text>
               <Text
                 className={`text-sm mt-0.5 font-medium ${
                   !countryId ? 'text-gray-400' : 'text-neutral-900'
@@ -164,7 +164,7 @@ export function ClinicsScreen() {
               accessibilityRole="button"
               accessibilityLabel="Seleccionar ciudad"
             >
-              <Text className="text-[11px] text-gray-600 font-medium uppercase">Ciudad</Text>
+              <Text className="text-xs text-gray-600 font-semibold uppercase">Ciudad</Text>
               <Text
                 className={`text-sm mt-0.5 font-medium ${
                   !stateId ? 'text-gray-400' : 'text-neutral-900'
@@ -181,7 +181,7 @@ export function ClinicsScreen() {
             accessibilityRole="button"
             accessibilityLabel="Seleccionar especialidades"
           >
-            <Text className="text-[11px] text-gray-600 font-medium uppercase">Especialidades</Text>
+            <Text className="text-xs text-gray-600 font-semibold uppercase">Especialidades</Text>
             <Text className="text-sm text-neutral-900 mt-0.5 font-medium">{specialtiesLabel}</Text>
           </Pressable>
 

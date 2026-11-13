@@ -81,7 +81,7 @@ export function PrescriptionsScreen() {
                     <Ionicons name="business" size={16} color="#259487" />
                   </View>
                   <View className="flex-1">
-                    <Text className="text-[10px] text-teal-700 font-bold uppercase tracking-wider">
+                    <Text className="text-xs text-teal-700 font-bold uppercase tracking-wider">
                       Clínica
                     </Text>
                     <Text className="font-bold text-sm text-neutral-900" numberOfLines={1}>
@@ -121,7 +121,7 @@ export function PrescriptionsScreen() {
                             {formattedDate}
                           </Text>
                         </View>
-                        <Text className="text-[11px] text-gray-500 font-medium">
+                        <Text className="text-xs text-gray-500 font-medium">
                           Dr(a). {doctorName}
                         </Text>
                       </View>
