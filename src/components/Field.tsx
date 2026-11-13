@@ -1,7 +1,6 @@
 import React, { useRef, useState } from 'react';
 import {
   KeyboardTypeOptions,
-  LayoutChangeEvent,
   StyleProp,
   Text,
   TextInput,
@@ -68,12 +67,7 @@ export function Field<
 }: FieldProps<TFieldValues, TName>) {
   const [isFocused, setIsFocused] = useState(false);
   const containerRef = useRef<View | null>(null);
-  const layoutYRef = useRef<number | null>(null);
   const { scrollToField } = useFormScroll();
-
-  const handleLayout = (e: LayoutChangeEvent) => {
-    layoutYRef.current = e.nativeEvent.layout.y;
-  };
 
   return (
     <Controller
@@ -84,7 +78,7 @@ export function Field<
       render={({ field, fieldState }) => (
         <View
           ref={containerRef}
-          onLayout={handleLayout}
+          collapsable={false}
           className={`w-full mb-3 ${className}`}
           style={containerStyle}
         >
@@ -102,7 +96,7 @@ export function Field<
             }}
             onFocus={() => {
               setIsFocused(true);
-              scrollToField(containerRef.current, layoutYRef.current);
+              scrollToField(containerRef.current);
               onFocus?.();
             }}
             placeholder={placeholder}

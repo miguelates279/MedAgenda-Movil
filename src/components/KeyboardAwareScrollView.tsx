@@ -1,4 +1,4 @@
-import React, { createContext, useContext, useRef, useState, useEffect } from 'react';
+import React, { createContext, useContext, useEffect, useRef } from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -11,7 +11,7 @@ import {
 } from 'react-native';
 
 export interface FormScrollContextType {
-  scrollToField: (targetView: View | null, fallbackY?: number | null) => void;
+  scrollToField: (targetView: View | null) => void;
 }
 
 export const FormScrollContext = createContext<FormScrollContextType>({
@@ -37,34 +37,86 @@ export const KeyboardAwareScrollView = React.forwardRef<
     {
       children,
       keyboardVerticalOffset = 0,
-      extraScrollHeight = 65,
+      extraScrollHeight = 50,
       contentContainerStyle,
       style,
       className = '',
       contentContainerClassName = '',
       containerStyle,
+      onScroll,
       ...scrollViewProps
     },
     forwardedRef
   ) => {
     const internalScrollRef = useRef<ScrollView | null>(null);
-    const [, setKeyboardVisible] = useState(false);
+    const innerContainerRef = useRef<View | null>(null);
+    const activeFieldRef = useRef<View | null>(null);
+    const currentScrollY = useRef(0);
+
+    const performScrollTo = (targetView: View | null) => {
+      if (!targetView || !internalScrollRef.current) return;
+
+      setTimeout(() => {
+        if (!targetView || !internalScrollRef.current) return;
+
+        if (innerContainerRef.current) {
+          targetView.measureLayout(
+            innerContainerRef.current as any,
+            (_x, y) => {
+              const targetY = Math.max(0, y - extraScrollHeight);
+              internalScrollRef.current?.scrollTo({
+                y: targetY,
+                animated: true,
+              });
+            },
+            () => {
+              // Fallback using measureInWindow if measureLayout fails
+              targetView.measureInWindow((_x, y, _w, h) => {
+                if (isNaN(y) || isNaN(h)) return;
+                const offset = y > 250 ? currentScrollY.current + (y - 100) : currentScrollY.current;
+                internalScrollRef.current?.scrollTo({
+                  y: Math.max(0, offset),
+                  animated: true,
+                });
+              });
+            }
+          );
+        } else {
+          targetView.measureInWindow((_x, y) => {
+            if (isNaN(y)) return;
+            const targetY = Math.max(0, currentScrollY.current + (y - 100));
+            internalScrollRef.current?.scrollTo({
+              y: targetY,
+              animated: true,
+            });
+          });
+        }
+      }, 70);
+    };
+
+    const scrollToField = (targetView: View | null) => {
+      activeFieldRef.current = targetView;
+      performScrollTo(targetView);
+    };
 
     useEffect(() => {
-      const showSub = Keyboard.addListener(
-        Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow',
-        () => setKeyboardVisible(true)
-      );
-      const hideSub = Keyboard.addListener(
-        Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide',
-        () => setKeyboardVisible(false)
-      );
+      const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+      const showSub = Keyboard.addListener(showEvent, () => {
+        if (activeFieldRef.current) {
+          performScrollTo(activeFieldRef.current);
+        }
+      });
+
+      const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+      const hideSub = Keyboard.addListener(hideEvent, () => {
+        activeFieldRef.current = null;
+      });
 
       return () => {
         showSub.remove();
         hideSub.remove();
       };
-    }, []);
+    }, [extraScrollHeight]);
 
     const setRef = (node: ScrollView | null) => {
       internalScrollRef.current = node;
@@ -73,42 +125,6 @@ export const KeyboardAwareScrollView = React.forwardRef<
       } else if (forwardedRef) {
         (forwardedRef as React.MutableRefObject<ScrollView | null>).current = node;
       }
-    };
-
-    const scrollToField = (targetView: View | null, fallbackY?: number | null) => {
-      if (!internalScrollRef.current) return;
-
-      const performScroll = (y: number) => {
-        const targetY = Math.max(0, y - extraScrollHeight);
-        internalScrollRef.current?.scrollTo({ y: targetY, animated: true });
-      };
-
-      // Allow a brief tick for soft keyboard layout changes to settle
-      setTimeout(() => {
-        if (!internalScrollRef.current) return;
-
-        if (targetView && typeof targetView.measureLayout === 'function') {
-          try {
-            targetView.measureLayout(
-              internalScrollRef.current as any,
-              (_left, top) => {
-                performScroll(top);
-              },
-              () => {
-                if (typeof fallbackY === 'number') {
-                  performScroll(fallbackY);
-                }
-              }
-            );
-          } catch {
-            if (typeof fallbackY === 'number') {
-              performScroll(fallbackY);
-            }
-          }
-        } else if (typeof fallbackY === 'number') {
-          performScroll(fallbackY);
-        }
-      }, 120);
     };
 
     return (
@@ -122,16 +138,23 @@ export const KeyboardAwareScrollView = React.forwardRef<
             ref={setRef}
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
+            scrollEventThrottle={16}
+            onScroll={(e) => {
+              currentScrollY.current = e.nativeEvent.contentOffset.y;
+              onScroll?.(e);
+            }}
             className={className}
             contentContainerClassName={contentContainerClassName}
             contentContainerStyle={[
               contentContainerStyle,
-              { paddingBottom: Math.max(48, (contentContainerStyle as any)?.paddingBottom || 48) },
+              { paddingBottom: Math.max(160, (contentContainerStyle as any)?.paddingBottom || 160) },
             ]}
             style={style}
             {...scrollViewProps}
           >
-            {children}
+            <View ref={innerContainerRef} collapsable={false} style={{ flexGrow: 1 }}>
+              {children}
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </FormScrollContext.Provider>
