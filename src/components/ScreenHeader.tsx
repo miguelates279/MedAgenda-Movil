@@ -78,7 +78,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
       </View>
 
       {/* Extremo Derecho: Acción secundaria o espacio para balance simétrico */}
-      <View className="w-20 items-end justify-center">
+      <View className="flex-shrink-0 items-end justify-center" style={{ minWidth: 80 }}>
         {rightAction ? rightAction : null}
       </View>
     </View>

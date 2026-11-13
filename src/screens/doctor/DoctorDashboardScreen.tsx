@@ -12,6 +12,7 @@ import {
   TouchableOpacity,
   View,
 } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
 import { Badge, Button, Card } from '../../components';
 import { useDoctorDashboard } from './useDoctorDashboard';
 import { TodayAgendaSection } from './components/TodayAgendaSection';
@@ -73,7 +74,8 @@ export function DoctorDashboardScreen() {
             activeOpacity={0.7}
             className="bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-full flex-row items-center"
           >
-            <Text className="text-primary font-bold text-xs">🔄 Recargar</Text>
+            <Ionicons name="refresh-outline" size={14} color="#259487" />
+            <Text className="text-primary font-bold text-xs ml-1">Recargar</Text>
           </TouchableOpacity>
         </View>
 
@@ -142,7 +144,9 @@ export function DoctorDashboardScreen() {
 
         <View className="flex-row gap-3 mb-5">
           <View className="flex-1 bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex-row items-center">
-            <Text className="text-3xl mr-3">📅</Text>
+            <View className="w-10 h-10 rounded-full bg-teal-50 items-center justify-center mr-3">
+              <Ionicons name="calendar-outline" size={22} color="#259487" />
+            </View>
             <View>
               <Text className="text-xs font-bold text-gray-500 uppercase">Citas en rango</Text>
               <Text className="text-2xl font-black text-neutral-900">{stats.totalUpcoming}</Text>
@@ -150,7 +154,9 @@ export function DoctorDashboardScreen() {
           </View>
 
           <View className="flex-1 bg-white p-4 rounded-xl border border-gray-200 shadow-sm flex-row items-center">
-            <Text className="text-3xl mr-3">👥</Text>
+            <View className="w-10 h-10 rounded-full bg-teal-50 items-center justify-center mr-3">
+              <Ionicons name="people-outline" size={22} color="#259487" />
+            </View>
             <View>
               <Text className="text-xs font-bold text-gray-500 uppercase">Pacientes</Text>
               <Text className="text-2xl font-black text-neutral-900">{stats.totalPatients}</Text>
@@ -160,7 +166,9 @@ export function DoctorDashboardScreen() {
 
         <View className="mb-6">
           <View className="flex-row items-center mb-3">
-            <Text className="text-lg mr-2">🏥</Text>
+            <View className="w-7 h-7 rounded-full bg-teal-50 items-center justify-center mr-2">
+              <Ionicons name="business-outline" size={15} color="#259487" />
+            </View>
             <Text className="text-base font-bold text-neutral-900">Próximas Citas por Clínica</Text>
           </View>
 
@@ -178,7 +186,7 @@ export function DoctorDashboardScreen() {
               <Card key={clinic.clinicId} className="mb-3 p-0 overflow-hidden">
                 <View className="bg-teal-50 border-b border-teal-100 p-3 flex-row justify-between items-center">
                   <View className="flex-row items-center">
-                    <Text className="text-base mr-2">🏢</Text>
+                    <Ionicons name="business-outline" size={16} color="#259487" className="mr-2" />
                     <Text className="font-bold text-sm text-neutral-900">{clinic.clinicName}</Text>
                   </View>
                   <Badge text={`${clinic.appointments.length} cita(s)`} variant="primary" />
@@ -202,10 +210,15 @@ export function DoctorDashboardScreen() {
                         key={appt.appointment_id}
                         className="py-2.5 border-b border-gray-100 last:border-b-0 flex-row items-start"
                       >
-                        <Text className="text-lg mr-2.5 mt-0.5">👤</Text>
+                        <View className="w-7 h-7 rounded-full bg-gray-100 items-center justify-center mr-2.5 mt-0.5">
+                        <Ionicons name="person-outline" size={14} color="#4b5563" />
+                      </View>
                         <View className="flex-1">
                           <Text className="text-sm font-bold text-neutral-900">{pName || 'Paciente'}</Text>
-                          <Text className="text-xs text-primary font-medium mt-0.5">🕒 {startStr}</Text>
+                          <View className="flex-row items-center mt-0.5">
+                            <Ionicons name="time-outline" size={12} color="#259487" />
+                            <Text className="text-xs text-primary font-medium ml-1">{startStr}</Text>
+                          </View>
                           {appt.appointment_description && (
                             <Text className="text-xs text-gray-600 mt-1 bg-gray-50 p-2 rounded">
                               Nota: {appt.appointment_description}
@@ -224,14 +237,16 @@ export function DoctorDashboardScreen() {
         <View className="mb-6">
           <View className="flex-row justify-between items-center mb-3">
             <View className="flex-row items-center">
-              <Text className="text-lg mr-2">📋</Text>
+              <View className="w-7 h-7 rounded-full bg-teal-50 items-center justify-center mr-2">
+              <Ionicons name="document-text-outline" size={15} color="#259487" />
+            </View>
               <Text className="text-base font-bold text-neutral-900">Historial y Fórmulas Médicas</Text>
             </View>
           </View>
 
           <View className="mb-3">
             <TextInput
-              placeholder="🔍 Buscar por nombre de paciente..."
+              placeholder="Buscar por nombre de paciente..."
               value={patientQuery}
               onChangeText={setPatientQuery}
               className="bg-white border border-gray-200 rounded-xl px-4 py-2.5 text-sm text-neutral-900"
@@ -285,7 +300,10 @@ export function DoctorDashboardScreen() {
                         className="bg-teal-50/50 border border-teal-100 rounded-lg p-3 mb-2"
                       >
                         <View className="flex-row justify-between items-start mb-1">
-                          <Text className="text-xs font-bold text-teal-800">🗓️ {pres.displayDate}</Text>
+                          <View className="flex-row items-center">
+                          <Ionicons name="calendar-outline" size={12} color="#0f766e" />
+                          <Text className="text-xs font-bold text-teal-800 ml-1">{pres.displayDate}</Text>
+                        </View>
                           <View className="flex-row gap-2">
                             {pres.prescriptionId && (
                               <>
@@ -294,14 +312,20 @@ export function DoctorDashboardScreen() {
                                   activeOpacity={0.7}
                                   className="bg-white border border-gray-200 px-2 py-1 rounded"
                                 >
-                                  <Text className="text-[11px] font-semibold text-primary">✏️ Editar</Text>
+                                  <View className="flex-row items-center gap-1">
+                                    <Ionicons name="pencil-outline" size={12} color="#259487" />
+                                    <Text className="text-[11px] font-semibold text-primary">Editar</Text>
+                                  </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                   onPress={() => handleDeletePrescription(pres.prescriptionId)}
                                   activeOpacity={0.7}
                                   className="bg-white border border-red-200 px-2 py-1 rounded"
                                 >
-                                  <Text className="text-[11px] font-semibold text-red-600">🗑️ Eliminar</Text>
+                                  <View className="flex-row items-center gap-1">
+                                    <Ionicons name="trash-outline" size={12} color="#dc2626" />
+                                    <Text className="text-[11px] font-semibold text-red-600">Eliminar</Text>
+                                  </View>
                                 </TouchableOpacity>
                               </>
                             )}
@@ -322,7 +346,10 @@ export function DoctorDashboardScreen() {
                     </Text>
                     {group.records.slice(0, 3).map((rec, rIdx) => (
                       <View key={rIdx} className="py-1 flex-row items-center justify-between">
-                        <Text className="text-xs text-gray-600 font-medium">📅 {rec.displayDate}</Text>
+                        <View className="flex-row items-center">
+                        <Ionicons name="calendar-outline" size={12} color="#4b5563" />
+                        <Text className="text-xs text-gray-600 font-medium ml-1">{rec.displayDate}</Text>
+                      </View>
                         <Text className="text-[11px] text-gray-500">{rec.clinicName}</Text>
                       </View>
                     ))}
@@ -343,8 +370,8 @@ export function DoctorDashboardScreen() {
                 <Text className="text-xs font-bold text-primary uppercase">Nueva Fórmula Médica</Text>
                 <Text className="text-lg font-bold text-neutral-900">{targetPatient?.patientName}</Text>
               </View>
-              <TouchableOpacity onPress={() => setCreateModalVisible(false)} className="p-1">
-                <Text className="text-gray-400 font-bold text-lg">✕</Text>
+              <TouchableOpacity onPress={() => setCreateModalVisible(false)} className="p-2 rounded-full bg-gray-100 active:bg-gray-200">
+                <Ionicons name="close" size={18} color="#6b7280" />
               </TouchableOpacity>
             </View>
 
@@ -416,8 +443,8 @@ export function DoctorDashboardScreen() {
                 <Text className="text-xs font-bold text-primary uppercase">Editar Fórmula Médica</Text>
                 <Text className="text-base font-bold text-neutral-900">ID #{editingPrescriptionId}</Text>
               </View>
-              <TouchableOpacity onPress={() => setEditModalVisible(false)} className="p-1">
-                <Text className="text-gray-400 font-bold text-lg">✕</Text>
+              <TouchableOpacity onPress={() => setEditModalVisible(false)} className="p-2 rounded-full bg-gray-100 active:bg-gray-200">
+                <Ionicons name="close" size={18} color="#6b7280" />
               </TouchableOpacity>
             </View>
 

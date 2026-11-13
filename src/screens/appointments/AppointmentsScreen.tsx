@@ -56,11 +56,15 @@ export function AppointmentsScreen() {
         title="Mis Citas"
         canGoBack={false}
         rightAction={
-          <Button
-            text="+ Agendar en Clínica"
+          <Pressable
             onPress={() => router.push('/clinics' as any)}
-            className="py-1 px-2.5 text-xs"
-          />
+            className="flex-row items-center py-1 px-2.5 bg-teal-50 border border-teal-100 rounded-md active:bg-teal-100"
+            accessibilityRole="button"
+            accessibilityLabel="Agendar en Clínica"
+          >
+            <Ionicons name="add" size={15} color="#259487" />
+            <Text className="text-xs font-semibold text-teal-700 ml-0.5">Agendar</Text>
+          </Pressable>
         }
       />
 
