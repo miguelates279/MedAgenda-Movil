@@ -9,7 +9,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { AppointmentCard, Button, ScreenHeader } from '../../components';
+import { AppointmentCard, Button } from '../../components';
 import { useAppointmentsScreen } from './useAppointmentsScreen';
 
 export function AppointmentsScreen() {
@@ -29,7 +29,9 @@ export function AppointmentsScreen() {
   if (!isAuthenticated) {
     return (
       <SafeAreaView className="flex-1 bg-white">
-        <ScreenHeader title="Mis Citas" canGoBack={false} />
+        <View className="px-4 py-3 bg-white border-b border-gray-200">
+          <Text className="text-xl font-bold text-neutral-900">Mis Citas</Text>
+        </View>
         <View className="flex-1 items-center justify-center p-8 bg-gray-50">
           <View className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 items-center justify-center mb-3">
             <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
@@ -52,21 +54,17 @@ export function AppointmentsScreen() {
 
   return (
     <SafeAreaView className="flex-1 bg-white">
-      <ScreenHeader
-        title="Mis Citas"
-        canGoBack={false}
-        rightAction={
-          <Pressable
-            onPress={() => router.push('/clinics' as any)}
-            className="flex-row items-center py-1 px-2.5 bg-teal-50 border border-teal-100 rounded-md active:bg-teal-100"
-            accessibilityRole="button"
-            accessibilityLabel="Agendar en Clínica"
-          >
-            <Ionicons name="add" size={15} color="#259487" />
-            <Text className="text-xs font-semibold text-teal-700 ml-0.5">Agendar</Text>
-          </Pressable>
-        }
-      />
+      {/* Encabezado Principal de Citas */}
+      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
+        <Text className="text-xl font-bold text-neutral-900">
+          Mis Citas
+        </Text>
+        <Button
+          text="+ Agendar Cita"
+          onPress={() => router.push('/clinics' as any)}
+          className="py-1.5 px-3"
+        />
+      </View>
 
       <View className="flex-1 bg-gray-50">
         <View className="px-4 py-2.5 bg-white border-b border-gray-200">
