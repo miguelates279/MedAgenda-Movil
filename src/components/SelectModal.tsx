@@ -1,7 +1,9 @@
 import React, { useState } from 'react';
 import {
   FlatList,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   Pressable,
   SafeAreaView,
   Text,
@@ -81,74 +83,81 @@ export const SelectModal: React.FC<SelectModalProps> = ({
 
   return (
     <Modal visible={isOpen} animationType="slide" transparent onRequestClose={onClose}>
-      <View className="flex-1 bg-black/40 justify-end">
-        <SafeAreaView className="bg-white rounded-t-2xl max-h-[85%] min-h-[50%]">
-          <View className="flex-row justify-between items-center px-4 pt-4 pb-3 border-b border-gray-200">
-            <Text className="text-base font-bold text-neutral-900">{title}</Text>
-            <Pressable onPress={onClose} className="p-1 active:opacity-70">
-              <Text className="text-lg text-gray-600 font-semibold">✕</Text>
-            </Pressable>
-          </View>
-
-          <View className="px-4 py-2.5 border-b border-gray-100">
-            <TextInput
-              value={search}
-              onChangeText={setSearch}
-              placeholder={placeholder}
-              placeholderTextColor="#9ca3af"
-              className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-neutral-900"
-              clearButtonMode="while-editing"
-            />
-          </View>
-
-          {loading ? (
-            <View className="p-8 items-center">
-              <Text className="text-sm text-gray-600">Cargando opciones...</Text>
+      <KeyboardAvoidingView
+        behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
+        style={{ flex: 1 }}
+      >
+        <View className="flex-1 bg-black/40 justify-end">
+          <SafeAreaView className="bg-white rounded-t-2xl max-h-[85%] min-h-[50%]">
+            <View className="flex-row justify-between items-center px-4 pt-4 pb-3 border-b border-gray-200">
+              <Text className="text-base font-bold text-neutral-900">{title}</Text>
+              <Pressable onPress={onClose} className="p-1 active:opacity-70">
+                <Text className="text-lg text-gray-600 font-semibold">✕</Text>
+              </Pressable>
             </View>
-          ) : (
-            <FlatList
-              data={filteredItems}
-              keyExtractor={(item) => String(item.value)}
-              contentContainerStyle={{ paddingVertical: 8 }}
-              renderItem={({ item }) => {
-                const checked = isSelected(item.value);
-                return (
-                  <Pressable
-                    onPress={() => handleItemPress(item.value)}
-                    className={`flex-row justify-between items-center px-4 py-3 border-b border-gray-100 active:bg-gray-100 ${
-                      checked ? 'bg-[#e6f4f2]' : ''
-                    }`}
-                  >
-                    <Text
-                      className={`text-sm ${
-                        checked ? 'text-primary font-semibold' : 'text-neutral-900'
-                      }`}
-                    >
-                      {item.label}
-                    </Text>
-                    {checked && <Text className="text-primary text-base font-bold">✓</Text>}
-                  </Pressable>
-                );
-              }}
-              ListEmptyComponent={
-                <View className="p-6 items-center">
-                  <Text className="text-sm text-gray-400">No se encontraron resultados</Text>
-                </View>
-              }
-            />
-          )}
 
-          {multiple && (
-            <View className="p-4 border-t border-gray-200">
-              <Button
-                text={`Confirmar (${tempMultiSelected.length})`}
-                onPress={handleConfirmMulti}
-                variant="primary"
+            <View className="px-4 py-2.5 border-b border-gray-100">
+              <TextInput
+                value={search}
+                onChangeText={setSearch}
+                placeholder={placeholder}
+                placeholderTextColor="#9ca3af"
+                className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-neutral-900"
+                clearButtonMode="while-editing"
               />
             </View>
-          )}
-        </SafeAreaView>
-      </View>
+
+            {loading ? (
+              <View className="p-8 items-center">
+                <Text className="text-sm text-gray-600">Cargando opciones...</Text>
+              </View>
+            ) : (
+              <FlatList
+                data={filteredItems}
+                keyExtractor={(item) => String(item.value)}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+                contentContainerStyle={{ paddingVertical: 8 }}
+                renderItem={({ item }) => {
+                  const checked = isSelected(item.value);
+                  return (
+                    <Pressable
+                      onPress={() => handleItemPress(item.value)}
+                      className={`flex-row justify-between items-center px-4 py-3 border-b border-gray-100 active:bg-gray-100 ${
+                        checked ? 'bg-[#e6f4f2]' : ''
+                      }`}
+                    >
+                      <Text
+                        className={`text-sm ${
+                          checked ? 'text-primary font-semibold' : 'text-neutral-900'
+                        }`}
+                      >
+                        {item.label}
+                      </Text>
+                      {checked && <Text className="text-primary text-base font-bold">✓</Text>}
+                    </Pressable>
+                  );
+                }}
+                ListEmptyComponent={
+                  <View className="p-6 items-center">
+                    <Text className="text-sm text-gray-400">No se encontraron resultados</Text>
+                  </View>
+                }
+              />
+            )}
+
+            {multiple && (
+              <View className="p-4 border-t border-gray-200">
+                <Button
+                  text={`Confirmar (${tempMultiSelected.length})`}
+                  onPress={handleConfirmMulti}
+                  variant="primary"
+                />
+              </View>
+            )}
+          </SafeAreaView>
+        </View>
+      </KeyboardAvoidingView>
     </Modal>
   );
 };

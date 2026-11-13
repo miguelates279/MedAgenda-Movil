@@ -3,12 +3,11 @@ import {
   ActivityIndicator,
   Pressable,
   SafeAreaView,
-  ScrollView,
   Text,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Field, ScreenHeader, SelectModal } from '../../components';
+import { Button, Field, KeyboardAwareScrollView, ScreenHeader, SelectModal } from '../../components';
 import { useCreateClinic } from './useCreateClinic';
 
 export function CreateClinicScreen() {
@@ -125,10 +124,9 @@ export function CreateClinicScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <ScreenHeader title="Nueva clínica" />
 
-      <ScrollView
+      <KeyboardAwareScrollView
         className="flex-1 bg-gray-50"
-        contentContainerClassName="p-4 pb-8"
-        keyboardShouldPersistTaps="handled"
+        contentContainerClassName="p-4 pb-16"
       >
         <Text className="text-xs text-gray-600 mb-4">
           Completa la información básica de la clínica y su ubicación geográfica.
@@ -270,7 +268,7 @@ export function CreateClinicScreen() {
             setModalType(null);
           }}
         />
-      </ScrollView>
+      </KeyboardAwareScrollView>
     </SafeAreaView>
   );
 }

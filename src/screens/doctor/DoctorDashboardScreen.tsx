@@ -1,7 +1,9 @@
 import React from 'react';
 import {
   ActivityIndicator,
+  KeyboardAvoidingView,
   Modal,
+  Platform,
   RefreshControl,
   SafeAreaView,
   ScrollView,
@@ -54,6 +56,8 @@ export function DoctorDashboardScreen() {
     <SafeAreaView className="flex-1 bg-white">
       <ScrollView
         className="bg-gray-50"
+        keyboardShouldPersistTaps="handled"
+        keyboardDismissMode="on-drag"
         contentContainerStyle={{ padding: 16, paddingBottom: 32 }}
         refreshControl={<RefreshControl refreshing={loading} onRefresh={loadDashboardData} tintColor="#259487" />}
       >
@@ -331,7 +335,8 @@ export function DoctorDashboardScreen() {
       </ScrollView>
 
       <Modal visible={createModalVisible} transparent animationType="slide">
-        <View className="flex-1 bg-black/50 justify-end">
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} style={{ flex: 1 }}>
+          <View className="flex-1 bg-black/50 justify-end">
           <View className="bg-white rounded-t-3xl p-5 max-h-[85%]">
             <View className="flex-row justify-between items-center mb-4 border-b border-gray-100 pb-3">
               <View>
@@ -343,7 +348,7 @@ export function DoctorDashboardScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView>
+            <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: 24 }}>
               <Text className="text-xs font-bold text-neutral-900 mb-1.5">Clínica</Text>
               <View className="flex-row flex-wrap gap-2 mb-4">
                 {targetPatient?.clinics.map((c) => (
@@ -399,10 +404,12 @@ export function DoctorDashboardScreen() {
             </ScrollView>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
 
       <Modal visible={editModalVisible} transparent animationType="slide">
-        <View className="flex-1 bg-black/50 justify-end">
+        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} style={{ flex: 1 }}>
+          <View className="flex-1 bg-black/50 justify-end">
           <View className="bg-white rounded-t-3xl p-5 max-h-[85%]">
             <View className="flex-row justify-between items-center mb-4 border-b border-gray-100 pb-3">
               <View>
@@ -414,7 +421,7 @@ export function DoctorDashboardScreen() {
               </TouchableOpacity>
             </View>
 
-            <ScrollView>
+            <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: 24 }}>
               <Text className="text-xs font-bold text-neutral-900 mb-1.5">
                 Descripción / Indicaciones
               </Text>
@@ -447,6 +454,7 @@ export function DoctorDashboardScreen() {
             </ScrollView>
           </View>
         </View>
+        </KeyboardAvoidingView>
       </Modal>
     </SafeAreaView>
   );

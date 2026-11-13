@@ -1,6 +1,7 @@
-import React, { useState } from 'react';
+import React, { useRef, useState } from 'react';
 import {
   KeyboardTypeOptions,
+  LayoutChangeEvent,
   StyleProp,
   Text,
   TextInput,
@@ -15,6 +16,8 @@ import {
   FieldValues,
   RegisterOptions,
 } from 'react-hook-form';
+import { tokens } from '../theme/tokens';
+import { useFormScroll } from './KeyboardAwareScrollView';
 
 export type FieldProps<
   TFieldValues extends FieldValues,
@@ -36,9 +39,9 @@ export type FieldProps<
   className?: string;
   containerStyle?: StyleProp<ViewStyle>;
   inputStyle?: StyleProp<TextStyle>;
+  onFocus?: () => void;
+  onBlur?: () => void;
 };
-
-import { tokens } from '../theme/tokens';
 
 export function Field<
   TFieldValues extends FieldValues,
@@ -60,8 +63,17 @@ export function Field<
   className = '',
   containerStyle,
   inputStyle,
+  onFocus,
+  onBlur,
 }: FieldProps<TFieldValues, TName>) {
   const [isFocused, setIsFocused] = useState(false);
+  const containerRef = useRef<View | null>(null);
+  const layoutYRef = useRef<number | null>(null);
+  const { scrollToField } = useFormScroll();
+
+  const handleLayout = (e: LayoutChangeEvent) => {
+    layoutYRef.current = e.nativeEvent.layout.y;
+  };
 
   return (
     <Controller
@@ -70,7 +82,12 @@ export function Field<
       rules={rules}
       defaultValue={defaultValue as any}
       render={({ field, fieldState }) => (
-        <View className={`w-full mb-3 ${className}`} style={containerStyle}>
+        <View
+          ref={containerRef}
+          onLayout={handleLayout}
+          className={`w-full mb-3 ${className}`}
+          style={containerStyle}
+        >
           {label ? (
             <Text className="text-sm font-medium mb-1 text-med-text-muted">{label}</Text>
           ) : null}
@@ -81,8 +98,13 @@ export function Field<
             onBlur={() => {
               setIsFocused(false);
               field.onBlur();
+              onBlur?.();
             }}
-            onFocus={() => setIsFocused(true)}
+            onFocus={() => {
+              setIsFocused(true);
+              scrollToField(containerRef.current, layoutYRef.current);
+              onFocus?.();
+            }}
             placeholder={placeholder}
             placeholderTextColor={tokens.colors.textLight}
             keyboardType={keyboardType}

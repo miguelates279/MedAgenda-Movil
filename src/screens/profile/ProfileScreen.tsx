@@ -1,8 +1,6 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
-  Platform,
   Pressable,
   SafeAreaView,
   ScrollView,
@@ -10,7 +8,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Card, ConfirmModal } from '../../components';
+import { Button, Card, ConfirmModal, KeyboardAwareScrollView } from '../../components';
 import { useProfile } from '../../hooks/useProfile';
 import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
@@ -64,6 +62,8 @@ export const ProfileScreen: React.FC = () => {
           <ScrollView
             className="flex-1 bg-gray-50"
             contentContainerClassName="p-4 pb-10"
+            keyboardShouldPersistTaps="handled"
+            keyboardDismissMode="on-drag"
           >
             {/* Si el usuario tiene múltiples modos disponibles, preservar acceso a selector */}
             <ModeSelector
@@ -116,10 +116,7 @@ export const ProfileScreen: React.FC = () => {
           </ScrollView>
         )
       ) : (
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
-          className="flex-1"
-        >
+        <View className="flex-1 bg-gray-50">
           {/* Pestañas de Iniciar Sesión / Registrarse para Invitados */}
           <View className="flex-row bg-white border-b border-gray-200">
             <Pressable
@@ -163,10 +160,9 @@ export const ProfileScreen: React.FC = () => {
             </Pressable>
           </View>
 
-          <ScrollView
+          <KeyboardAwareScrollView
             className="flex-1 bg-gray-50"
-            contentContainerClassName="p-4 pb-10"
-            keyboardShouldPersistTaps="handled"
+            contentContainerClassName="p-4 pb-16"
           >
             <Text className="text-xs text-gray-600 mb-4 leading-4">
               Inicia sesión para agendar citas médicas, consultar tus recetas y ver tu historial.
@@ -177,8 +173,8 @@ export const ProfileScreen: React.FC = () => {
             ) : (
               <RegisterForm onSwitchToLogin={() => setTab('login')} />
             )}
-          </ScrollView>
-        </KeyboardAvoidingView>
+          </KeyboardAwareScrollView>
+        </View>
       )}
 
       {/* Modal de Confirmación de Cierre de Sesión */}

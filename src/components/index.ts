@@ -9,3 +9,4 @@ export * from './SelectModal';
 export * from './ConfirmModal';
 export * from './ScreenHeader';
 export * from './TabBar';
+export * from './KeyboardAwareScrollView';

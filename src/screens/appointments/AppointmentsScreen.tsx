@@ -120,6 +120,8 @@ export function AppointmentsScreen() {
         <FlatList
           data={filteredAppointments}
           keyExtractor={(item) => String(item.appointment_id)}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
           renderItem={({ item }) => (
             <AppointmentCard
               appointment={item}
