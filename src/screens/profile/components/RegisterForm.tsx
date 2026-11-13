@@ -105,7 +105,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
       {serverError ? (
         <View className="bg-red-50 border border-red-200 rounded-md p-2.5 mb-3">
-          <Text className="text-red-700 text-xs font-medium">{serverError}</Text>
+          <Text className="text-red-700 text-sm font-medium">{serverError}</Text>
         </View>
       ) : null}
 
@@ -122,9 +122,9 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         accessibilityRole="button"
         accessibilityLabel="Cambiar a inicio de sesión"
       >
-        <Text className="text-xs text-gray-600">
+        <Text className="text-sm text-gray-600">
           ¿Ya tienes cuenta?{' '}
-          <Text className="text-primary font-semibold">Inicia sesión</Text>
+          <Text className="text-primary font-bold">Inicia sesión</Text>
         </Text>
       </Pressable>
     </View>

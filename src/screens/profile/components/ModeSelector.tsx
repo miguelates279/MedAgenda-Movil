@@ -52,17 +52,17 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
       {/* Encabezado del Selector */}
       <View className="flex-row items-center justify-between mb-1.5">
         <View className="flex-row items-center">
-          <View className="w-7 h-7 rounded-full bg-teal-50 items-center justify-center mr-2">
-            <Ionicons name="swap-horizontal" size={16} color="#259487" />
+          <View className="w-8 h-8 rounded-full bg-teal-50 items-center justify-center mr-2">
+            <Ionicons name="swap-horizontal" size={17} color="#259487" />
           </View>
-          <Text className="text-sm font-semibold text-neutral-900">
+          <Text className="text-base font-bold text-neutral-900">
             Modo de Navegación
           </Text>
         </View>
         <Badge text={`Activo: ${activeLabel}`} variant="primary" />
       </View>
 
-      <Text className="text-xs text-gray-600 mb-3 leading-4">
+      <Text className="text-sm text-gray-600 mb-3.5 leading-5">
         Tienes múltiples roles habilitados. Cambia el modo activo para adaptar las pestañas y vistas:
       </Text>
 
@@ -85,7 +85,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
               accessibilityLabel={`Cambiar al modo ${config.label}${
                 isActive ? ' (modo actualmente activo)' : ''
               }`}
-              className={`flex-1 py-2.5 px-2 rounded-md border items-center justify-center flex-row gap-1.5 min-h-[44px] ${
+              className={`flex-1 py-2.5 px-2 rounded-md border items-center justify-center flex-row gap-1.5 min-h-[46px] ${
                 isActive
                   ? 'bg-primary-dark border-primary-dark active:opacity-90'
                   : 'bg-white border-gray-300 active:bg-gray-100'
@@ -93,11 +93,11 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
             >
               <Ionicons
                 name={isActive ? config.activeIcon : config.icon}
-                size={16}
+                size={18}
                 color={isActive ? '#ffffff' : '#4b5563'}
               />
               <Text
-                className={`text-xs ${
+                className={`text-sm ${
                   isActive ? 'text-white font-bold' : 'text-neutral-900 font-semibold'
                 }`}
               >

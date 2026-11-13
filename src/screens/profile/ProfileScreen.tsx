@@ -42,7 +42,7 @@ export const ProfileScreen: React.FC = () => {
     <SafeAreaView className="flex-1 bg-white">
       {/* Encabezado Principal */}
       <View className="px-4 py-3.5 bg-white border-b border-gray-200">
-        <Text className="text-xl font-bold text-neutral-900">Mi Perfil</Text>
+        <Text className="text-2xl font-bold text-neutral-900">Mi Perfil</Text>
       </View>
 
       {isAuthenticated ? (
@@ -77,10 +77,10 @@ export const ProfileScreen: React.FC = () => {
               {loadingProfile ? (
                 <View className="items-center py-4">
                   <ActivityIndicator size="large" color="#259487" className="mb-3" />
-                  <Text className="text-sm font-semibold text-neutral-900 text-center mb-1">
+                  <Text className="text-base font-bold text-neutral-900 text-center mb-1">
                     Cargando información del perfil...
                   </Text>
-                  <Text className="text-xs text-gray-500 text-center">
+                  <Text className="text-sm text-gray-500 text-center">
                     Obteniendo los datos de tu cuenta.
                   </Text>
                 </View>
@@ -89,10 +89,10 @@ export const ProfileScreen: React.FC = () => {
                   <View className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 items-center justify-center mb-3">
                     <Ionicons name="alert-circle-outline" size={26} color="#b45309" />
                   </View>
-                  <Text className="text-base font-bold text-neutral-900 text-center mb-1">
+                  <Text className="text-lg font-bold text-neutral-900 text-center mb-1">
                     Perfil temporalmente no disponible
                   </Text>
-                  <Text className="text-xs text-gray-600 text-center mb-5 leading-relaxed">
+                  <Text className="text-sm text-gray-600 text-center mb-5 leading-relaxed">
                     {profileError ||
                       'Ocurrió un problema al obtener los datos personales de tu cuenta. Tu sesión continúa activa.'}
                   </Text>
@@ -129,7 +129,7 @@ export const ProfileScreen: React.FC = () => {
               accessibilityLabel="Pestaña Iniciar Sesión"
             >
               <Text
-                className={`text-sm ${
+                className={`text-base ${
                   tab === 'login'
                     ? 'text-primary font-bold'
                     : 'text-gray-600 font-medium'
@@ -149,7 +149,7 @@ export const ProfileScreen: React.FC = () => {
               accessibilityLabel="Pestaña Registrarse"
             >
               <Text
-                className={`text-sm ${
+                className={`text-base ${
                   tab === 'register'
                     ? 'text-primary font-bold'
                     : 'text-gray-600 font-medium'
@@ -164,7 +164,7 @@ export const ProfileScreen: React.FC = () => {
             className="flex-1 bg-gray-50"
             contentContainerClassName="p-4 pb-16"
           >
-            <Text className="text-xs text-gray-600 mb-4 leading-4">
+            <Text className="text-sm text-gray-600 mb-4 leading-5">
               Inicia sesión para agendar citas médicas, consultar tus recetas y ver tu historial.
             </Text>
 

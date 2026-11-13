@@ -33,7 +33,7 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
 
       {serverError ? (
         <View className="bg-red-50 border border-red-200 rounded-md p-2.5 mb-3">
-          <Text className="text-red-700 text-xs font-medium">{serverError}</Text>
+          <Text className="text-red-700 text-sm font-medium">{serverError}</Text>
         </View>
       ) : null}
 
@@ -50,9 +50,9 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
         accessibilityRole="button"
         accessibilityLabel="Cambiar a registro"
       >
-        <Text className="text-xs text-gray-600">
+        <Text className="text-sm text-gray-600">
           ¿No tienes cuenta?{' '}
-          <Text className="text-primary font-semibold">Regístrate</Text>
+          <Text className="text-primary font-bold">Regístrate</Text>
         </Text>
       </Pressable>
     </View>

@@ -13,6 +13,7 @@ export interface BadgeProps {
   text: string;
   variant?: BadgeVariant;
   className?: string;
+  textClassName?: string;
   style?: StyleProp<ViewStyle>;
 }
 
@@ -50,6 +51,7 @@ export const Badge: React.FC<BadgeProps> = ({
   text,
   variant = 'primary',
   className = '',
+  textClassName = '',
   style,
 }) => {
   const currentVariant = variantClassNames[variant] || variantClassNames.primary;
@@ -59,7 +61,7 @@ export const Badge: React.FC<BadgeProps> = ({
       className={`px-2 py-0.5 rounded-full border self-start flex-row items-center ${currentVariant.container} ${className}`}
       style={style}
     >
-      <Text className={`text-xs font-semibold ${currentVariant.text}`}>{text}</Text>
+      <Text className={`${textClassName || 'text-xs'} font-semibold ${currentVariant.text}`}>{text}</Text>
     </View>
   );
 };
