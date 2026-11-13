@@ -30,7 +30,30 @@ export const useLoginForm = (options?: UseLoginFormOptions) => {
         router.replace('/' as any);
       }
     } catch (err: any) {
-      setServerError(err.message || 'Credenciales incorrectas.');
+      const msg = (err?.message || '').toLowerCase();
+      if (
+        msg.includes('network') ||
+        msg.includes('internet') ||
+        msg.includes('conexion') ||
+        msg.includes('conexión')
+      ) {
+        setServerError('Error de conexión. Revisa tu acceso a internet.');
+      } else if (
+        msg.includes('match') ||
+        msg.includes('password') ||
+        msg.includes('contraseña') ||
+        msg.includes('invalid') ||
+        msg.includes('unauthorized') ||
+        msg.includes('not found') ||
+        msg.includes('user') ||
+        msg.includes('credential') ||
+        err?.status === 400 ||
+        err?.status === 401
+      ) {
+        setServerError('Usuario o contraseña incorrecta.');
+      } else {
+        setServerError(err?.message || 'Usuario o contraseña incorrecta.');
+      }
     } finally {
       setLoading(false);
     }
