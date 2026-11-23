@@ -1,15 +1,17 @@
 import React from 'react';
+import { ActivityIndicator, SafeAreaView, Text, View } from 'react-native';
 import {
-  ActivityIndicator,
-  SafeAreaView,
-  Text,
-  TouchableOpacity,
-  View,
-} from 'react-native';
-import { Badge, Button, Card, Field, KeyboardAwareScrollView, ScreenHeader } from '../../components';
+  Button,
+  Card,
+  Field,
+  KeyboardAwareScrollView,
+  ScreenHeader,
+} from '../../components';
 import { useNewAppointment } from './useNewAppointment';
+import { AppointmentSchedulePicker } from './components/AppointmentSchedulePicker';
 
 export function NewAppointmentScreen() {
+  const appointmentForm = useNewAppointment();
   const {
     router,
     isAuthenticated,
@@ -21,24 +23,11 @@ export function NewAppointmentScreen() {
     loadingDetails,
     control,
     handleSubmit,
-    rulesError,
-    months,
-    selectedMonthKey,
-    setSelectedMonthKey,
-    days,
-    selectedDayKey,
-    setSelectedDayKey,
-    selectedDayLabel,
-    slots,
-    loadingSlots,
-    slotsError,
-    selectedSlotId,
-    setSelectedSlotId,
     selectedSlot,
     submitting,
     scheduleError,
     onSubmit,
-  } = useNewAppointment();
+  } = appointmentForm;
 
   if (!isAuthenticated) {
     return (
@@ -50,7 +39,8 @@ export function NewAppointmentScreen() {
             Inicio de sesión requerido
           </Text>
           <Text className="text-sm text-gray-500 text-center leading-5 max-w-[280px]">
-            Debes iniciar sesión o crear una cuenta para poder agendar una cita médica.
+            Debes iniciar sesión o crear una cuenta para poder agendar una cita
+            médica.
           </Text>
           <Button
             text="Iniciar Sesión / Registrarse"
@@ -72,7 +62,8 @@ export function NewAppointmentScreen() {
             Selecciona una Clínica y Especialista
           </Text>
           <Text className="text-sm text-gray-500 text-center leading-5 max-w-[300px]">
-            Para agendar tu cita, utiliza el buscador de clínicas para encontrar tu centro médico y seleccionar el doctor disponible.
+            Para agendar tu cita, utiliza el buscador de clínicas para encontrar
+            tu centro médico y seleccionar el doctor disponible.
           </Text>
           <Button
             text="Ir al Buscador de Clínicas"
@@ -101,12 +92,16 @@ export function NewAppointmentScreen() {
               <View className="flex-row items-start mb-2">
                 <Text className="text-lg mr-2 mt-0.5">🏢</Text>
                 <View className="flex-1">
-                  <Text className="text-xs text-gray-500 uppercase font-semibold">Clínica</Text>
+                  <Text className="text-xs text-gray-500 uppercase font-semibold">
+                    Clínica
+                  </Text>
                   <Text className="text-sm font-bold text-neutral-900">
                     {clinic?.clinic_name || `Clínica #${clinicId}`}
                   </Text>
                   {clinic?.clinic_address && (
-                    <Text className="text-xs text-gray-600 mt-0.5">📍 {clinic.clinic_address}</Text>
+                    <Text className="text-xs text-gray-600 mt-0.5">
+                      📍 {clinic.clinic_address}
+                    </Text>
                   )}
                 </View>
               </View>
@@ -114,10 +109,14 @@ export function NewAppointmentScreen() {
               <View className="flex-row items-start border-t border-teal-100/70 pt-2 mt-1">
                 <Text className="text-lg mr-2 mt-0.5">👨‍⚕️</Text>
                 <View className="flex-1">
-                  <Text className="text-xs text-gray-500 uppercase font-semibold">Especialista</Text>
+                  <Text className="text-xs text-gray-500 uppercase font-semibold">
+                    Especialista
+                  </Text>
                   <Text className="text-sm font-bold text-neutral-900">
                     Dr(a). {doctorFullName}
-                    <Text className="text-primary font-semibold">{doctorSpecialtyName}</Text>
+                    <Text className="text-primary font-semibold">
+                      {doctorSpecialtyName}
+                    </Text>
                   </Text>
                 </View>
               </View>
@@ -125,155 +124,16 @@ export function NewAppointmentScreen() {
           )}
         </Card>
 
-        <Card className="mb-4">
-          <Text className="text-[15px] font-bold text-neutral-900 mb-2">Selecciona un Mes</Text>
-          <View className="flex-row flex-wrap gap-2">
-            {months.map((m) => {
-              const isSelected = m.key === selectedMonthKey;
-              return (
-                <TouchableOpacity
-                  key={m.key}
-                  onPress={() => setSelectedMonthKey(m.key)}
-                  className={`px-3 py-1.5 rounded-med-md border ${
-                    isSelected ? 'bg-primary border-primary' : 'bg-gray-100 border-gray-200'
-                  }`}
-                >
-                  <Text
-                    className={`text-xs font-medium ${
-                      isSelected ? 'text-white' : 'text-neutral-900'
-                    }`}
-                  >
-                    {m.label}
-                  </Text>
-                </TouchableOpacity>
-              );
-            })}
-          </View>
-        </Card>
-
-        {selectedMonthKey && (
-          <Card className="mb-4">
-            <Text className="text-[15px] font-bold text-neutral-900 mb-2">Selecciona un Día</Text>
-            <View className="flex-row flex-wrap gap-2">
-              {days.map((d) => {
-                const isSelected = d.key === selectedDayKey;
-                return (
-                  <TouchableOpacity
-                    key={d.key}
-                    onPress={() => setSelectedDayKey(d.key)}
-                    className={`p-2 rounded-med-md border items-center min-w-[50px] ${
-                      isSelected ? 'bg-primary border-primary' : 'bg-gray-100 border-gray-200'
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-semibold uppercase ${
-                        isSelected ? 'text-white' : 'text-gray-500'
-                      }`}
-                    >
-                      {d.weekLabel}
-                    </Text>
-                    <Text
-                      className={`text-sm font-bold ${
-                        isSelected ? 'text-white' : 'text-neutral-900'
-                      }`}
-                    >
-                      {d.label}
-                    </Text>
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-          </Card>
-        )}
-
-        {selectedDayKey && (
-          <Card className="mb-4">
-            <View className="flex-row justify-between items-center mb-2">
-              <Text className="text-[15px] font-bold text-neutral-900">Horarios Disponibles</Text>
-              {selectedDayLabel && (
-                <Text className="text-xs text-primary font-medium capitalize">
-                  {selectedDayLabel}
-                </Text>
-              )}
-            </View>
-
-            {loadingSlots && (
-              <View className="py-4 items-center">
-                <ActivityIndicator size="small" color="#259487" />
-                <Text className="text-xs text-gray-500 mt-1">Cargando turnos...</Text>
-              </View>
-            )}
-
-            {slotsError && (
-              <View className="bg-red-50 border border-red-200 p-2.5 rounded-md mb-2">
-                <Text className="text-red-700 text-xs">{slotsError}</Text>
-              </View>
-            )}
-
-            <View className="flex-row flex-wrap gap-2">
-              {slots.map((slot) => {
-                const isSelected = slot.id === selectedSlotId;
-                const isAvailable = slot.status === 'available';
-
-                return (
-                  <TouchableOpacity
-                    key={slot.id}
-                    onPress={() => isAvailable && setSelectedSlotId(slot.id)}
-                    disabled={!isAvailable}
-                    className={`p-2.5 rounded-med-md border items-center min-w-[90px] ${
-                      isSelected
-                        ? 'bg-teal-50 border-primary'
-                        : isAvailable
-                        ? 'bg-white border-gray-200'
-                        : 'bg-gray-100 border-gray-200 opacity-60'
-                    }`}
-                  >
-                    <Text
-                      className={`text-xs font-semibold ${
-                        isSelected ? 'text-primary' : 'text-neutral-900'
-                      }`}
-                    >
-                      {slot.label}
-                    </Text>
-                    <Badge
-                      text={
-                        isAvailable
-                          ? isSelected
-                            ? 'Seleccionado'
-                            : 'Disponible'
-                          : slot.status === 'booked'
-                          ? 'Ocupado'
-                          : slot.status === 'break'
-                          ? 'Descanso'
-                          : 'Pasada'
-                      }
-                      variant={
-                        isSelected
-                          ? 'primary'
-                          : isAvailable
-                          ? 'success'
-                          : slot.status === 'break'
-                          ? 'warning'
-                          : 'neutral'
-                      }
-                      className="mt-1"
-                    />
-                  </TouchableOpacity>
-                );
-              })}
-            </View>
-
-            {!loadingSlots && slots.length === 0 && (
-              <Text className="text-xs text-gray-400 text-center my-3">
-                No hay horarios disponibles configurados para este día.
-              </Text>
-            )}
-          </Card>
-        )}
+        <AppointmentSchedulePicker
+          availability={appointmentForm}
+          disabled={submitting}
+        />
 
         {selectedSlot ? (
           <Card className="mb-4">
-            <Text className="text-[15px] font-bold text-neutral-900 mb-2">Motivo o Nota (Opcional)</Text>
+            <Text className="text-[15px] font-bold text-neutral-900 mb-2">
+              Motivo o Nota (Opcional)
+            </Text>
             <Field
               control={control}
               name="appointment_description"

@@ -88,7 +88,10 @@ export class AppointmentReminderService {
     });
   }
 
-  async refresh(requestPermission = false): Promise<DoctorAppointmentView[]> {
+  async refresh(
+    requestPermission = false,
+    options: { throwOnDeviceError?: boolean } = {},
+  ): Promise<DoctorAppointmentView[]> {
     const session = this.session;
     const generation = this.generation;
     const revision = ++this.revision;
@@ -180,9 +183,10 @@ export class AppointmentReminderService {
           }
         }
       });
-    } catch {
+    } catch (error) {
       // The appointment operation must still succeed when the OS notification service is unavailable.
       this.onError();
+      if (options.throwOnDeviceError) throw error;
     }
     return appointments;
   }

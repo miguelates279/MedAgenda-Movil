@@ -3,6 +3,28 @@
 const http = require('node:http');
 const HOUR = 3_600_000;
 let nextId = 9;
+const date = new Date(Date.now() - 5 * HOUR);
+date.setUTCDate(date.getUTCDate() + 2);
+while ([0, 6].includes(date.getUTCDay()))
+  date.setUTCDate(date.getUTCDate() + 1);
+const fixtureDay = date.toISOString().slice(0, 10);
+const startFor = (id) =>
+  new Date(`${fixtureDay}T${id === 7 ? '08' : '09'}:00:00-05:00`);
+const rules = {
+  clinic_opening_time: '08:00',
+  clinic_close_time: '12:00',
+  clinic_average_appointment_time: '30',
+  clinic_break_time: '10:00',
+  clinic_break_duration: '30',
+};
+const clinic = {
+  clinic_id: 1,
+  clinic_name: 'Clinica de Prueba',
+  clinic_address: 'Calle de prueba 42',
+};
+let conflictNext = false;
+let extraBookings = [];
+const mutations = [];
 let appointments = [7, 8].map((id) => ({
   appointment_id: id,
   clinic_id: 1,
@@ -11,10 +33,8 @@ let appointments = [7, 8].map((id) => ({
   first_name: 'Ana',
   first_last_name: 'Ruiz',
   second_last_name: '',
-  start_date_time: new Date(Date.now() + (48 + id) * HOUR).toISOString(),
-  end_date_time: new Date(
-    Date.now() + (48 + id) * HOUR + 1_800_000,
-  ).toISOString(),
+  start_date_time: startFor(id).toISOString(),
+  end_date_time: new Date(startFor(id).getTime() + 1_800_000).toISOString(),
   appointment_description: 'Consulta de prueba',
 }));
 const profile = {
@@ -86,6 +106,15 @@ const server = http.createServer(async (req, res) => {
       return;
     }
     if (req.method === 'PUT') {
+      if (conflictNext) {
+        conflictNext = false;
+        extraBookings.push({ appointment_id: 99, ...body });
+        reply(409, {
+          message: 'Doctor or clinic is not available at the specified time.',
+        });
+        return;
+      }
+      mutations.push({ method: 'PUT', id: item.appointment_id, body });
       Object.assign(item, body);
       reply(200, { message: 'updated' });
       return;
@@ -95,6 +124,47 @@ const server = http.createServer(async (req, res) => {
       reply(200, { message: 'cancelled' });
       return;
     }
+  }
+  if (url.pathname === '/clinics/getClinicScheduleRules') {
+    reply(200, rules);
+    return;
+  }
+  if (url.pathname === '/clinics/getClinicDoctorAppointmentsForDay') {
+    const day = url.searchParams.get('appointment_date');
+    reply(
+      200,
+      [...appointments, ...extraBookings].filter(
+        (item) =>
+          new Date(Date.parse(item.start_date_time) - 5 * HOUR)
+            .toISOString()
+            .slice(0, 10) === day,
+      ),
+    );
+    return;
+  }
+  if (url.pathname === '/clinics/getClinicDetails') {
+    reply(200, clinic);
+    return;
+  }
+  if (url.pathname === '/clinics/getClinicDoctors') {
+    reply(200, [
+      {
+        doctor_id: 2,
+        first_name: 'Ana',
+        first_last_name: 'Ruiz',
+        specialties: [],
+      },
+    ]);
+    return;
+  }
+  if (url.pathname === '/__qa/state') {
+    reply(200, { appointments, mutations, fixtureDay });
+    return;
+  }
+  if (req.method === 'POST' && url.pathname === '/__qa/conflict-next') {
+    conflictNext = true;
+    reply(200, { ready: true });
+    return;
   }
   if (url.pathname === '/location/getCountries') {
     reply(200, [{ country_id: 1, country_name: 'Colombia' }]);

@@ -14,7 +14,10 @@ export interface AppointmentFormData {
 export function useNewAppointment() {
   const router = useRouter();
   const { isAuthenticated } = useAuth();
-  const params = useLocalSearchParams<{ clinic_id?: string; doctor_id?: string }>();
+  const params = useLocalSearchParams<{
+    clinic_id?: string;
+    doctor_id?: string;
+  }>();
 
   const clinicId = params.clinic_id ? Number(params.clinic_id) : null;
   const doctorId = params.doctor_id ? Number(params.doctor_id) : null;
@@ -33,6 +36,7 @@ export function useNewAppointment() {
     rules,
     loadingRules,
     rulesError,
+    retry,
     months,
     selectedMonthKey,
     setSelectedMonthKey,
@@ -101,24 +105,37 @@ export function useNewAppointment() {
           text: 'Confirmar y Agendar',
           onPress: async () => {
             try {
-              if (!await confirmBooking(formData.appointment_description)) return;
-              Alert.alert('¡Cita Agendada!', 'Tu cita ha sido confirmada con éxito.', [
-                {
-                  text: 'Ver Mis Citas',
-                  onPress: () => router.replace('/appointments' as any),
-                },
-              ]);
+              if (!(await confirmBooking(formData.appointment_description)))
+                return;
+              Alert.alert(
+                '¡Cita Agendada!',
+                'Tu cita ha sido confirmada con éxito.',
+                [
+                  {
+                    text: 'Ver Mis Citas',
+                    onPress: () => router.replace('/appointments' as any),
+                  },
+                ],
+              );
             } catch (err: any) {
-              Alert.alert('Error al agendar', err.message || 'No se pudo agendar la cita.');
+              Alert.alert(
+                'Error al agendar',
+                err.message || 'No se pudo agendar la cita.',
+              );
             }
           },
         },
-      ]
+      ],
     );
   };
 
   const doctorFullName = doctor
-    ? [doctor.first_name, doctor.second_name, doctor.first_last_name, doctor.second_last_name]
+    ? [
+        doctor.first_name,
+        doctor.second_name,
+        doctor.first_last_name,
+        doctor.second_last_name,
+      ]
         .filter(Boolean)
         .join(' ')
     : `Doctor #${doctorId}`;
@@ -142,6 +159,7 @@ export function useNewAppointment() {
     rules,
     loadingRules,
     rulesError,
+    retry,
     months,
     selectedMonthKey,
     setSelectedMonthKey,

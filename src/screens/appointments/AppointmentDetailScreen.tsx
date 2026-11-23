@@ -1,12 +1,16 @@
 import React from 'react';
+import { ActivityIndicator, SafeAreaView, Text, View } from 'react-native';
 import {
-  ActivityIndicator,
-  SafeAreaView,
-  Text,
-  View,
-} from 'react-native';
-import { Badge, Button, Card, Field, KeyboardAwareScrollView, ScreenHeader } from '../../components';
+  Badge,
+  Button,
+  Card,
+  Field,
+  KeyboardAwareScrollView,
+  ScreenHeader,
+} from '../../components';
 import { useAppointmentDetail } from './useAppointmentDetail';
+import { RescheduleAppointmentModal } from './components/RescheduleAppointmentModal';
+import { CLINIC_TIME_ZONE } from '../../utils/appointmentAvailability';
 
 export function AppointmentDetailScreen() {
   const {
@@ -20,6 +24,10 @@ export function AppointmentDetailScreen() {
     isDirty,
     onUpdate,
     handleCancelAppointment,
+    rescheduleVisible,
+    handleOpenReschedule,
+    closeReschedule,
+    onRescheduled,
   } = useAppointmentDetail();
 
   if (loading) {
@@ -27,7 +35,9 @@ export function AppointmentDetailScreen() {
       <SafeAreaView className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center p-6 bg-gray-50">
           <ActivityIndicator size="large" color="#259487" />
-          <Text className="mt-3 text-sm text-gray-600">Cargando cita médica...</Text>
+          <Text className="mt-3 text-sm text-gray-600">
+            Cargando cita médica...
+          </Text>
         </View>
       </SafeAreaView>
     );
@@ -39,6 +49,7 @@ export function AppointmentDetailScreen() {
 
   const dateStr = startDate
     ? startDate.toLocaleDateString('es-ES', {
+        timeZone: CLINIC_TIME_ZONE,
         weekday: 'long',
         year: 'numeric',
         month: 'long',
@@ -49,9 +60,11 @@ export function AppointmentDetailScreen() {
   const timeStr =
     startDate && endDate
       ? `${startDate.toLocaleTimeString('es-ES', {
+          timeZone: CLINIC_TIME_ZONE,
           hour: '2-digit',
           minute: '2-digit',
         })} - ${endDate.toLocaleTimeString('es-ES', {
+          timeZone: CLINIC_TIME_ZONE,
           hour: '2-digit',
           minute: '2-digit',
         })}`
@@ -72,7 +85,9 @@ export function AppointmentDetailScreen() {
           <>
             <Card className="mb-4">
               <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-[15px] font-bold text-neutral-900">Detalles de la Consulta</Text>
+                <Text className="text-[15px] font-bold text-neutral-900">
+                  Detalles de la Consulta
+                </Text>
                 <Badge
                   text={isUpcoming ? 'Programada' : 'Finalizada'}
                   variant={isUpcoming ? 'primary' : 'neutral'}
@@ -87,8 +102,12 @@ export function AppointmentDetailScreen() {
               </View>
 
               <View className="flex-row justify-between py-1.5 border-b border-gray-100">
-                <Text className="text-sm text-gray-600">Horario:</Text>
-                <Text className="text-sm text-primary font-bold">{timeStr}</Text>
+                <Text className="text-sm text-gray-600">
+                  Horario (Colombia):
+                </Text>
+                <Text className="text-sm text-primary font-bold">
+                  {timeStr}
+                </Text>
               </View>
 
               <View className="flex-row justify-between py-1.5 border-b border-gray-100">
@@ -107,10 +126,12 @@ export function AppointmentDetailScreen() {
             </Card>
 
             <Card className="mb-4">
-              <Text className="text-[15px] font-bold text-neutral-900 mb-1">Modificar Motivo / Notas</Text>
+              <Text className="text-[15px] font-bold text-neutral-900 mb-1">
+                Modificar Motivo / Notas
+              </Text>
               <Text className="text-xs text-gray-600 mb-3 leading-4">
-                Edita la descripción o síntomas asociados a esta cita. Solo se guardarán los
-                campos modificados.
+                Edita la descripción o síntomas asociados a esta cita. Solo se
+                guardarán los campos modificados.
               </Text>
 
               <Field
@@ -125,18 +146,37 @@ export function AppointmentDetailScreen() {
               <Button
                 text={updating ? 'Guardando...' : 'Guardar Modificación'}
                 onPress={handleSubmit(onUpdate)}
-                disabled={!isDirty || updating}
+                disabled={!isDirty || updating || cancelling}
                 loading={updating}
                 className="mt-2"
               />
             </Card>
 
             {isUpcoming && (
-              <Card className="mb-4 border-red-200 bg-red-50/40">
-                <Text className="text-[15px] font-bold text-red-800 mb-1">Cancelar Cita Médica</Text>
+              <Card className="mb-4 border-teal-200 bg-teal-50/40">
+                <Text className="text-[15px] font-bold text-teal-900 mb-1">
+                  Cambiar fecha u hora
+                </Text>
                 <Text className="text-xs text-gray-600 mb-3 leading-4">
-                  Si no puedes asistir a tu cita, puedes cancelarla para que otro paciente
-                  pueda utilizar el horario.
+                  Consulta los horarios disponibles y elige cuándo asistir con
+                  el mismo médico.
+                </Text>
+                <Button
+                  text="Reprogramar cita"
+                  onPress={handleOpenReschedule}
+                  disabled={updating || cancelling}
+                />
+              </Card>
+            )}
+
+            {isUpcoming && (
+              <Card className="mb-4 border-red-200 bg-red-50/40">
+                <Text className="text-[15px] font-bold text-red-800 mb-1">
+                  Cancelar Cita Médica
+                </Text>
+                <Text className="text-xs text-gray-600 mb-3 leading-4">
+                  Si no puedes asistir a tu cita, puedes cancelarla para que
+                  otro paciente pueda utilizar el horario.
                 </Text>
 
                 <Button
@@ -144,7 +184,7 @@ export function AppointmentDetailScreen() {
                   variant="danger"
                   onPress={handleCancelAppointment}
                   loading={cancelling}
-                  disabled={cancelling}
+                  disabled={cancelling || updating}
                   className="mt-1"
                 />
               </Card>
@@ -152,6 +192,13 @@ export function AppointmentDetailScreen() {
           </>
         )}
       </KeyboardAwareScrollView>
+      {appointment && rescheduleVisible && (
+        <RescheduleAppointmentModal
+          appointment={appointment}
+          onComplete={onRescheduled}
+          onDismiss={closeReschedule}
+        />
+      )}
     </SafeAreaView>
   );
 }
