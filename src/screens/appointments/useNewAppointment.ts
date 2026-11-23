@@ -47,7 +47,6 @@ export function useNewAppointment() {
     setSelectedSlotId,
     selectedSlot,
     note,
-    setNote,
     submitting,
     scheduleError,
     confirmBooking,
@@ -102,10 +101,7 @@ export function useNewAppointment() {
           text: 'Confirmar y Agendar',
           onPress: async () => {
             try {
-              if (formData.appointment_description) {
-                setNote(formData.appointment_description);
-              }
-              await confirmBooking();
+              if (!await confirmBooking(formData.appointment_description)) return;
               Alert.alert('¡Cita Agendada!', 'Tu cita ha sido confirmada con éxito.', [
                 {
                   text: 'Ver Mis Citas',

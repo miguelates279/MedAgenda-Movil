@@ -3,6 +3,8 @@ import { Alert } from 'react-native';
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import appointmentsApi from '../../api/appointments';
+import apiClient from '../../api/client';
+import { appointmentReminders, refreshAppointmentReminders } from './reminders/appointmentReminders';
 import { DoctorAppointmentView } from '../../api/types';
 
 export interface EditAppointmentForm {
@@ -79,9 +81,12 @@ export function useAppointmentDetail() {
           onPress: async () => {
             setUpdating(true);
             try {
+              const sessionId = apiClient.getSessionId();
               await appointmentsApi.updateAppointment(appointmentId, {
                 appointment_description: data.appointment_description.trim(),
               });
+              if (sessionId !== apiClient.getSessionId()) return;
+              await refreshAppointmentReminders();
               setAppointment((prev) =>
                 prev
                   ? { ...prev, appointment_description: data.appointment_description.trim() }
@@ -116,7 +121,15 @@ export function useAppointmentDetail() {
           onPress: async () => {
             setCancelling(true);
             try {
+              const sessionId = apiClient.getSessionId();
               await appointmentsApi.cancelAppointment(appointmentId);
+              if (sessionId !== apiClient.getSessionId()) return;
+              try {
+                await appointmentReminders.cancelAppointment(appointmentId);
+              } catch {
+                Alert.alert('Cita cancelada', 'La cita se canceló, pero no se pudieron retirar sus avisos del teléfono. Vuelve a abrir la app para reintentar la sincronización.');
+              }
+              void refreshAppointmentReminders();
               Alert.alert('Cita Cancelada', 'Tu cita médica ha sido cancelada exitosamente.', [
                 { text: 'Aceptar', onPress: () => router.replace('/appointments' as any) },
               ]);

@@ -24,6 +24,11 @@ export function AppointmentsScreen() {
     error,
     loadAppointments,
     filteredAppointments,
+    remindersSupported,
+    remindersEnabled,
+    remindersPrecise,
+    enablingReminders,
+    enableReminders,
   } = useAppointmentsScreen();
 
   if (!isAuthenticated) {
@@ -67,6 +72,17 @@ export function AppointmentsScreen() {
       </View>
 
       <View className="flex-1 bg-gray-50">
+        {remindersSupported && (!remindersEnabled || !remindersPrecise) && (
+          <View className="mx-4 mt-3 p-3 bg-white border border-gray-200 rounded-lg">
+            <Text className="text-sm text-neutral-900 mb-2">
+              {remindersEnabled
+                ? 'Para recibir los avisos a la hora programada, permite las alarmas y recordatorios en los ajustes de Android.'
+                : 'Recibe un aviso 24 horas y 1 hora antes de cada cita. Los avisos abren el detalle de tu cita.'}
+            </Text>
+            <Button text={remindersEnabled ? 'Revisar puntualidad' : 'Activar recordatorios'} variant="secondary" onPress={enableReminders}
+              loading={enablingReminders} disabled={enablingReminders} />
+          </View>
+        )}
         <View className="px-4 py-2.5 bg-white border-b border-gray-200">
           <TextInput
             value={search}

@@ -1,5 +1,5 @@
 import apiClient from './client';
-import { CreateAppointmentDto, DoctorAppointmentView } from './types';
+import { CreateAppointmentDto, DoctorAppointmentView, UpdateAppointmentDto } from './types';
 
 export const appointmentsApi = {
   async getPatientAppointments(): Promise<DoctorAppointmentView[]> {
@@ -26,7 +26,7 @@ export const appointmentsApi = {
 
   async updateAppointment(
     appointmentId: number,
-    dto: { appointment_description?: string }
+    dto: UpdateAppointmentDto
   ): Promise<{ message: string }> {
     return apiClient.put<{ message: string }>(`/appointments/${appointmentId}`, dto);
   },

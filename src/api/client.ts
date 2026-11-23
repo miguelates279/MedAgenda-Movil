@@ -1,6 +1,6 @@
 import type { ApiErrorResponse } from './types';
 
-export const BASE_URL = 'https://med-agenda-1-three.vercel.app';
+export const BASE_URL = process.env.EXPO_PUBLIC_API_URL || 'https://med-agenda-1-three.vercel.app';
 
 export interface RequestOptions extends RequestInit {
   skipAuth?: boolean;

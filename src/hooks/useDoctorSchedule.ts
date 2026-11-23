@@ -1,6 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
 import clinicsApi from '../api/clinics';
 import appointmentsApi from '../api/appointments';
+import apiClient from '../api/client';
+import { refreshAppointmentReminders } from '../screens/appointments/reminders/appointmentReminders';
 import {
   AppointmentSlot,
   ClinicScheduleRules,
@@ -279,13 +281,14 @@ export function useDoctorSchedule(clinicId: number, doctorId: number) {
     [slots, selectedSlotId]
   );
 
-  const confirmBooking = async (): Promise<void> => {
+  const confirmBooking = async (description = note): Promise<boolean> => {
     if (!selectedSlot || !clinicId || !doctorId) {
       throw new Error('Selecciona un horario disponible antes de confirmar.');
     }
 
     setSubmitting(true);
     setScheduleError(null);
+    const sessionId = apiClient.getSessionId();
 
     try {
       const dto: CreateAppointmentDto = {
@@ -293,11 +296,14 @@ export function useDoctorSchedule(clinicId: number, doctorId: number) {
         doctor_id: doctorId,
         start_date_time: selectedSlot.start,
         end_date_time: selectedSlot.end,
-        appointment_description: note.trim() || undefined,
+        appointment_description: description.trim() || undefined,
       };
       await appointmentsApi.scheduleAppointment(dto);
+      if (apiClient.getSessionId() !== sessionId) return false;
       setNote('');
+      await refreshAppointmentReminders(true);
       await refreshSlots(selectedSlot.start);
+      return apiClient.getSessionId() === sessionId;
     } catch (err: any) {
       let message = err.message || 'No se pudo agendar la cita.';
       if (/409|Conflict/i.test(message)) {

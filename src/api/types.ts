@@ -156,6 +156,8 @@ export interface CreateAppointmentDto {
 
 export interface UpdateAppointmentDto {
   appointment_description?: string;
+  start_date_time?: string;
+  end_date_time?: string;
 }
 
 export interface ClinicSearchFilters {
