@@ -1,5 +1,6 @@
-import React from 'react';
-import { Modal, ScrollView, Text, View } from 'react-native';
+import { AppModal } from '../../../components/AppModal';
+import React, { useEffect, useRef, useState } from 'react';
+import { Platform, ScrollView, Text, View } from 'react-native';
 import { Button, Card } from '../../../components';
 import type { DoctorAppointmentView } from '../../../api/types';
 import { useRescheduleAppointment } from '../useRescheduleAppointment';
@@ -20,6 +21,23 @@ export function RescheduleAppointmentModal({
   onComplete,
   onDismiss,
 }: Props) {
+  const [visible, setVisible] = useState(true);
+  const afterDismiss = useRef<(() => void) | null>(null);
+  useEffect(
+    () => () => {
+      afterDismiss.current = null;
+    },
+    [],
+  );
+  const closePresentation = (complete: () => void) => {
+    if (Platform.OS !== 'ios') {
+      complete();
+      return;
+    }
+    if (afterDismiss.current) return;
+    afterDismiss.current = complete;
+    setVisible(false);
+  };
   const {
     availability,
     saving,
@@ -28,13 +46,22 @@ export function RescheduleAppointmentModal({
     dismiss,
     currentDateLabel,
     selectedDateLabel,
-  } = useRescheduleAppointment(appointment, onComplete, onDismiss);
+  } = useRescheduleAppointment(
+    appointment,
+    (result) => closePresentation(() => onComplete(result)),
+    () => closePresentation(onDismiss),
+  );
   return (
-    <Modal
-      visible
+    <AppModal
+      visible={visible}
       animationType="slide"
       presentationStyle="pageSheet"
       onRequestClose={dismiss}
+      onDismiss={() => {
+        const complete = afterDismiss.current;
+        afterDismiss.current = null;
+        complete?.();
+      }}
     >
       <ModalViewport style={{ backgroundColor: '#ffffff' }}>
         <View className="p-4 border-b border-gray-200">
@@ -110,6 +137,6 @@ export function RescheduleAppointmentModal({
           />
         </ScrollView>
       </ModalViewport>
-    </Modal>
+    </AppModal>
   );
 }

@@ -6,7 +6,7 @@ import React, {
   useCallback,
   useEffect,
 } from 'react';
-import { Alert } from 'react-native';
+
 import apiClient from '../api/client';
 import authApi from '../api/auth';
 import adminApi from '../api/admin';
@@ -18,6 +18,7 @@ import {
   LoginResponse,
   UserProfile,
 } from '../api/types';
+import { appAlerts } from '../utils/appAlerts';
 
 export type AppMode = 'patient' | 'doctor' | 'admin';
 
@@ -124,6 +125,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       roleResolutionGenRef.current += 1;
       apiClient.setSession(null, newSessionId);
 
+      appAlerts.dismissAll();
+
       setTokenState(null);
       tokenRef.current = null;
       setUser(null);
@@ -139,9 +142,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       hasResolvedModesRef.current = false;
 
       // Single Spanish feedback alert for genuine session expiration
-      Alert.alert(
+      appAlerts.alert(
         'Sesión expirada',
-        'Tu sesión ha expirado. Inicia sesión nuevamente para continuar.'
+        'Tu sesión ha expirado. Inicia sesión nuevamente para continuar.',
+        undefined,
+        { variant: 'warning' },
       );
     });
 
@@ -337,6 +342,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
       sessionId = ++authSessionRef.current;
       resolutionGen = ++roleResolutionGenRef.current;
 
+      appAlerts.dismissAll();
+
       hasResolvedModesRef.current = false;
       manualActiveModeRef.current = null;
       setUser(null);
@@ -410,6 +417,8 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
     const newSessionId = ++authSessionRef.current;
     roleResolutionGenRef.current += 1;
     apiClient.setSession(null, newSessionId);
+
+    appAlerts.dismissAll();
     setTokenState(null);
     tokenRef.current = null;
     setUser(null);

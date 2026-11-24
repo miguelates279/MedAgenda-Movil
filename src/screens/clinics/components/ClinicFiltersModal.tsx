@@ -1,7 +1,7 @@
+import { AppModal } from '../../../components/AppModal';
 import React from 'react';
 import {
   ActivityIndicator,
-  Modal,
   Pressable,
   ScrollView,
   StyleSheet,
@@ -90,7 +90,7 @@ export function ClinicFiltersModal({ filters }: { filters: Filters }) {
             };
 
   return (
-    <Modal
+    <AppModal
       visible={filters.open}
       transparent
       animationType="slide"
@@ -208,7 +208,7 @@ export function ClinicFiltersModal({ filters }: { filters: Filters }) {
           </View>
         </View>
       </ModalViewport>
-    </Modal>
+    </AppModal>
   );
 }
 

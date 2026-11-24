@@ -1,8 +1,8 @@
+import { AppModal } from './AppModal';
 import React, { useState } from 'react';
 import {
   FlatList,
   ActivityIndicator,
-  Modal,
   Pressable,
   Text,
   TextInput,
@@ -186,7 +186,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
   if (embedded) return isOpen ? content : null;
 
   return (
-    <Modal
+    <AppModal
       visible={isOpen}
       animationType="slide"
       transparent
@@ -206,7 +206,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
           </View>
         </View>
       </ModalViewport>
-    </Modal>
+    </AppModal>
   );
 };
 

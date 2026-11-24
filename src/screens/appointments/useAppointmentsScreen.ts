@@ -1,11 +1,12 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { Alert, AppState } from 'react-native';
+import { AppState } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import apiClient from '../../api/client';
 import { appointmentReminders } from './reminders/appointmentReminders';
 import { hasPreciseReminderAccess, hasReminderPermission, remindersSupported } from './reminders/deviceNotifications';
 import { DoctorAppointmentView } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
+import { appAlerts } from '../../utils/appAlerts';
 
 export function useAppointmentsScreen() {
   const router = useRouter();
@@ -75,7 +76,12 @@ export function useAppointmentsScreen() {
         setRemindersPrecise(hasPreciseReminderAccess());
       }
     } catch {
-      Alert.alert('Recordatorios', 'No se pudieron activar los recordatorios. Puedes seguir usando tus citas e intentarlo nuevamente.');
+      appAlerts.alert(
+        'Recordatorios',
+        'No se pudieron activar los recordatorios. Puedes seguir usando tus citas e intentarlo nuevamente.',
+        undefined,
+        { variant: 'warning' },
+      );
     } finally {
       setEnablingReminders(false);
     }

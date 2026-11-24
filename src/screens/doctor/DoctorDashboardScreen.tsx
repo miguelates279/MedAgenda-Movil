@@ -1,7 +1,7 @@
+import { AppModal } from '../../components/AppModal';
 import React from 'react';
 import {
   ActivityIndicator,
-  Modal,
   RefreshControl,
   ScrollView,
   Text,
@@ -366,7 +366,7 @@ export function DoctorDashboardScreen() {
         </View>
       </ScrollView>
 
-      <Modal
+      <AppModal
         visible={createModalVisible}
         transparent
         animationType="slide"
@@ -480,9 +480,9 @@ export function DoctorDashboardScreen() {
             </View>
           </View>
         </ModalViewport>
-      </Modal>
+      </AppModal>
 
-      <Modal
+      <AppModal
         visible={editModalVisible}
         transparent
         animationType="slide"
@@ -572,7 +572,7 @@ export function DoctorDashboardScreen() {
             </View>
           </View>
         </ModalViewport>
-      </Modal>
+      </AppModal>
     </View>
   );
 }

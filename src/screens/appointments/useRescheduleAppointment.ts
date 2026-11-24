@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert } from 'react-native';
+
 import appointmentsApi from '../../api/appointments';
 import apiClient from '../../api/client';
 import type { DoctorAppointmentView } from '../../api/types';
@@ -7,6 +7,7 @@ import { useAppointmentAvailability } from '../../hooks/useAppointmentAvailabili
 import { formatAppointmentDate } from '../../utils/appointmentAvailability';
 import { appointmentReminders } from './reminders/appointmentReminders';
 import { rescheduleAppointment } from './rescheduleAppointment';
+import { appAlerts } from '../../utils/appAlerts';
 
 export function useRescheduleAppointment(
   appointment: DoctorAppointmentView,
@@ -50,7 +51,7 @@ export function useRescheduleAppointment(
       return;
     }
     confirming.current = true;
-    Alert.alert(
+    appAlerts.alert(
       'Confirmar reprogramación',
       `Tu cita del ${formatAppointmentDate(appointment.start_date_time)} cambiará al ${formatAppointmentDate(slot.start)}. ¿Deseas guardar el nuevo horario?`,
       [
@@ -71,10 +72,8 @@ export function useRescheduleAppointment(
             setError(null);
             try {
               const result = await rescheduleAppointment(appointment, slot, {
-                update: (id, dates) =>
-                  appointmentsApi.updateAppointment(id, dates),
-                cancelReminders: (id) =>
-                  appointmentReminders.cancelAppointment(id),
+                update: (id, dates) => appointmentsApi.updateAppointment(id, dates),
+                cancelReminders: (id) => appointmentReminders.cancelAppointment(id),
                 refreshReminders: () =>
                   appointmentReminders.refresh(false, {
                     throwOnDeviceError: true,
@@ -102,6 +101,7 @@ export function useRescheduleAppointment(
         },
       ],
       {
+        variant: 'primary',
         cancelable: true,
         onDismiss: () => {
           confirming.current = false;

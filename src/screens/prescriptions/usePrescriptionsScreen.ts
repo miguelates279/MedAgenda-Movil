@@ -1,7 +1,8 @@
 import { useCallback, useEffect, useMemo, useState } from 'react';
-import { Alert } from 'react-native';
+
 import prescriptionsApi from '../../api/prescriptions';
 import { PrescriptionUserView } from '../../api/types';
+import { appAlerts } from '../../utils/appAlerts';
 
 export interface PrescriptionGroup {
   clinicId: number;
@@ -19,7 +20,12 @@ export function usePrescriptionsScreen() {
       const data = await prescriptionsApi.getUserPrescriptions();
       setPrescriptions(data || []);
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'No se pudieron cargar tus fórmulas médicas.');
+      appAlerts.alert(
+        'Error',
+        err?.message || 'No se pudieron cargar tus fórmulas médicas.',
+        undefined,
+        { variant: 'error' },
+      );
     } finally {
       setLoading(false);
     }

@@ -1,5 +1,5 @@
 import { useEffect, useRef, useState } from 'react';
-import { Alert, AppState } from 'react-native';
+import { AppState } from 'react-native';
 import { useRootNavigationState, useRouter } from 'expo-router';
 import { useAuth } from '../../../context/AuthContext';
 import {
@@ -15,6 +15,7 @@ import {
   reminderNavigationAction,
   reminderResponseKey,
 } from './reminderNavigation';
+import { appAlerts } from '../../../utils/appAlerts';
 
 export function useAppointmentReminderLifecycle(): void {
   const {
@@ -102,9 +103,11 @@ export function useAppointmentReminderLifecycle(): void {
       consumed.current.add(key);
       setPending(null);
       clearReminderResponse();
-      Alert.alert(
+      appAlerts.alert(
         'Recordatorio de otra cuenta',
         'Iniciaste sesión con una cuenta diferente a la de esta cita.',
+        undefined,
+        { variant: 'warning' },
       );
       return;
     }

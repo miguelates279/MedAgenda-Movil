@@ -1,5 +1,5 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert, AppState, AppStateStatus } from 'react-native';
+import { AppState, AppStateStatus } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import clinicsApi from '../../api/clinics';
 import doctorsApi from '../../api/doctors';
@@ -11,6 +11,7 @@ import {
   PrescriptionDoctorView,
 } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
+import { appAlerts } from '../../utils/appAlerts';
 
 export function useDoctorDashboard() {
   const router = useRouter();
@@ -106,7 +107,12 @@ export function useDoctorDashboard() {
 
       setDoctorClinics(extractedClinics);
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'No se pudieron cargar los datos del doctor.');
+      appAlerts.alert(
+        'Error',
+        err?.message || 'No se pudieron cargar los datos del doctor.',
+        undefined,
+        { variant: 'error' },
+      );
     } finally {
       setLoading(false);
     }
@@ -389,7 +395,12 @@ export function useDoctorDashboard() {
 
   const handleSavePrescription = async () => {
     if (!targetPatient || !selectedClinicId || !prescriptionText.trim()) {
-      Alert.alert('Campos incompletos', 'Por favor ingresa la descripción de la fórmula y selecciona una clínica.');
+      appAlerts.alert(
+        'Campos incompletos',
+        'Por favor ingresa la descripción de la fórmula y selecciona una clínica.',
+        undefined,
+        { variant: 'warning' },
+      );
       return;
     }
 
@@ -400,12 +411,19 @@ export function useDoctorDashboard() {
         clinic_id: selectedClinicId,
         prescription_description: prescriptionText.trim(),
       });
-      Alert.alert('Éxito', 'Fórmula médica asignada correctamente.');
+      appAlerts.alert('Éxito', 'Fórmula médica asignada correctamente.', undefined, {
+        variant: 'success',
+      });
       setCreateModalVisible(false);
       setPrescriptionText('');
       await loadDashboardData();
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'No se pudo crear la receta médica.');
+      appAlerts.alert(
+        'Error',
+        err?.message || 'No se pudo crear la receta médica.',
+        undefined,
+        { variant: 'error' },
+      );
     } finally {
       setSavingPrescription(false);
     }
@@ -413,7 +431,12 @@ export function useDoctorDashboard() {
 
   const handleOpenEditModal = (prescriptionId?: number, currentText?: string) => {
     if (!prescriptionId) {
-      Alert.alert('Aviso', 'No se puede editar esta fórmula porque no tiene un ID asociado.');
+      appAlerts.alert(
+        'Aviso',
+        'No se puede editar esta fórmula porque no tiene un ID asociado.',
+        undefined,
+        { variant: 'warning' },
+      );
       return;
     }
     setEditingPrescriptionId(prescriptionId);
@@ -423,7 +446,12 @@ export function useDoctorDashboard() {
 
   const handleSaveEditPrescription = async () => {
     if (!editingPrescriptionId || !editPrescriptionText.trim()) {
-      Alert.alert('Campo requerido', 'Por favor ingresa el contenido de la fórmula médica.');
+      appAlerts.alert(
+        'Campo requerido',
+        'Por favor ingresa el contenido de la fórmula médica.',
+        undefined,
+        { variant: 'warning' },
+      );
       return;
     }
 
@@ -432,11 +460,21 @@ export function useDoctorDashboard() {
       await prescriptionsApi.updatePrescription(editingPrescriptionId, {
         prescription_description: editPrescriptionText.trim(),
       });
-      Alert.alert('Éxito', 'Fórmula médica actualizada correctamente.');
+      appAlerts.alert(
+        'Éxito',
+        'Fórmula médica actualizada correctamente.',
+        undefined,
+        { variant: 'success' },
+      );
       setEditModalVisible(false);
       await loadDashboardData();
     } catch (err: any) {
-      Alert.alert('Error', err?.message || 'No se pudo actualizar la fórmula médica.');
+      appAlerts.alert(
+        'Error',
+        err?.message || 'No se pudo actualizar la fórmula médica.',
+        undefined,
+        { variant: 'error' },
+      );
     } finally {
       setUpdatingPrescription(false);
     }
@@ -444,11 +482,16 @@ export function useDoctorDashboard() {
 
   const handleDeletePrescription = (prescriptionId?: number) => {
     if (!prescriptionId) {
-      Alert.alert('Aviso', 'No se puede eliminar esta fórmula porque no tiene un ID asociado.');
+      appAlerts.alert(
+        'Aviso',
+        'No se puede eliminar esta fórmula porque no tiene un ID asociado.',
+        undefined,
+        { variant: 'warning' },
+      );
       return;
     }
 
-    Alert.alert(
+    appAlerts.alert(
       'Eliminar Fórmula',
       '¿Estás seguro de que deseas eliminar esta fórmula médica? Esta acción no se puede deshacer.',
       [
@@ -459,14 +502,25 @@ export function useDoctorDashboard() {
           onPress: async () => {
             try {
               await prescriptionsApi.deletePrescription(prescriptionId);
-              Alert.alert('Eliminada', 'La fórmula médica ha sido eliminada.');
+              appAlerts.alert(
+                'Eliminada',
+                'La fórmula médica ha sido eliminada.',
+                undefined,
+                { variant: 'success' },
+              );
               await loadDashboardData();
             } catch (err: any) {
-              Alert.alert('Error', err?.message || 'No se pudo eliminar la fórmula médica.');
+              appAlerts.alert(
+                'Error',
+                err?.message || 'No se pudo eliminar la fórmula médica.',
+                undefined,
+                { variant: 'error' },
+              );
             }
           },
         },
-      ]
+      ],
+      { variant: 'danger' },
     );
   };
 

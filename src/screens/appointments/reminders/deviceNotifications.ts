@@ -1,4 +1,4 @@
-import { Alert, Linking, Platform } from 'react-native';
+import { Linking, Platform } from 'react-native';
 import * as Notifications from 'expo-notifications';
 import {
   MAX_PENDING_REMINDERS,
@@ -8,6 +8,7 @@ import {
 import type { ReminderDevice } from './reminderService';
 import type { ReminderData } from './reminderPlan';
 import exactAlarmAccess from '../../../../modules/medagenda-reminder-access';
+import { appAlerts } from '../../../utils/appAlerts';
 
 export const remindersSupported =
   Platform.OS === 'android' || Platform.OS === 'ios';
@@ -65,21 +66,23 @@ export function hasPreciseReminderAccess(): boolean {
 async function offerPreciseReminders(): Promise<void> {
   if (hasPreciseReminderAccess()) return;
   if (!exactAlarmAccess) {
-    Alert.alert(
+    appAlerts.alert(
       'Recordatorios puntuales',
       'Para autorizar avisos a la hora programada, utiliza un APK de MedAgenda con este módulo instalado.',
+      undefined,
+      { variant: 'warning' },
     );
     return;
   }
   const accepted = await new Promise<boolean>((resolve) =>
-    Alert.alert(
+    appAlerts.alert(
       'Recordatorios a tiempo',
       'Android necesita que permitas las alarmas y recordatorios para avisarte a la hora programada. Los avisos se activarán cuando lo autorices. Puedes seguir usando tus citas sin este permiso.',
       [
         { text: 'Ahora no', style: 'cancel', onPress: () => resolve(false) },
         { text: 'Abrir ajustes', onPress: () => resolve(true) },
       ],
-      { cancelable: true, onDismiss: () => resolve(false) },
+      { variant: 'primary', cancelable: true, onDismiss: () => resolve(false) },
     ),
   );
   if (accepted) await exactAlarmAccess.openExactAlarmSettings();
@@ -94,7 +97,7 @@ async function askPermission(): Promise<boolean> {
     return hasPreciseReminderAccess();
   }
   const accepted = await new Promise<boolean>((resolve) =>
-    Alert.alert(
+    appAlerts.alert(
       'Recordatorios de tus citas',
       'MedAgenda puede avisarte 24 horas y 1 hora antes de cada cita. Al tocar el aviso abrirás esa cita. Puedes seguir usando la app sin permitir las notificaciones.',
       [
@@ -104,7 +107,7 @@ async function askPermission(): Promise<boolean> {
           onPress: () => resolve(true),
         },
       ],
-      { cancelable: true, onDismiss: () => resolve(false) },
+      { variant: 'primary', cancelable: true, onDismiss: () => resolve(false) },
     ),
   );
   if (!accepted) return false;

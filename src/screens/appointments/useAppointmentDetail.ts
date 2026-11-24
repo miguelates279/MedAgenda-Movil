@@ -1,5 +1,5 @@
 import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import appointmentsApi from '../../api/appointments';
@@ -9,6 +9,7 @@ import {
   refreshAppointmentReminders,
 } from './reminders/appointmentReminders';
 import { DoctorAppointmentView } from '../../api/types';
+import { appAlerts } from '../../utils/appAlerts';
 
 export interface EditAppointmentForm {
   appointment_description: string;
@@ -74,11 +75,16 @@ export function useAppointmentDetail() {
 
   const onUpdate = async (data: EditAppointmentForm) => {
     if (!isDirty) {
-      Alert.alert('Información', 'No has realizado cambios en la cita.');
+      appAlerts.alert(
+        'Información',
+        'No has realizado cambios en la cita.',
+        undefined,
+        { variant: 'primary' },
+      );
       return;
     }
 
-    Alert.alert(
+    appAlerts.alert(
       'Confirmar Modificación',
       '¿Deseas guardar los cambios realizados en las notas de tu cita?',
       [
@@ -98,20 +104,23 @@ export function useAppointmentDetail() {
                 prev
                   ? {
                       ...prev,
-                      appointment_description:
-                        data.appointment_description.trim(),
+                      appointment_description: data.appointment_description.trim(),
                     }
                   : null,
               );
               reset(data);
-              Alert.alert(
+              appAlerts.alert(
                 'Éxito',
                 'Las notas de la cita se han actualizado correctamente.',
+                undefined,
+                { variant: 'success' },
               );
             } catch (err: any) {
-              Alert.alert(
+              appAlerts.alert(
                 'Error',
                 err.message || 'No se pudieron guardar los cambios.',
+                undefined,
+                { variant: 'error' },
               );
             } finally {
               setUpdating(false);
@@ -119,6 +128,7 @@ export function useAppointmentDetail() {
           },
         },
       ],
+      { variant: 'primary' },
     );
   };
 
@@ -127,7 +137,7 @@ export function useAppointmentDetail() {
       ? `Dr(a). ${appointment.first_name} ${appointment.first_last_name}`
       : 'el médico';
 
-    Alert.alert(
+    appAlerts.alert(
       'Confirmación de Cancelación',
       `¿Estás seguro de que deseas cancelar tu cita con ${doctorName}? Esta acción liberará el cupo y no se puede deshacer.`,
       [
@@ -144,13 +154,15 @@ export function useAppointmentDetail() {
               try {
                 await appointmentReminders.cancelAppointment(appointmentId);
               } catch {
-                Alert.alert(
+                appAlerts.alert(
                   'Cita cancelada',
                   'La cita se canceló, pero no se pudieron retirar sus avisos del teléfono. Vuelve a abrir la app para reintentar la sincronización.',
+                  undefined,
+                  { variant: 'warning' },
                 );
               }
               void refreshAppointmentReminders();
-              Alert.alert(
+              appAlerts.alert(
                 'Cita Cancelada',
                 'Tu cita médica ha sido cancelada exitosamente.',
                 [
@@ -159,11 +171,14 @@ export function useAppointmentDetail() {
                     onPress: () => router.replace('/appointments' as any),
                   },
                 ],
+                { variant: 'success' },
               );
             } catch (err: any) {
-              Alert.alert(
+              appAlerts.alert(
                 'Error',
                 err.message || 'No se pudo cancelar la cita.',
+                undefined,
+                { variant: 'error' },
               );
             } finally {
               setCancelling(false);
@@ -171,13 +186,19 @@ export function useAppointmentDetail() {
           },
         },
       ],
+      { variant: 'danger' },
     );
   };
 
   const handleOpenReschedule = () => {
     if (updating || cancelling || !appointment) return;
     if (Date.parse(appointment.start_date_time) <= Date.now()) {
-      Alert.alert('Cita finalizada', 'Solo puedes reprogramar citas futuras.');
+      appAlerts.alert(
+        'Cita finalizada',
+        'Solo puedes reprogramar citas futuras.',
+        undefined,
+        { variant: 'warning' },
+      );
       return;
     }
     setRescheduleVisible(true);
@@ -189,11 +210,13 @@ export function useAppointmentDetail() {
   }) => {
     setAppointment(result.appointment);
     setRescheduleVisible(false);
-    Alert.alert(
+    appAlerts.alert(
       'Cita reprogramada',
       result.remindersUpdated
         ? 'El nuevo horario quedó guardado y se actualizaron los recordatorios habilitados.'
         : 'El nuevo horario quedó guardado. No pudimos completar la actualización de sus avisos; vuelve a abrir Mis Citas con conexión para reintentarlo.',
+      undefined,
+      { variant: result.remindersUpdated ? 'success' : 'warning' },
     );
   };
 

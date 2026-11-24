@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import { Alert } from 'react-native';
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import clinicsApi from '../../api/clinics';
 import { Clinic, ClinicScheduleRules, PublicDoctor } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
+import { appAlerts } from '../../utils/appAlerts';
 
 export function useClinicDetail() {
   const router = useRouter();
@@ -110,7 +111,7 @@ export function useClinicDetail() {
   // Manejo coherente de agendamiento público según modo y sesión (Fix 3)
   const handleBookWithDoctor = (doctorId: number) => {
     if (!isAuthenticated) {
-      Alert.alert(
+      appAlerts.alert(
         'Inicio de sesión requerido',
         'Para agendar una cita médica debes iniciar sesión con una cuenta de paciente.',
         [
@@ -119,14 +120,15 @@ export function useClinicDetail() {
             text: 'Iniciar Sesión',
             onPress: () => router.push('/profile' as any),
           },
-        ]
+        ],
+        { variant: 'warning' },
       );
       return;
     }
 
     if (activeMode !== 'patient') {
       if (availableModes.includes('patient')) {
-        Alert.alert(
+        appAlerts.alert(
           'Función exclusiva de Paciente',
           'El agendamiento de citas está disponible en el modo Paciente. ¿Deseas cambiar al modo Paciente para continuar?',
           [
@@ -146,12 +148,15 @@ export function useClinicDetail() {
                 setActiveMode('patient');
               },
             },
-          ]
+          ],
+          { variant: 'warning' },
         );
       } else {
-        Alert.alert(
+        appAlerts.alert(
           'Modo no disponible',
-          'El agendamiento de citas médicas está disponible únicamente en el modo Paciente.'
+          'El agendamiento de citas médicas está disponible únicamente en el modo Paciente.',
+          undefined,
+          { variant: 'warning' },
         );
       }
       return;
@@ -165,7 +170,7 @@ export function useClinicDetail() {
 
   // Separación estricta de eliminación de clínica y sincronización de roles (Fix 2 & Stage 4 Carryover B)
   const handleDelete = () => {
-    Alert.alert(
+    appAlerts.alert(
       'Eliminar clínica',
       'Esta acción no se puede deshacer. ¿Quieres continuar?',
       [
@@ -182,7 +187,12 @@ export function useClinicDetail() {
               await clinicsApi.deleteClinic(clinicId);
             } catch (deleteErr: any) {
               setDeleting(false);
-              Alert.alert('No se pudo eliminar', deleteErr?.message || 'Intenta nuevamente.');
+              appAlerts.alert(
+                'No se pudo eliminar',
+                deleteErr?.message || 'Intenta nuevamente.',
+                undefined,
+                { variant: 'error' },
+              );
               return;
             }
 
@@ -204,7 +214,9 @@ export function useClinicDetail() {
                 if (getSessionId() !== targetSessionId) {
                   return;
                 }
-                const verifiedList = Array.isArray(refreshedClinics) ? refreshedClinics : [];
+                const verifiedList = Array.isArray(refreshedClinics)
+                  ? refreshedClinics
+                  : [];
                 if (verifiedList.length > 0) {
                   // Aún cuenta con otras sedes administrables: preservar la experiencia admin
                   router.replace('/clinics/mine' as any);
@@ -222,7 +234,7 @@ export function useClinicDetail() {
                   return;
                 }
                 // Al fallar la sincronización, NUNCA asumir 0 clínicas restantes ni reportar fallo de eliminación
-                Alert.alert(
+                appAlerts.alert(
                   'Clínica eliminada',
                   'La clínica se eliminó correctamente, pero ocurrió un problema al sincronizar los permisos de administración. Puedes reintentar la sincronización de tus permisos.',
                   [
@@ -234,7 +246,8 @@ export function useClinicDetail() {
                       text: 'Ir a Mis Clínicas',
                       onPress: () => router.replace('/clinics/mine' as any),
                     },
-                  ]
+                  ],
+                  { variant: 'warning' },
                 );
               }
             };
@@ -242,7 +255,8 @@ export function useClinicDetail() {
             await syncRoleAccess();
           },
         },
-      ]
+      ],
+      { variant: 'danger' },
     );
   };
 

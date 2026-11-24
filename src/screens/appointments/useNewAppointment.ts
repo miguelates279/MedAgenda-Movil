@@ -1,11 +1,12 @@
 import { useEffect, useState } from 'react';
-import { Alert } from 'react-native';
+
 import { useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import clinicsApi from '../../api/clinics';
 import { Clinic, PublicDoctor } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
 import { useDoctorSchedule } from '../../hooks/useDoctorSchedule';
+import { appAlerts } from '../../utils/appAlerts';
 
 export interface AppointmentFormData {
   appointment_description: string;
@@ -88,7 +89,12 @@ export function useNewAppointment() {
 
   const onSubmit = (formData: AppointmentFormData) => {
     if (!selectedSlot) {
-      Alert.alert('Atención', 'Por favor selecciona un horario disponible.');
+      appAlerts.alert(
+        'Atención',
+        'Por favor selecciona un horario disponible.',
+        undefined,
+        { variant: 'warning' },
+      );
       return;
     }
 
@@ -96,7 +102,7 @@ export function useNewAppointment() {
       ? `${doctor.first_name} ${doctor.first_last_name}`
       : 'el doctor';
 
-    Alert.alert(
+    appAlerts.alert(
       'Confirmar Cita Médica',
       `¿Deseas confirmar tu cita médica con ${doctorName} para el ${selectedDayLabel} a las ${selectedSlot.label}?`,
       [
@@ -105,9 +111,8 @@ export function useNewAppointment() {
           text: 'Confirmar y Agendar',
           onPress: async () => {
             try {
-              if (!(await confirmBooking(formData.appointment_description)))
-                return;
-              Alert.alert(
+              if (!(await confirmBooking(formData.appointment_description))) return;
+              appAlerts.alert(
                 '¡Cita Agendada!',
                 'Tu cita ha sido confirmada con éxito.',
                 [
@@ -116,16 +121,20 @@ export function useNewAppointment() {
                     onPress: () => router.replace('/appointments' as any),
                   },
                 ],
+                { variant: 'success' },
               );
             } catch (err: any) {
-              Alert.alert(
+              appAlerts.alert(
                 'Error al agendar',
                 err.message || 'No se pudo agendar la cita.',
+                undefined,
+                { variant: 'error' },
               );
             }
           },
         },
       ],
+      { variant: 'primary' },
     );
   };
 

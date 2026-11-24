@@ -133,6 +133,7 @@ function createLayoutServer() {
   const mutations = [];
   let roleFailure = false;
   let searchMode = 'normal';
+  let failureRoutes = [];
   let nextClinicId = 21;
   let nextAppointmentId = 41;
   let nextPrescriptionId = 41;
@@ -168,6 +169,52 @@ function createLayoutServer() {
       return;
     }
     console.log(method, url.pathname);
+    if (method === 'POST' && url.pathname === '/__qa/failures') {
+      if (
+        !Array.isArray(body.routes) ||
+        body.routes.some(
+          (route) =>
+            !route ||
+            !['GET', 'POST', 'PUT', 'DELETE'].includes(route.method) ||
+            typeof route.path !== 'string' ||
+            !route.path.startsWith('/') ||
+            route.path.startsWith('/__qa/') ||
+            !Number.isInteger(route.status) ||
+            route.status < 400 ||
+            route.status > 599 ||
+            typeof route.message !== 'string',
+        )
+      ) {
+        reply(400, {
+          message:
+            'Configura routes con metodo, ruta, estado de error y mensaje validos.',
+        });
+        return;
+      }
+      failureRoutes = body.routes.map(
+        ({ method: targetMethod, path, status, message }) => ({
+          method: targetMethod,
+          path,
+          status,
+          message,
+        }),
+      );
+      reply(200, { failureRoutes });
+      return;
+    }
+    const failure =
+      !url.pathname.startsWith('/__qa/') &&
+      failureRoutes.find(
+        (route) => route.method === method && route.path === url.pathname,
+      );
+    if (failure) {
+      reply(failure.status, {
+        statusCode: failure.status,
+        message: failure.message,
+        error: 'Fixture failure',
+      });
+      return;
+    }
 
     if (method === 'POST' && url.pathname === '/auth/login') {
       const selectedRole = ['patient', 'doctor', 'admin'].find(
@@ -487,6 +534,7 @@ function createLayoutServer() {
         clinics,
         roleFailure,
         searchMode,
+        failureRoutes,
         accounts: [
           'patient@layout.test',
           'doctor@layout.test',

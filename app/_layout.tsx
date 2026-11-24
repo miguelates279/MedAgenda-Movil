@@ -6,6 +6,7 @@ import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { AppointmentReminderLifecycle } from '../src/screens/appointments/reminders/AppointmentReminderLifecycle';
+import { AppAlertHost } from '../src/components/AppAlertHost';
 
 function RootNavigation() {
   const { isAuthenticated, activeMode } = useAuth();
@@ -52,6 +53,7 @@ export default function RootLayout() {
         >
           <RootNavigation />
           <AppointmentReminderLifecycle />
+          <AppAlertHost />
         </SafeAreaView>
       </AuthProvider>
     </SafeAreaProvider>
