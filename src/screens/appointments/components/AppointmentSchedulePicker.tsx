@@ -82,6 +82,7 @@ export function AppointmentSchedulePicker({
             return (
               <TouchableOpacity
                 key={m.key}
+                style={{ maxWidth: '100%' }}
                 onPress={() => setSelectedMonthKey(m.key)}
                 disabled={disabled}
                 accessibilityRole="button"
@@ -150,7 +151,7 @@ export function AppointmentSchedulePicker({
 
       {selectedDayKey && (
         <Card className="mb-4">
-          <View className="flex-row justify-between items-center mb-2">
+          <View className="flex-row flex-wrap justify-between items-center gap-2 mb-2">
             <Text className="text-[15px] font-bold text-neutral-900">
               Horarios Disponibles
             </Text>
@@ -191,6 +192,7 @@ export function AppointmentSchedulePicker({
               return (
                 <TouchableOpacity
                   key={slot.id}
+                  style={{ maxWidth: '100%' }}
                   onPress={() => isAvailable && setSelectedSlotId(slot.id)}
                   disabled={disabled || !isAvailable || loadingSlots}
                   accessibilityRole="button"

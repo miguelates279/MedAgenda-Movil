@@ -3,10 +3,10 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   Text,
   TextInput,
   View,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppointmentCard, Button } from '../../components';
@@ -33,11 +33,19 @@ export function AppointmentsScreen() {
 
   if (!isAuthenticated) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <View className="px-4 py-3 bg-white border-b border-gray-200">
           <Text className="text-xl font-bold text-neutral-900">Mis Citas</Text>
         </View>
-        <View className="flex-1 items-center justify-center p-8 bg-gray-50">
+        <ScrollView
+          className="flex-1 bg-gray-50"
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 24,
+          }}
+        >
           <View className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 items-center justify-center mb-3">
             <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
           </View>
@@ -45,25 +53,24 @@ export function AppointmentsScreen() {
             Inicia sesión para ver tus citas
           </Text>
           <Text className="text-xs text-gray-500 text-center leading-5 max-w-[280px]">
-            Debes tener una sesión activa para consultar tu historial y próximas citas médicas.
+            Debes tener una sesión activa para consultar tu historial y próximas
+            citas médicas.
           </Text>
           <Button
             text="Iniciar Sesión / Registrarse"
             onPress={() => router.push('/profile' as any)}
             className="mt-4"
           />
-        </View>
-      </SafeAreaView>
+        </ScrollView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       {/* Encabezado Principal de Citas */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
-        <Text className="text-xl font-bold text-neutral-900">
-          Mis Citas
-        </Text>
+      <View className="flex-row flex-wrap items-center justify-between gap-2 px-4 py-3 bg-white border-b border-gray-200">
+        <Text className="text-xl font-bold text-neutral-900">Mis Citas</Text>
         <Button
           text="+ Agendar Cita"
           onPress={() => router.push('/clinics' as any)}
@@ -72,70 +79,88 @@ export function AppointmentsScreen() {
       </View>
 
       <View className="flex-1 bg-gray-50">
-        {remindersSupported && (!remindersEnabled || !remindersPrecise) && (
-          <View className="mx-4 mt-3 p-3 bg-white border border-gray-200 rounded-lg">
-            <Text className="text-sm text-neutral-900 mb-2">
-              {remindersEnabled
-                ? 'Para recibir los avisos a la hora programada, permite las alarmas y recordatorios en los ajustes de Android.'
-                : 'Recibe un aviso 24 horas y 1 hora antes de cada cita. Los avisos abren el detalle de tu cita.'}
-            </Text>
-            <Button text={remindersEnabled ? 'Revisar puntualidad' : 'Activar recordatorios'} variant="secondary" onPress={enableReminders}
-              loading={enablingReminders} disabled={enablingReminders} />
-          </View>
-        )}
-        <View className="px-4 py-2.5 bg-white border-b border-gray-200">
-          <TextInput
-            value={search}
-            onChangeText={setSearch}
-            placeholder="Buscar por doctor, clínica o motivo..."
-            placeholderTextColor="#9ca3af"
-            className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-neutral-900"
-            clearButtonMode="while-editing"
-          />
-        </View>
-
-        <View className="flex-row bg-white border-b border-gray-200">
-          <Pressable
-            onPress={() => setTab('upcoming')}
-            className={`flex-1 py-3 items-center border-b-2 ${
-              tab === 'upcoming' ? 'border-primary' : 'border-transparent'
-            }`}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: tab === 'upcoming' }}
-          >
-            <Text
-              className={`text-sm ${
-                tab === 'upcoming' ? 'text-primary font-bold' : 'text-gray-500 font-medium'
-              }`}
-            >
-              Próximas Citas
-            </Text>
-          </Pressable>
-          <Pressable
-            onPress={() => setTab('past')}
-            className={`flex-1 py-3 items-center border-b-2 ${
-              tab === 'past' ? 'border-primary' : 'border-transparent'
-            }`}
-            accessibilityRole="tab"
-            accessibilityState={{ selected: tab === 'past' }}
-          >
-            <Text
-              className={`text-sm ${
-                tab === 'past' ? 'text-primary font-bold' : 'text-gray-500 font-medium'
-              }`}
-            >
-              Historial
-            </Text>
-          </Pressable>
-        </View>
-
-        {error ? (
-          <View className="bg-red-50 border border-red-200 p-3 m-4 rounded-md">
-            <Text className="text-red-700 text-sm">{error}</Text>
-          </View>
-        ) : null}
-
         <FlatList
+          style={{ flex: 1 }}
+          ListHeaderComponent={
+            <>
+              {remindersSupported &&
+                (!remindersEnabled || !remindersPrecise) && (
+                  <View className="mx-4 mt-3 p-3 bg-white border border-gray-200 rounded-lg">
+                    <Text className="text-sm text-neutral-900 mb-2">
+                      {remindersEnabled
+                        ? 'Para recibir los avisos a la hora programada, permite las alarmas y recordatorios en los ajustes de Android.'
+                        : 'Recibe un aviso 24 horas y 1 hora antes de cada cita. Los avisos abren el detalle de tu cita.'}
+                    </Text>
+                    <Button
+                      text={
+                        remindersEnabled
+                          ? 'Revisar puntualidad'
+                          : 'Activar recordatorios'
+                      }
+                      variant="secondary"
+                      onPress={enableReminders}
+                      loading={enablingReminders}
+                      disabled={enablingReminders}
+                    />
+                  </View>
+                )}
+              <View className="px-4 py-2.5 bg-white border-b border-gray-200">
+                <TextInput
+                  value={search}
+                  onChangeText={setSearch}
+                  placeholder="Buscar por doctor, clínica o motivo..."
+                  placeholderTextColor="#9ca3af"
+                  className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-neutral-900"
+                  clearButtonMode="while-editing"
+                />
+              </View>
+
+              <View className="flex-row bg-white border-b border-gray-200">
+                <Pressable
+                  onPress={() => setTab('upcoming')}
+                  className={`flex-1 py-3 items-center border-b-2 ${
+                    tab === 'upcoming' ? 'border-primary' : 'border-transparent'
+                  }`}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: tab === 'upcoming' }}
+                >
+                  <Text
+                    className={`text-sm ${
+                      tab === 'upcoming'
+                        ? 'text-primary font-bold'
+                        : 'text-gray-500 font-medium'
+                    }`}
+                  >
+                    Próximas Citas
+                  </Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setTab('past')}
+                  className={`flex-1 py-3 items-center border-b-2 ${
+                    tab === 'past' ? 'border-primary' : 'border-transparent'
+                  }`}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: tab === 'past' }}
+                >
+                  <Text
+                    className={`text-sm ${
+                      tab === 'past'
+                        ? 'text-primary font-bold'
+                        : 'text-gray-500 font-medium'
+                    }`}
+                  >
+                    Historial
+                  </Text>
+                </Pressable>
+              </View>
+
+              {error ? (
+                <View className="bg-red-50 border border-red-200 p-3 m-4 rounded-md">
+                  <Text className="text-red-700 text-sm">{error}</Text>
+                </View>
+              ) : null}
+            </>
+          }
           data={filteredAppointments}
           keyExtractor={(item) => String(item.appointment_id)}
           keyboardShouldPersistTaps="handled"
@@ -143,7 +168,9 @@ export function AppointmentsScreen() {
           renderItem={({ item }) => (
             <AppointmentCard
               appointment={item}
-              onPress={() => router.push(`/appointments/${item.appointment_id}` as any)}
+              onPress={() =>
+                router.push(`/appointments/${item.appointment_id}` as any)
+              }
             />
           )}
           contentContainerClassName="p-4 pb-8"
@@ -178,7 +205,7 @@ export function AppointmentsScreen() {
           }
         />
       </View>
-    </SafeAreaView>
+    </View>
   );
 }
 

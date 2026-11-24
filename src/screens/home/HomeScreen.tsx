@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   Text,
   View,
@@ -32,7 +31,7 @@ export const HomeScreen: React.FC = () => {
   } = useHome();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <ScrollView
         className="flex-1 bg-gray-50"
         contentContainerClassName="p-4 pb-8"
@@ -84,12 +83,18 @@ export const HomeScreen: React.FC = () => {
           {loadingAppt && !upcomingAppt && !apptError ? (
             <View className="bg-white border border-gray-200 rounded-lg p-6 items-center justify-center shadow-sm">
               <ActivityIndicator size="small" color="#259487" />
-              <Text className="text-xs text-gray-500 mt-2">Cargando tu próxima cita...</Text>
+              <Text className="text-xs text-gray-500 mt-2">
+                Cargando tu próxima cita...
+              </Text>
             </View>
           ) : apptError ? (
             <View className="bg-white border border-red-200 rounded-lg p-5 items-center justify-center shadow-sm">
               <View className="w-10 h-10 rounded-full bg-red-50 items-center justify-center mb-2">
-                <Ionicons name="alert-circle-outline" size={22} color="#991b1b" />
+                <Ionicons
+                  name="alert-circle-outline"
+                  size={22}
+                  color="#991b1b"
+                />
               </View>
               <Text className="text-sm font-semibold text-neutral-900 text-center mb-1">
                 No se pudo cargar la próxima cita
@@ -116,11 +121,7 @@ export const HomeScreen: React.FC = () => {
               <View className="flex-row justify-between items-center mb-2">
                 <Badge text="Próxima Cita" variant="primary" />
                 <View className="flex-row items-center">
-                  <Ionicons
-                    name="calendar-outline"
-                    size={14}
-                    color="#259487"
-                  />
+                  <Ionicons name="calendar-outline" size={14} color="#259487" />
                   <Text className="text-xs font-semibold text-primary ml-1 capitalize">
                     {new Date(upcomingAppt.start_date_time).toLocaleDateString(
                       'es-ES',
@@ -128,7 +129,7 @@ export const HomeScreen: React.FC = () => {
                         weekday: 'short',
                         day: 'numeric',
                         month: 'short',
-                      }
+                      },
                     )}
                     {' · '}
                     {new Date(upcomingAppt.start_date_time).toLocaleTimeString(
@@ -136,7 +137,7 @@ export const HomeScreen: React.FC = () => {
                       {
                         hour: '2-digit',
                         minute: '2-digit',
-                      }
+                      },
                     )}
                   </Text>
                 </View>
@@ -145,7 +146,8 @@ export const HomeScreen: React.FC = () => {
               <View className="flex-row items-center mt-1">
                 <Ionicons name="person-outline" size={15} color="#4b5563" />
                 <Text className="text-sm font-bold text-neutral-900 ml-1.5">
-                  Dr(a). {upcomingAppt.first_name} {upcomingAppt.first_last_name}
+                  Dr(a). {upcomingAppt.first_name}{' '}
+                  {upcomingAppt.first_last_name}
                 </Text>
               </View>
 
@@ -157,7 +159,10 @@ export const HomeScreen: React.FC = () => {
               </View>
 
               {upcomingAppt.appointment_description ? (
-                <Text className="text-xs text-gray-500 mt-2 italic" numberOfLines={2}>
+                <Text
+                  className="text-xs text-gray-500 mt-2 italic"
+                  numberOfLines={2}
+                >
                   {upcomingAppt.appointment_description}
                 </Text>
               ) : null}
@@ -269,7 +274,8 @@ export const HomeScreen: React.FC = () => {
                   Registra una clínica
                 </Text>
                 <Text className="text-xs text-gray-600 mt-0.5">
-                  Crea una sede médica y comienza a gestionar citas como propietario.
+                  Crea una sede médica y comienza a gestionar citas como
+                  propietario.
                 </Text>
               </View>
               <Button
@@ -296,7 +302,7 @@ export const HomeScreen: React.FC = () => {
         onClose={handleCancelLogout}
         onConfirm={handleConfirmLogout}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

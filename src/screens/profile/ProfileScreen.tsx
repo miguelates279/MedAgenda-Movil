@@ -2,13 +2,17 @@ import React from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  SafeAreaView,
   ScrollView,
   Text,
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Card, ConfirmModal, KeyboardAwareScrollView } from '../../components';
+import {
+  Button,
+  Card,
+  ConfirmModal,
+  KeyboardAwareScrollView,
+} from '../../components';
 import { useProfile } from '../../hooks/useProfile';
 import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
@@ -39,7 +43,7 @@ export const ProfileScreen: React.FC = () => {
   } = useProfile();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       {/* Encabezado Principal */}
       <View className="px-4 py-3.5 bg-white border-b border-gray-200">
         <Text className="text-2xl font-bold text-neutral-900">Mi Perfil</Text>
@@ -76,7 +80,11 @@ export const ProfileScreen: React.FC = () => {
             <Card className="items-center p-6 mt-2">
               {loadingProfile ? (
                 <View className="items-center py-4">
-                  <ActivityIndicator size="large" color="#259487" className="mb-3" />
+                  <ActivityIndicator
+                    size="large"
+                    color="#259487"
+                    className="mb-3"
+                  />
                   <Text className="text-base font-bold text-neutral-900 text-center mb-1">
                     Cargando información del perfil...
                   </Text>
@@ -87,7 +95,11 @@ export const ProfileScreen: React.FC = () => {
               ) : (
                 <View className="items-center w-full">
                   <View className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 items-center justify-center mb-3">
-                    <Ionicons name="alert-circle-outline" size={26} color="#b45309" />
+                    <Ionicons
+                      name="alert-circle-outline"
+                      size={26}
+                      color="#b45309"
+                    />
                   </View>
                   <Text className="text-lg font-bold text-neutral-900 text-center mb-1">
                     Perfil temporalmente no disponible
@@ -165,7 +177,8 @@ export const ProfileScreen: React.FC = () => {
             contentContainerClassName="p-4 pb-16"
           >
             <Text className="text-sm text-gray-600 mb-4 leading-5">
-              Inicia sesión para agendar citas médicas, consultar tus recetas y ver tu historial.
+              Inicia sesión para agendar citas médicas, consultar tus recetas y
+              ver tu historial.
             </Text>
 
             {tab === 'login' ? (
@@ -190,7 +203,7 @@ export const ProfileScreen: React.FC = () => {
         onClose={handleCancelLogout}
         onConfirm={handleConfirmLogout}
       />
-    </SafeAreaView>
+    </View>
   );
 };
 

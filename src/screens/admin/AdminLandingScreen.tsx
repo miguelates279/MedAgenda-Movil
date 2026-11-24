@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   Text,
   View,
@@ -25,9 +24,9 @@ export const AdminLandingScreen: React.FC = () => {
   } = useAdminLanding();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       {/* Encabezado Principal */}
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
+      <View className="flex-row flex-wrap items-center justify-between gap-2 px-4 py-3 bg-white border-b border-gray-200">
         <View>
           <View className="flex-row items-center">
             <Ionicons name="shield-checkmark" size={14} color="#259487" />
@@ -61,7 +60,8 @@ export const AdminLandingScreen: React.FC = () => {
             Hola, {user?.first_name || 'Administrador'}
           </Text>
           <Text className="text-xs text-gray-600 mt-1 leading-relaxed">
-            Desde este espacio puedes gestionar las sedes clínicas asignadas a tu cargo, consultar sus detalles o registrar nuevas sedes.
+            Desde este espacio puedes gestionar las sedes clínicas asignadas a
+            tu cargo, consultar sus detalles o registrar nuevas sedes.
           </Text>
         </View>
 
@@ -105,7 +105,9 @@ export const AdminLandingScreen: React.FC = () => {
             )}
           </View>
 
-          {isResolvingModes && adminClinics.length === 0 && !modeResolutionError ? (
+          {isResolvingModes &&
+          adminClinics.length === 0 &&
+          !modeResolutionError ? (
             <Card className="items-center p-6">
               <ActivityIndicator size="small" color="#259487" />
               <Text className="text-xs text-gray-500 mt-2">
@@ -121,7 +123,8 @@ export const AdminLandingScreen: React.FC = () => {
                 Sin sedes vinculadas actualmente
               </Text>
               <Text className="text-xs text-gray-600 text-center max-w-[260px] mb-4">
-                Aún no tienes sedes asignadas para administración directa. Puedes registrar una nueva sede clínica.
+                Aún no tienes sedes asignadas para administración directa.
+                Puedes registrar una nueva sede clínica.
               </Text>
               <Button
                 text="Registrar Nueva Clínica"
@@ -140,7 +143,11 @@ export const AdminLandingScreen: React.FC = () => {
                         {clinic.clinic_name}
                       </Text>
                       <View className="flex-row items-center mt-1">
-                        <Ionicons name="business-outline" size={13} color="#4b5563" />
+                        <Ionicons
+                          name="business-outline"
+                          size={13}
+                          color="#4b5563"
+                        />
                         <Text className="text-xs text-gray-600 ml-1">
                           Sede ID #{clinic.clinic_id}
                         </Text>
@@ -167,7 +174,11 @@ export const AdminLandingScreen: React.FC = () => {
                       <Text className="text-xs font-semibold text-primary mr-1">
                         Ver detalles de sede
                       </Text>
-                      <Ionicons name="chevron-forward" size={14} color="#259487" />
+                      <Ionicons
+                        name="chevron-forward"
+                        size={14}
+                        color="#259487"
+                      />
                     </Pressable>
                   </View>
                 </Card>
@@ -219,7 +230,7 @@ export const AdminLandingScreen: React.FC = () => {
           </View>
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 };
 

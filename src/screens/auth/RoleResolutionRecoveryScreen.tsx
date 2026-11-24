@@ -1,9 +1,5 @@
 import React from 'react';
-import {
-  SafeAreaView,
-  Text,
-  View,
-} from 'react-native';
+import { Text, View, ScrollView } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Button, Card } from '../../components';
 import { useRoleResolutionRecovery } from './useRoleResolutionRecovery';
@@ -13,8 +9,16 @@ export const RoleResolutionRecoveryScreen: React.FC = () => {
     useRoleResolutionRecovery();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
-      <View className="flex-1 justify-center items-center p-6 bg-gray-50">
+    <View className="flex-1 bg-white">
+      <ScrollView
+        className="flex-1 bg-gray-50"
+        contentContainerStyle={{
+          flexGrow: 1,
+          justifyContent: 'center',
+          alignItems: 'center',
+          padding: 24,
+        }}
+      >
         <Card className="w-full max-w-sm p-6 items-center">
           {/* Icono de Alerta de Error */}
           <View className="w-14 h-14 rounded-full bg-red-50 border border-red-200 items-center justify-center mb-4">
@@ -28,7 +32,8 @@ export const RoleResolutionRecoveryScreen: React.FC = () => {
 
           {/* Descripción del error */}
           <Text className="text-xs text-gray-600 text-center mb-4 leading-relaxed">
-            Ocurrió un problema al verificar los permisos y roles asociados a tu cuenta. No podemos determinar las pantallas disponibles.
+            Ocurrió un problema al verificar los permisos y roles asociados a tu
+            cuenta. No podemos determinar las pantallas disponibles.
           </Text>
 
           {/* Caja con detalle técnico del error */}
@@ -57,8 +62,8 @@ export const RoleResolutionRecoveryScreen: React.FC = () => {
             />
           </View>
         </Card>
-      </View>
-    </SafeAreaView>
+      </ScrollView>
+    </View>
   );
 };
 

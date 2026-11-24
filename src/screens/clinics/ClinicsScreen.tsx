@@ -3,7 +3,6 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   Text,
   View,
 } from 'react-native';
@@ -81,7 +80,7 @@ export function ClinicsScreen() {
   );
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <View className="flex-1 bg-gray-50">
         {/* Encabezado Principal del Buscador */}
         <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200">
@@ -299,7 +298,7 @@ export function ClinicsScreen() {
         onClose={() => setModalType(null)}
         onSelect={(val) => setSelectedSpecialtyIds(val)}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

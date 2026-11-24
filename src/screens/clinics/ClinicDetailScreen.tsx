@@ -1,12 +1,12 @@
 import React from 'react';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import {
-  ActivityIndicator,
-  SafeAreaView,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
-import { Badge, Button, Card, DoctorCard, ScreenHeader } from '../../components';
+  Badge,
+  Button,
+  Card,
+  DoctorCard,
+  ScreenHeader,
+} from '../../components';
 import { useClinicDetail } from './useClinicDetail';
 
 export function ClinicDetailScreen() {
@@ -24,17 +24,19 @@ export function ClinicDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center p-6 bg-gray-50">
           <ActivityIndicator size="large" color="#259487" />
-          <Text className="mt-3 text-sm text-gray-600">Cargando información de la clínica...</Text>
+          <Text className="mt-3 text-sm text-gray-600">
+            Cargando información de la clínica...
+          </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <ScreenHeader title={clinic?.clinic_name || 'Detalles de la Clínica'} />
 
       <ScrollView
@@ -59,8 +61,12 @@ export function ClinicDetailScreen() {
               />
             </View>
 
-            <Text className="text-sm text-gray-600 mb-1">📍 {clinic.clinic_address}</Text>
-            <Text className="text-sm text-gray-600 mb-1">📞 {clinic.clinic_phone_number}</Text>
+            <Text className="text-sm text-gray-600 mb-1">
+              📍 {clinic.clinic_address}
+            </Text>
+            <Text className="text-sm text-gray-600 mb-1">
+              📞 {clinic.clinic_phone_number}
+            </Text>
 
             {clinic.clinic_description ? (
               <Text className="text-sm text-neutral-900 mt-2 leading-5">
@@ -97,7 +103,9 @@ export function ClinicDetailScreen() {
                   </Text>
                 </View>
                 <View className="flex-row justify-between py-0.5">
-                  <Text className="text-sm text-gray-600">Duración de cita:</Text>
+                  <Text className="text-sm text-gray-600">
+                    Duración de cita:
+                  </Text>
                   <Text className="text-sm font-semibold text-neutral-900">
                     {rules.clinic_average_appointment_time}
                   </Text>
@@ -106,7 +114,8 @@ export function ClinicDetailScreen() {
                   <View className="flex-row justify-between py-0.5">
                     <Text className="text-sm text-gray-600">Descanso:</Text>
                     <Text className="text-sm font-semibold text-neutral-900">
-                      {rules.clinic_break_time} ({rules.clinic_break_duration || '60 min'})
+                      {rules.clinic_break_time} (
+                      {rules.clinic_break_duration || '60 min'})
                     </Text>
                   </View>
                 )}
@@ -116,7 +125,9 @@ export function ClinicDetailScreen() {
         )}
 
         <View className="mt-2">
-          <Text className="text-base font-bold text-neutral-900 mb-3">Médicos Disponibles</Text>
+          <Text className="text-base font-bold text-neutral-900 mb-3">
+            Médicos Disponibles
+          </Text>
 
           {doctors.length === 0 ? (
             <Card className="items-center p-6">
@@ -135,7 +146,7 @@ export function ClinicDetailScreen() {
           )}
         </View>
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 export default ClinicDetailScreen;

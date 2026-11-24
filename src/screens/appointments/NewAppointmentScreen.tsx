@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, SafeAreaView, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View, ScrollView } from 'react-native';
 import {
   Button,
   Card,
@@ -31,9 +31,17 @@ export function NewAppointmentScreen() {
 
   if (!isAuthenticated) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <ScreenHeader title="Nueva Cita Médica" />
-        <View className="flex-1 items-center justify-center p-6 bg-gray-50">
+        <ScrollView
+          className="flex-1 bg-gray-50"
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 24,
+          }}
+        >
           <Text className="text-5xl mb-3">🔒</Text>
           <Text className="text-lg font-bold text-neutral-900 mb-2 text-center">
             Inicio de sesión requerido
@@ -47,16 +55,24 @@ export function NewAppointmentScreen() {
             onPress={() => router.push('/profile' as any)}
             className="mt-5 min-w-[220px]"
           />
-        </View>
-      </SafeAreaView>
+        </ScrollView>
+      </View>
     );
   }
 
   if (!clinicId || !doctorId) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <ScreenHeader title="Agendar Cita" />
-        <View className="flex-1 items-center justify-center p-6 bg-gray-50">
+        <ScrollView
+          className="flex-1 bg-gray-50"
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 24,
+          }}
+        >
           <Text className="text-5xl mb-3">🏥</Text>
           <Text className="text-lg font-bold text-neutral-900 mb-2 text-center">
             Selecciona una Clínica y Especialista
@@ -70,13 +86,13 @@ export function NewAppointmentScreen() {
             onPress={() => router.replace('/clinics' as any)}
             className="mt-5 min-w-[240px]"
           />
-        </View>
-      </SafeAreaView>
+        </ScrollView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <ScreenHeader title="Agendar Cita Médica" />
 
       <KeyboardAwareScrollView contentContainerClassName="p-4 pb-16">
@@ -160,7 +176,7 @@ export function NewAppointmentScreen() {
           className="mt-2"
         />
       </KeyboardAwareScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

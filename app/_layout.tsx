@@ -46,7 +46,10 @@ export default function RootLayout() {
     <SafeAreaProvider>
       <AuthProvider>
         <StatusBar style="dark" />
-        <SafeAreaView style={{ flex: 1, backgroundColor: '#ffffff' }} edges={['top', 'bottom']}>
+        <SafeAreaView
+          style={{ flex: 1, backgroundColor: '#ffffff' }}
+          edges={['top', 'right', 'bottom', 'left']}
+        >
           <RootNavigation />
           <AppointmentReminderLifecycle />
         </SafeAreaView>

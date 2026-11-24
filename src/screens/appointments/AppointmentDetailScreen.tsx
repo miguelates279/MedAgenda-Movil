@@ -1,5 +1,5 @@
 import React from 'react';
-import { ActivityIndicator, SafeAreaView, Text, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import {
   Badge,
   Button,
@@ -32,14 +32,14 @@ export function AppointmentDetailScreen() {
 
   if (loading) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <View className="flex-1 items-center justify-center p-6 bg-gray-50">
           <ActivityIndicator size="large" color="#259487" />
           <Text className="mt-3 text-sm text-gray-600">
             Cargando cita médica...
           </Text>
         </View>
-      </SafeAreaView>
+      </View>
     );
   }
 
@@ -71,7 +71,7 @@ export function AppointmentDetailScreen() {
       : '';
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <ScreenHeader title="Gestionar Cita" />
 
       <KeyboardAwareScrollView contentContainerClassName="p-4 pb-16">
@@ -199,7 +199,7 @@ export function AppointmentDetailScreen() {
           onDismiss={closeReschedule}
         />
       )}
-    </SafeAreaView>
+    </View>
   );
 }
 

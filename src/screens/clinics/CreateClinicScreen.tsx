@@ -2,12 +2,18 @@ import React from 'react';
 import {
   ActivityIndicator,
   Pressable,
-  SafeAreaView,
   Text,
   View,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Button, Field, KeyboardAwareScrollView, ScreenHeader, SelectModal } from '../../components';
+import {
+  Button,
+  Field,
+  KeyboardAwareScrollView,
+  ScreenHeader,
+  SelectModal,
+} from '../../components';
 import { useCreateClinic } from './useCreateClinic';
 
 export function CreateClinicScreen() {
@@ -41,9 +47,17 @@ export function CreateClinicScreen() {
 
   if (!isAuthenticated) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <ScreenHeader title="Nueva clínica" />
-        <View className="flex-1 items-center justify-center p-6 bg-gray-50">
+        <ScrollView
+          className="flex-1 bg-gray-50"
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 24,
+          }}
+        >
           <View className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 items-center justify-center mb-3">
             <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
           </View>
@@ -51,30 +65,53 @@ export function CreateClinicScreen() {
             Inicio de sesión requerido
           </Text>
           <Text className="text-xs text-gray-600 text-center max-w-[260px] mb-4">
-            Debes iniciar sesión con una cuenta autorizada para registrar una nueva clínica.
+            Debes iniciar sesión con una cuenta autorizada para registrar una
+            nueva clínica.
           </Text>
-          <Button text="Volver" onPress={() => router.back()} className="min-w-[160px]" />
-        </View>
-      </SafeAreaView>
+          <Button
+            text="Volver"
+            onPress={() => router.back()}
+            className="min-w-[160px]"
+          />
+        </ScrollView>
+      </View>
     );
   }
 
   if (createdClinicId !== null) {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <ScreenHeader title="Nueva clínica" canGoBack={false} />
         {isVerifyingRole ? (
-          <View className="flex-1 items-center justify-center px-6 bg-gray-50">
+          <ScrollView
+            className="flex-1 bg-gray-50"
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 24,
+            }}
+          >
             <ActivityIndicator size="large" color="#259487" className="mb-4" />
             <Text className="text-lg font-bold text-neutral-900 text-center">
               Verificando permisos de administración...
             </Text>
             <Text className="text-xs text-gray-600 text-center mt-2 max-w-xs leading-relaxed">
-              Tu clínica #{createdClinicId} fue creada con éxito. Estamos confirmando tu rol de Propietario para habilitar el Modo Administrador.
+              Tu clínica #{createdClinicId} fue creada con éxito. Estamos
+              confirmando tu rol de Propietario para habilitar el Modo
+              Administrador.
             </Text>
-          </View>
+          </ScrollView>
         ) : (
-          <View className="flex-1 items-center justify-center px-6 bg-gray-50">
+          <ScrollView
+            className="flex-1 bg-gray-50"
+            contentContainerStyle={{
+              flexGrow: 1,
+              justifyContent: 'center',
+              alignItems: 'center',
+              padding: 24,
+            }}
+          >
             <View className="w-16 h-16 rounded-full bg-emerald-50 border border-emerald-100 items-center justify-center mb-3">
               <Ionicons name="checkmark-circle" size={36} color="#059669" />
             </View>
@@ -88,7 +125,11 @@ export function CreateClinicScreen() {
             {roleVerificationError ? (
               <View className="w-full max-w-xs bg-amber-50 border border-amber-200 rounded-md p-3.5 mt-4 mb-4">
                 <View className="flex-row items-center mb-1">
-                  <Ionicons name="alert-circle-outline" size={16} color="#b45309" />
+                  <Ionicons
+                    name="alert-circle-outline"
+                    size={16}
+                    color="#b45309"
+                  />
                   <Text className="text-xs font-bold text-amber-800 ml-1.5">
                     Verificación de rol pendiente
                   </Text>
@@ -114,14 +155,14 @@ export function CreateClinicScreen() {
                 className="w-full"
               />
             </View>
-          </View>
+          </ScrollView>
         )}
-      </SafeAreaView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <ScreenHeader title="Nueva clínica" />
 
       <KeyboardAwareScrollView
@@ -129,12 +170,15 @@ export function CreateClinicScreen() {
         contentContainerClassName="p-4 pb-16"
       >
         <Text className="text-xs text-gray-600 mb-4">
-          Completa la información básica de la clínica y su ubicación geográfica.
+          Completa la información básica de la clínica y su ubicación
+          geográfica.
         </Text>
 
         {submitError ? (
           <View className="bg-red-50 border border-red-200 p-3 mb-4 rounded-md">
-            <Text className="text-red-700 text-xs font-medium">{submitError}</Text>
+            <Text className="text-red-700 text-xs font-medium">
+              {submitError}
+            </Text>
           </View>
         ) : null}
 
@@ -183,14 +227,18 @@ export function CreateClinicScreen() {
           numberOfLines={4}
         />
 
-        <Text className="text-xs font-semibold mb-1 text-gray-700">Ubicación Geográfica *</Text>
+        <Text className="text-xs font-semibold mb-1 text-gray-700">
+          Ubicación Geográfica *
+        </Text>
         <Pressable
           className="border border-gray-300 rounded-md px-3 py-2.5 mb-2.5 bg-white active:bg-gray-50"
           onPress={() => setModalType('country')}
           accessibilityRole="button"
           accessibilityLabel="Seleccionar país"
         >
-          <Text className="text-xs text-gray-600 font-semibold uppercase">País</Text>
+          <Text className="text-xs text-gray-600 font-semibold uppercase">
+            País
+          </Text>
           <Text className="text-sm text-neutral-900 mt-0.5">
             {selectedCountry?.country_name || 'Selecciona un país'}
           </Text>
@@ -198,30 +246,42 @@ export function CreateClinicScreen() {
 
         <Pressable
           className={`border rounded-md px-3 py-2.5 mb-2.5 ${
-            countryId ? 'border-gray-300 bg-white active:bg-gray-50' : 'border-gray-200 bg-gray-100'
+            countryId
+              ? 'border-gray-300 bg-white active:bg-gray-50'
+              : 'border-gray-200 bg-gray-100'
           }`}
           onPress={() => countryId && setModalType('state')}
           disabled={!countryId}
           accessibilityRole="button"
           accessibilityLabel="Seleccionar departamento o estado"
         >
-          <Text className="text-xs text-gray-600 font-semibold uppercase">Estado / Depto</Text>
-          <Text className={`text-sm mt-0.5 ${countryId ? 'text-neutral-900' : 'text-gray-400'}`}>
+          <Text className="text-xs text-gray-600 font-semibold uppercase">
+            Estado / Depto
+          </Text>
+          <Text
+            className={`text-sm mt-0.5 ${countryId ? 'text-neutral-900' : 'text-gray-400'}`}
+          >
             {selectedState?.state_name || 'Selecciona un estado'}
           </Text>
         </Pressable>
 
         <Pressable
           className={`border rounded-md px-3 py-2.5 mb-4 ${
-            stateId ? 'border-gray-300 bg-white active:bg-gray-50' : 'border-gray-200 bg-gray-100'
+            stateId
+              ? 'border-gray-300 bg-white active:bg-gray-50'
+              : 'border-gray-200 bg-gray-100'
           }`}
           onPress={() => stateId && setModalType('city')}
           disabled={!stateId}
           accessibilityRole="button"
           accessibilityLabel="Seleccionar ciudad"
         >
-          <Text className="text-xs text-gray-600 font-semibold uppercase">Ciudad</Text>
-          <Text className={`text-sm mt-0.5 ${stateId ? 'text-neutral-900' : 'text-gray-400'}`}>
+          <Text className="text-xs text-gray-600 font-semibold uppercase">
+            Ciudad
+          </Text>
+          <Text
+            className={`text-sm mt-0.5 ${stateId ? 'text-neutral-900' : 'text-gray-400'}`}
+          >
             {selectedCity?.city_name || 'Selecciona una ciudad'}
           </Text>
         </Pressable>
@@ -269,7 +329,7 @@ export function CreateClinicScreen() {
           }}
         />
       </KeyboardAwareScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 

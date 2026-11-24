@@ -60,7 +60,8 @@ export const Button: React.FC<ButtonProps> = ({
   textStyle,
 }) => {
   const isInteractive = !disabled && !loading;
-  const currentVariant = variantClassNames[variant] || variantClassNames.primary;
+  const currentVariant =
+    variantClassNames[variant] || variantClassNames.primary;
 
   return (
     <Pressable
@@ -69,7 +70,10 @@ export const Button: React.FC<ButtonProps> = ({
       className={`py-2.5 px-4 rounded-md items-center justify-center flex-row gap-2 ${currentVariant.base} ${
         disabled ? 'opacity-50' : ''
       } ${className}`}
-      style={style}
+      style={[{ minHeight: 48, minWidth: 0, maxWidth: '100%' }, style]}
+      accessibilityRole="button"
+      accessibilityLabel={text}
+      accessibilityState={{ disabled: !isInteractive, busy: loading }}
     >
       {({ pressed }) =>
         loading ? (
@@ -86,7 +90,7 @@ export const Button: React.FC<ButtonProps> = ({
             className={`text-sm font-semibold ${currentVariant.text} ${
               pressed && isInteractive ? 'opacity-90' : ''
             }`}
-            style={textStyle}
+            style={[{ flexShrink: 1, textAlign: 'center' }, textStyle]}
           >
             {text}
           </Text>

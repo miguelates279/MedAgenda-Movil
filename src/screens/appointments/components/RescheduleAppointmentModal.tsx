@@ -1,9 +1,10 @@
 import React from 'react';
-import { Modal, SafeAreaView, ScrollView, Text, View } from 'react-native';
+import { Modal, ScrollView, Text, View } from 'react-native';
 import { Button, Card } from '../../../components';
 import type { DoctorAppointmentView } from '../../../api/types';
 import { useRescheduleAppointment } from '../useRescheduleAppointment';
 import { AppointmentSchedulePicker } from './AppointmentSchedulePicker';
+import { ModalViewport } from '../../../components/ModalViewport';
 
 interface Props {
   appointment: DoctorAppointmentView;
@@ -35,7 +36,7 @@ export function RescheduleAppointmentModal({
       presentationStyle="pageSheet"
       onRequestClose={dismiss}
     >
-      <SafeAreaView className="flex-1 bg-white">
+      <ModalViewport style={{ backgroundColor: '#ffffff' }}>
         <View className="p-4 border-b border-gray-200">
           <Text
             className="text-xl font-bold text-neutral-900 mb-2"
@@ -50,7 +51,12 @@ export function RescheduleAppointmentModal({
             disabled={saving}
           />
         </View>
-        <ScrollView contentContainerStyle={{ padding: 16, paddingBottom: 40 }}>
+        <ScrollView
+          style={{ flex: 1, minHeight: 0 }}
+          contentContainerStyle={{ padding: 16, paddingBottom: 40 }}
+          keyboardShouldPersistTaps="handled"
+          keyboardDismissMode="on-drag"
+        >
           <Card className="mb-4 bg-teal-50 border-teal-100">
             <Text className="text-sm font-bold text-neutral-900">
               Dr(a). {appointment.first_name} {appointment.first_last_name}
@@ -103,7 +109,7 @@ export function RescheduleAppointmentModal({
             disabled={saving || !availability.selectedSlot}
           />
         </ScrollView>
-      </SafeAreaView>
+      </ModalViewport>
     </Modal>
   );
 }

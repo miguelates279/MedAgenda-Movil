@@ -3,12 +3,18 @@ import {
   FlatList,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   Text,
   View,
+  ScrollView,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Badge, Button, Card, ConfirmModal, ScreenHeader } from '../../components';
+import {
+  Badge,
+  Button,
+  Card,
+  ConfirmModal,
+  ScreenHeader,
+} from '../../components';
 import { useMyClinics } from './useMyClinics';
 
 export function MyClinicsScreen() {
@@ -31,9 +37,17 @@ export function MyClinicsScreen() {
 
   if (!isAuthenticated || activeMode !== 'admin') {
     return (
-      <SafeAreaView className="flex-1 bg-white">
+      <View className="flex-1 bg-white">
         <ScreenHeader title="Mis Clínicas" />
-        <View className="flex-1 items-center justify-center p-6 bg-gray-50">
+        <ScrollView
+          className="flex-1 bg-gray-50"
+          contentContainerStyle={{
+            flexGrow: 1,
+            justifyContent: 'center',
+            alignItems: 'center',
+            padding: 24,
+          }}
+        >
           <View className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 items-center justify-center mb-3">
             <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
           </View>
@@ -41,20 +55,21 @@ export function MyClinicsScreen() {
             Acceso Administrativo Requerido
           </Text>
           <Text className="text-xs text-gray-600 text-center max-w-[260px] mb-4">
-            Esta sección es exclusiva para la gestión de sedes clínicas en el modo Administrador.
+            Esta sección es exclusiva para la gestión de sedes clínicas en el
+            modo Administrador.
           </Text>
           <Button
             text="Volver al inicio"
             onPress={() => router.replace('/' as any)}
             className="min-w-[200px]"
           />
-        </View>
-      </SafeAreaView>
+        </ScrollView>
+      </View>
     );
   }
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <ScreenHeader
         title="Mis Clínicas"
         rightAction={
@@ -65,47 +80,64 @@ export function MyClinicsScreen() {
             accessibilityLabel="Nueva clínica"
           >
             <Ionicons name="add" size={16} color="#259487" />
-            <Text className="text-xs font-semibold text-primary ml-0.5">Nueva</Text>
+            <Text className="text-xs font-semibold text-primary ml-0.5">
+              Nueva
+            </Text>
           </Pressable>
         }
       />
 
       <View className="flex-1 bg-gray-50">
-        <View className="bg-white border-b border-gray-200 px-4 py-3">
-          <Text className="text-xs text-gray-600">
-            Sedes asignadas para administración directa. Solo puedes eliminar las sedes de las que eres propietario verificado.
-          </Text>
-        </View>
-
-        {error ? (
-          <View className="bg-red-50 border border-red-200 p-3 m-4 rounded-md">
-            <Text className="text-red-700 text-xs font-medium">{error}</Text>
-          </View>
-        ) : null}
-
-        {syncError ? (
-          <View className="bg-amber-50 border border-amber-200 p-3.5 m-4 mb-2 rounded-md">
-            <View className="flex-row items-center mb-1">
-              <Ionicons name="alert-circle-outline" size={16} color="#b45309" />
-              <Text className="text-xs font-bold text-amber-800 ml-1.5">
-                Sincronización pendiente
-              </Text>
-            </View>
-            <Text className="text-xs text-amber-700 leading-relaxed mb-2.5">
-              {syncError}
-            </Text>
-            <Button
-              text={isSyncing ? 'Sincronizando...' : 'Reintentar sincronización'}
-              variant="outline"
-              loading={isSyncing}
-              disabled={isSyncing}
-              onPress={handleRetrySync}
-              className="py-1 px-3 self-start"
-            />
-          </View>
-        ) : null}
-
         <FlatList
+          style={{ flex: 1 }}
+          ListHeaderComponent={
+            <>
+              <View className="bg-white border-b border-gray-200 px-4 py-3">
+                <Text className="text-xs text-gray-600">
+                  Sedes asignadas para administración directa. Solo puedes
+                  eliminar las sedes de las que eres propietario verificado.
+                </Text>
+              </View>
+
+              {error ? (
+                <View className="bg-red-50 border border-red-200 p-3 m-4 rounded-md">
+                  <Text className="text-red-700 text-xs font-medium">
+                    {error}
+                  </Text>
+                </View>
+              ) : null}
+
+              {syncError ? (
+                <View className="bg-amber-50 border border-amber-200 p-3.5 m-4 mb-2 rounded-md">
+                  <View className="flex-row items-center mb-1">
+                    <Ionicons
+                      name="alert-circle-outline"
+                      size={16}
+                      color="#b45309"
+                    />
+                    <Text className="text-xs font-bold text-amber-800 ml-1.5">
+                      Sincronización pendiente
+                    </Text>
+                  </View>
+                  <Text className="text-xs text-amber-700 leading-relaxed mb-2.5">
+                    {syncError}
+                  </Text>
+                  <Button
+                    text={
+                      isSyncing
+                        ? 'Sincronizando...'
+                        : 'Reintentar sincronización'
+                    }
+                    variant="outline"
+                    loading={isSyncing}
+                    disabled={isSyncing}
+                    onPress={handleRetrySync}
+                    className="py-1 px-3 self-start"
+                  />
+                </View>
+              ) : null}
+            </>
+          }
           data={adminClinics}
           keyExtractor={(item) => String(item.clinic_id)}
           contentContainerClassName="p-4 pb-8"
@@ -123,7 +155,9 @@ export function MyClinicsScreen() {
             return (
               <Card className="mb-3">
                 <Pressable
-                  onPress={() => router.push(`/clinics/${item.clinic_id}` as any)}
+                  onPress={() =>
+                    router.push(`/clinics/${item.clinic_id}` as any)
+                  }
                   className="active:opacity-90"
                   accessibilityRole="button"
                   accessibilityLabel={`Ver detalles de ${item.clinic_name}`}
@@ -139,22 +173,31 @@ export function MyClinicsScreen() {
                   </View>
 
                   <View className="flex-row items-center mb-1">
-                    <Ionicons name="business-outline" size={14} color="#4b5563" />
+                    <Ionicons
+                      name="business-outline"
+                      size={14}
+                      color="#4b5563"
+                    />
                     <Text className="text-xs text-gray-600 ml-1">
                       Sede ID #{item.clinic_id}
                     </Text>
                   </View>
 
                   {item.role_description ? (
-                    <Text className="text-xs text-gray-500 mt-0.5" numberOfLines={2}>
+                    <Text
+                      className="text-xs text-gray-500 mt-0.5"
+                      numberOfLines={2}
+                    >
                       {item.role_description}
                     </Text>
                   ) : null}
                 </Pressable>
 
-                <View className="mt-3 pt-2.5 border-t border-gray-100 flex-row justify-between items-center">
+                <View className="mt-3 pt-2.5 border-t border-gray-100 flex-row flex-wrap gap-2 justify-between items-center">
                   <Pressable
-                    onPress={() => router.push(`/clinics/${item.clinic_id}` as any)}
+                    onPress={() =>
+                      router.push(`/clinics/${item.clinic_id}` as any)
+                    }
                     className="flex-row items-center"
                     accessibilityRole="button"
                     accessibilityLabel={`Ver detalles de ${item.clinic_name}`}
@@ -162,7 +205,11 @@ export function MyClinicsScreen() {
                     <Text className="text-xs font-semibold text-primary mr-1">
                       Ver detalles
                     </Text>
-                    <Ionicons name="chevron-forward" size={14} color="#259487" />
+                    <Ionicons
+                      name="chevron-forward"
+                      size={14}
+                      color="#259487"
+                    />
                   </Pressable>
 
                   {/* Únicamente se muestra control de eliminación si el usuario es Owner verificado */}
@@ -181,17 +228,24 @@ export function MyClinicsScreen() {
           ListEmptyComponent={
             <View className="py-12 px-6 items-center justify-center">
               {loading ? (
-                <Text className="text-sm text-gray-400 text-center">Cargando tus clínicas...</Text>
+                <Text className="text-sm text-gray-400 text-center">
+                  Cargando tus clínicas...
+                </Text>
               ) : (
                 <View className="items-center">
                   <View className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center mb-3">
-                    <Ionicons name="business-outline" size={28} color="#9ca3af" />
+                    <Ionicons
+                      name="business-outline"
+                      size={28}
+                      color="#9ca3af"
+                    />
                   </View>
                   <Text className="text-base font-bold text-neutral-900 mb-1 text-center">
                     Sin sedes asignadas
                   </Text>
                   <Text className="text-xs text-gray-500 text-center max-w-[260px] mb-4">
-                    No tienes sedes vinculadas para administración. Puedes registrar una nueva sede clínica.
+                    No tienes sedes vinculadas para administración. Puedes
+                    registrar una nueva sede clínica.
                   </Text>
                   <Button
                     text="Registrar nueva clínica"
@@ -217,7 +271,7 @@ export function MyClinicsScreen() {
         onClose={() => setClinicPendingDelete(null)}
         onConfirm={confirmDelete}
       />
-    </SafeAreaView>
+    </View>
   );
 }
 

@@ -1,4 +1,11 @@
-import React, { createContext, useContext, useEffect, useRef } from 'react';
+import React, {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+} from 'react';
 import {
   Keyboard,
   KeyboardAvoidingView,
@@ -36,7 +43,7 @@ export const KeyboardAwareScrollView = React.forwardRef<
   (
     {
       children,
-      keyboardVerticalOffset = 0,
+      keyboardVerticalOffset,
       extraScrollHeight = 50,
       contentContainerStyle,
       style,
@@ -44,53 +51,68 @@ export const KeyboardAwareScrollView = React.forwardRef<
       contentContainerClassName = '',
       containerStyle,
       onScroll,
+      onLayout,
       ...scrollViewProps
     },
-    forwardedRef
+    forwardedRef,
   ) => {
+    const viewportRef = useRef<View | null>(null);
+    const measurementGeneration = useRef(0);
+    const [viewportTop, setViewportTop] = useState(0);
     const internalScrollRef = useRef<ScrollView | null>(null);
     const innerContainerRef = useRef<View | null>(null);
     const activeFieldRef = useRef<View | null>(null);
     const currentScrollY = useRef(0);
 
+    const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
+
+    const measureViewport = useCallback(() => {
+      const viewport = viewportRef.current;
+      if (!viewport) return;
+      const generation = ++measurementGeneration.current;
+      viewport.measureInWindow((_x, y) => {
+        if (
+          viewportRef.current !== viewport ||
+          generation !== measurementGeneration.current ||
+          !Number.isFinite(y)
+        )
+          return;
+        setViewportTop((previous) =>
+          Math.abs(previous - y) < 0.5 ? previous : y,
+        );
+      });
+    }, []);
+
     const performScrollTo = (targetView: View | null) => {
+      if (scrollTimer.current) clearTimeout(scrollTimer.current);
       if (!targetView || !internalScrollRef.current) return;
-
-      setTimeout(() => {
-        if (!targetView || !internalScrollRef.current) return;
-
-        if (innerContainerRef.current) {
-          targetView.measureLayout(
-            innerContainerRef.current as any,
-            (_x, y) => {
-              const targetY = Math.max(0, y - extraScrollHeight);
-              internalScrollRef.current?.scrollTo({
-                y: targetY,
-                animated: true,
-              });
-            },
-            () => {
-              // Fallback using measureInWindow if measureLayout fails
-              targetView.measureInWindow((_x, y, _w, h) => {
-                if (isNaN(y) || isNaN(h)) return;
-                const offset = y > 250 ? currentScrollY.current + (y - 100) : currentScrollY.current;
+      scrollTimer.current = setTimeout(() => {
+        if (activeFieldRef.current !== targetView || !internalScrollRef.current)
+          return;
+        internalScrollRef.current
+          .getNativeScrollRef()
+          ?.measureInWindow((_sx, viewportTop, _sw, viewportHeight) => {
+            targetView.measureInWindow((_x, fieldTop, _w, fieldHeight) => {
+              if (
+                ![viewportTop, viewportHeight, fieldTop, fieldHeight].every(
+                  Number.isFinite,
+                ) ||
+                viewportHeight <= 0
+              )
+                return;
+              const top = viewportTop + extraScrollHeight;
+              const bottom = viewportTop + viewportHeight - extraScrollHeight;
+              const delta =
+                fieldHeight > bottom - top || fieldTop < top
+                  ? fieldTop - top
+                  : Math.max(0, fieldTop + fieldHeight - bottom);
+              if (delta !== 0)
                 internalScrollRef.current?.scrollTo({
-                  y: Math.max(0, offset),
+                  y: Math.max(0, currentScrollY.current + delta),
                   animated: true,
                 });
-              });
-            }
-          );
-        } else {
-          targetView.measureInWindow((_x, y) => {
-            if (isNaN(y)) return;
-            const targetY = Math.max(0, currentScrollY.current + (y - 100));
-            internalScrollRef.current?.scrollTo({
-              y: targetY,
-              animated: true,
             });
           });
-        }
       }, 70);
     };
 
@@ -100,66 +122,96 @@ export const KeyboardAwareScrollView = React.forwardRef<
     };
 
     useEffect(() => {
-      const showEvent = Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
+      const showEvent =
+        Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
       const showSub = Keyboard.addListener(showEvent, () => {
+        measureViewport();
         if (activeFieldRef.current) {
           performScrollTo(activeFieldRef.current);
         }
       });
 
-      const hideEvent = Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
+      const hideEvent =
+        Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
       const hideSub = Keyboard.addListener(hideEvent, () => {
         activeFieldRef.current = null;
       });
 
       return () => {
+        ++measurementGeneration.current;
+        if (scrollTimer.current) clearTimeout(scrollTimer.current);
         showSub.remove();
         hideSub.remove();
       };
-    }, [extraScrollHeight]);
+    }, [extraScrollHeight, measureViewport]);
 
     const setRef = (node: ScrollView | null) => {
       internalScrollRef.current = node;
       if (typeof forwardedRef === 'function') {
         forwardedRef(node);
       } else if (forwardedRef) {
-        (forwardedRef as React.MutableRefObject<ScrollView | null>).current = node;
+        (forwardedRef as React.MutableRefObject<ScrollView | null>).current =
+          node;
       }
     };
 
     return (
       <FormScrollContext.Provider value={{ scrollToField }}>
-        <KeyboardAvoidingView
-          behavior={Platform.OS === 'ios' ? 'padding' : 'padding'}
-          keyboardVerticalOffset={keyboardVerticalOffset}
-          style={[{ flex: 1 }, containerStyle]}
-        >
-          <ScrollView
-            ref={setRef}
-            keyboardShouldPersistTaps="handled"
-            keyboardDismissMode="on-drag"
-            scrollEventThrottle={16}
-            onScroll={(e) => {
-              currentScrollY.current = e.nativeEvent.contentOffset.y;
-              onScroll?.(e);
-            }}
-            className={className}
-            contentContainerClassName={contentContainerClassName}
-            contentContainerStyle={[
-              contentContainerStyle,
-              { paddingBottom: Math.max(160, (contentContainerStyle as any)?.paddingBottom || 160) },
-            ]}
-            style={style}
-            {...scrollViewProps}
+        <View style={[{ flex: 1, minHeight: 0 }, containerStyle]}>
+          <View
+            ref={viewportRef}
+            collapsable={false}
+            style={{ flex: 1, minHeight: 0 }}
+            onLayout={measureViewport}
           >
-            <View ref={innerContainerRef} collapsable={false} style={{ flexGrow: 1 }}>
-              {children}
-            </View>
-          </ScrollView>
-        </KeyboardAvoidingView>
+            <KeyboardAvoidingView
+              behavior="padding"
+              keyboardVerticalOffset={keyboardVerticalOffset ?? viewportTop}
+              style={{ flex: 1, minHeight: 0 }}
+            >
+              <ScrollView
+                ref={setRef}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+                scrollEventThrottle={16}
+                onLayout={(event) => {
+                  measureViewport();
+                  onLayout?.(event);
+                  if (activeFieldRef.current)
+                    performScrollTo(activeFieldRef.current);
+                }}
+                onScroll={(e) => {
+                  currentScrollY.current = e.nativeEvent.contentOffset.y;
+                  onScroll?.(e);
+                }}
+                className={className}
+                contentContainerClassName={contentContainerClassName}
+                contentContainerStyle={[
+                  contentContainerStyle,
+                  {
+                    paddingBottom: Math.max(
+                      160,
+                      (contentContainerStyle as any)?.paddingBottom || 160,
+                    ),
+                  },
+                ]}
+                style={style}
+                {...scrollViewProps}
+              >
+                <View
+                  ref={innerContainerRef}
+                  collapsable={false}
+                  style={{ flexGrow: 1 }}
+                >
+                  {children}
+                </View>
+              </ScrollView>
+            </KeyboardAvoidingView>
+          </View>
+        </View>
       </FormScrollContext.Provider>
     );
-  }
+  },
 );
 
 KeyboardAwareScrollView.displayName = 'KeyboardAwareScrollView';

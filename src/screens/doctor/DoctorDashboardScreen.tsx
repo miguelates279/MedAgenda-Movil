@@ -1,11 +1,8 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  KeyboardAvoidingView,
   Modal,
-  Platform,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   Text,
   TextInput,
@@ -16,6 +13,7 @@ import { Ionicons } from '@expo/vector-icons';
 import { Badge, Button, Card } from '../../components';
 import { useDoctorDashboard } from './useDoctorDashboard';
 import { TodayAgendaSection } from './components/TodayAgendaSection';
+import { ModalViewport } from '../../components/ModalViewport';
 
 export function DoctorDashboardScreen() {
   const {
@@ -54,7 +52,7 @@ export function DoctorDashboardScreen() {
   } = useDoctorDashboard();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <ScrollView
         className="bg-gray-50"
         keyboardShouldPersistTaps="handled"
@@ -73,6 +71,7 @@ export function DoctorDashboardScreen() {
             onPress={loadDashboardData}
             activeOpacity={0.7}
             className="bg-teal-50 border border-teal-200 px-3 py-1.5 rounded-full flex-row items-center"
+            style={{ minHeight: 48 }}
           >
             <Ionicons name="refresh-outline" size={14} color="#259487" />
             <Text className="text-primary font-bold text-xs ml-1">Recargar</Text>
@@ -147,7 +146,7 @@ export function DoctorDashboardScreen() {
             <View className="w-10 h-10 rounded-full bg-teal-50 items-center justify-center mr-3">
               <Ionicons name="calendar-outline" size={22} color="#259487" />
             </View>
-            <View>
+            <View className="flex-1">
               <Text className="text-xs font-bold text-gray-500 uppercase">Citas en rango</Text>
               <Text className="text-2xl font-black text-neutral-900">{stats.totalUpcoming}</Text>
             </View>
@@ -157,7 +156,7 @@ export function DoctorDashboardScreen() {
             <View className="w-10 h-10 rounded-full bg-teal-50 items-center justify-center mr-3">
               <Ionicons name="people-outline" size={22} color="#259487" />
             </View>
-            <View>
+            <View className="flex-1">
               <Text className="text-xs font-bold text-gray-500 uppercase">Pacientes</Text>
               <Text className="text-2xl font-black text-neutral-900">{stats.totalPatients}</Text>
             </View>
@@ -169,7 +168,7 @@ export function DoctorDashboardScreen() {
             <View className="w-7 h-7 rounded-full bg-teal-50 items-center justify-center mr-2">
               <Ionicons name="business-outline" size={15} color="#259487" />
             </View>
-            <Text className="text-base font-bold text-neutral-900">Próximas Citas por Clínica</Text>
+            <Text className="text-base font-bold text-neutral-900 flex-1">Próximas Citas por Clínica</Text>
           </View>
 
           {loading && appointmentsByClinic.length === 0 ? (
@@ -184,10 +183,10 @@ export function DoctorDashboardScreen() {
           ) : (
             appointmentsByClinic.map((clinic) => (
               <Card key={clinic.clinicId} className="mb-3 p-0 overflow-hidden">
-                <View className="bg-teal-50 border-b border-teal-100 p-3 flex-row justify-between items-center">
-                  <View className="flex-row items-center">
+                <View className="bg-teal-50 border-b border-teal-100 p-3 flex-row flex-wrap gap-2 justify-between items-center">
+                  <View className="flex-row items-center" style={{ flexGrow: 1, flexBasis: 160, minWidth: 0 }}>
                     <Ionicons name="business-outline" size={16} color="#259487" className="mr-2" />
-                    <Text className="font-bold text-sm text-neutral-900">{clinic.clinicName}</Text>
+                    <Text className="font-bold text-sm text-neutral-900 flex-1">{clinic.clinicName}</Text>
                   </View>
                   <Badge text={`${clinic.appointments.length} cita(s)`} variant="primary" />
                 </View>
@@ -217,7 +216,7 @@ export function DoctorDashboardScreen() {
                           <Text className="text-sm font-bold text-neutral-900">{pName || 'Paciente'}</Text>
                           <View className="flex-row items-center mt-0.5">
                             <Ionicons name="time-outline" size={12} color="#259487" />
-                            <Text className="text-xs text-primary font-medium ml-1">{startStr}</Text>
+                            <Text className="text-xs text-primary font-medium ml-1 flex-1">{startStr}</Text>
                           </View>
                           {appt.appointment_description && (
                             <Text className="text-xs text-gray-600 mt-1 bg-gray-50 p-2 rounded">
@@ -236,11 +235,11 @@ export function DoctorDashboardScreen() {
 
         <View className="mb-6">
           <View className="flex-row justify-between items-center mb-3">
-            <View className="flex-row items-center">
+            <View className="flex-row items-center flex-1">
               <View className="w-7 h-7 rounded-full bg-teal-50 items-center justify-center mr-2">
               <Ionicons name="document-text-outline" size={15} color="#259487" />
             </View>
-              <Text className="text-base font-bold text-neutral-900">Historial y Fórmulas Médicas</Text>
+              <Text className="text-base font-bold text-neutral-900 flex-1">Historial y Fórmulas Médicas</Text>
             </View>
           </View>
 
@@ -266,12 +265,12 @@ export function DoctorDashboardScreen() {
           ) : (
             patientHistoryGroups.map((group) => (
               <Card key={group.patientId} className="mb-4 p-4">
-                <View className="flex-row justify-between items-start mb-3">
-                  <View className="flex-1 mr-2">
+                <View className="mb-3 gap-3">
+                  <View>
                     <Text className="text-base font-bold text-neutral-900">{group.patientName}</Text>
                     <View className="flex-row flex-wrap gap-1 mt-1">
                       {group.clinics.map((c) => (
-                        <View key={c.clinicId} className="bg-gray-100 px-2.5 py-0.5 rounded-full">
+                        <View key={c.clinicId} className="bg-gray-100 px-2.5 py-0.5 rounded-full max-w-full">
                           <Text className="text-xs font-medium text-gray-700">{c.clinicName}</Text>
                         </View>
                       ))}
@@ -281,9 +280,11 @@ export function DoctorDashboardScreen() {
                   <TouchableOpacity
                     onPress={() => handleOpenCreateModal(group)}
                     activeOpacity={0.7}
-                    className="bg-primary px-3 py-1.5 rounded-lg flex-row items-center"
+                    className="bg-primary px-3 py-1.5 rounded-lg flex-row items-center self-start"
+                    style={{ minHeight: 48, maxWidth: '100%' }}
+                    accessibilityRole="button"
                   >
-                    <Text className="text-white text-xs font-bold">+ Asignar Receta</Text>
+                    <Text className="text-white text-xs font-bold" style={{ flexShrink: 1 }}>+ Asignar Receta</Text>
                   </TouchableOpacity>
                 </View>
 
@@ -299,32 +300,36 @@ export function DoctorDashboardScreen() {
                         key={pres.prescriptionId ? `pres-${pres.prescriptionId}` : `pres-idx-${idx}`}
                         className="bg-teal-50/50 border border-teal-100 rounded-lg p-3 mb-2"
                       >
-                        <View className="flex-row justify-between items-start mb-1">
+                        <View className="mb-1 gap-2">
                           <View className="flex-row items-center">
                           <Ionicons name="calendar-outline" size={12} color="#0f766e" />
-                          <Text className="text-xs font-bold text-teal-800 ml-1">{pres.displayDate}</Text>
+                          <Text className="text-xs font-bold text-teal-800 ml-1 flex-1">{pres.displayDate}</Text>
                         </View>
-                          <View className="flex-row gap-2">
+                          <View className="flex-row flex-wrap gap-2">
                             {pres.prescriptionId && (
                               <>
                                 <TouchableOpacity
                                   onPress={() => handleOpenEditModal(pres.prescriptionId, pres.description)}
                                   activeOpacity={0.7}
                                   className="bg-white border border-gray-200 px-2 py-1 rounded"
+                                  style={{ minHeight: 48, maxWidth: '100%', justifyContent: 'center' }}
+                                  accessibilityRole="button"
                                 >
                                   <View className="flex-row items-center gap-1">
                                     <Ionicons name="pencil-outline" size={12} color="#259487" />
-                                    <Text className="text-xs font-semibold text-primary">Editar</Text>
+                                    <Text className="text-xs font-semibold text-primary" style={{ flexShrink: 1 }}>Editar</Text>
                                   </View>
                                 </TouchableOpacity>
                                 <TouchableOpacity
                                   onPress={() => handleDeletePrescription(pres.prescriptionId)}
                                   activeOpacity={0.7}
                                   className="bg-white border border-red-200 px-2 py-1 rounded"
+                                  style={{ minHeight: 48, maxWidth: '100%', justifyContent: 'center' }}
+                                  accessibilityRole="button"
                                 >
                                   <View className="flex-row items-center gap-1">
                                     <Ionicons name="trash-outline" size={12} color="#dc2626" />
-                                    <Text className="text-xs font-semibold text-red-600">Eliminar</Text>
+                                    <Text className="text-xs font-semibold text-red-600" style={{ flexShrink: 1 }}>Eliminar</Text>
                                   </View>
                                 </TouchableOpacity>
                               </>
@@ -345,10 +350,10 @@ export function DoctorDashboardScreen() {
                       Historial de Citas ({group.records.length})
                     </Text>
                     {group.records.slice(0, 3).map((rec, rIdx) => (
-                      <View key={rIdx} className="py-1 flex-row items-center justify-between">
+                      <View key={rIdx} className="py-1 gap-1">
                         <View className="flex-row items-center">
                         <Ionicons name="calendar-outline" size={12} color="#4b5563" />
-                        <Text className="text-xs text-gray-600 font-medium ml-1">{rec.displayDate}</Text>
+                        <Text className="text-xs text-gray-600 font-medium ml-1 flex-1">{rec.displayDate}</Text>
                       </View>
                         <Text className="text-xs text-gray-500 font-medium">{rec.clinicName}</Text>
                       </View>
@@ -361,129 +366,214 @@ export function DoctorDashboardScreen() {
         </View>
       </ScrollView>
 
-      <Modal visible={createModalVisible} transparent animationType="slide">
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} style={{ flex: 1 }}>
-          <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl p-5 max-h-[85%]">
-            <View className="flex-row justify-between items-center mb-4 border-b border-gray-100 pb-3">
-              <View>
-                <Text className="text-xs font-bold text-primary uppercase">Nueva Fórmula Médica</Text>
-                <Text className="text-lg font-bold text-neutral-900">{targetPatient?.patientName}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setCreateModalVisible(false)} className="p-2 rounded-full bg-gray-100 active:bg-gray-200">
-                <Ionicons name="close" size={18} color="#6b7280" />
-              </TouchableOpacity>
-            </View>
-
-            <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: 24 }}>
-              <Text className="text-xs font-bold text-neutral-900 mb-1.5">Clínica</Text>
-              <View className="flex-row flex-wrap gap-2 mb-4">
-                {targetPatient?.clinics.map((c) => (
+      <Modal
+        visible={createModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          if (!savingPrescription) setCreateModalVisible(false);
+        }}
+      >
+        <ModalViewport style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={{ flex: 1, minHeight: 0, justifyContent: 'flex-end' }}>
+            <View
+              className="bg-white rounded-t-3xl"
+              style={{
+                height: '85%',
+                maxHeight: '100%',
+                minHeight: 0,
+                flexShrink: 1,
+              }}
+            >
+              <ScrollView
+                style={{ flex: 1, minHeight: 0 }}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+                contentContainerStyle={{ padding: 20, paddingBottom: 24 }}
+              >
+                <View className="flex-row justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                  <View className="flex-1 mr-2">
+                    <Text className="text-xs font-bold text-primary uppercase">
+                      Nueva Fórmula Médica
+                    </Text>
+                    <Text className="text-lg font-bold text-neutral-900">
+                      {targetPatient?.patientName}
+                    </Text>
+                  </View>
                   <TouchableOpacity
-                    key={c.clinicId}
-                    onPress={() => setSelectedClinicId(c.clinicId)}
-                    className={`px-3 py-2 rounded-lg border ${
-                      selectedClinicId === c.clinicId
-                        ? 'bg-primary border-primary'
-                        : 'bg-gray-50 border-gray-200'
-                    }`}
+                    onPress={() => setCreateModalVisible(false)}
+                    disabled={savingPrescription}
+                    accessibilityRole="button"
+                    accessibilityLabel="Cerrar nueva receta"
+                    style={{
+                      minWidth: 48,
+                      minHeight: 48,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                    className="rounded-full bg-gray-100 active:bg-gray-200"
                   >
-                    <Text
-                      className={`text-xs font-bold ${
-                        selectedClinicId === c.clinicId ? 'text-white' : 'text-gray-700'
+                    <Ionicons name="close" size={18} color="#6b7280" />
+                  </TouchableOpacity>
+                </View>
+
+                <Text className="text-xs font-bold text-neutral-900 mb-1.5">
+                  Clínica
+                </Text>
+                <View className="flex-row flex-wrap gap-2 mb-4">
+                  {targetPatient?.clinics.map((c) => (
+                    <TouchableOpacity
+                      key={c.clinicId}
+                      onPress={() => setSelectedClinicId(c.clinicId)}
+                      disabled={savingPrescription}
+                      className={`px-3 py-2 rounded-lg border ${
+                        selectedClinicId === c.clinicId
+                          ? 'bg-primary border-primary'
+                          : 'bg-gray-50 border-gray-200'
                       }`}
                     >
-                      {c.clinicName}
-                    </Text>
-                  </TouchableOpacity>
-                ))}
-              </View>
+                      <Text
+                        className={`text-xs font-bold ${
+                          selectedClinicId === c.clinicId
+                            ? 'text-white'
+                            : 'text-gray-700'
+                        }`}
+                      >
+                        {c.clinicName}
+                      </Text>
+                    </TouchableOpacity>
+                  ))}
+                </View>
 
-              <Text className="text-xs font-bold text-neutral-900 mb-1.5">
-                Descripción / Indicaciones de la Receta
-              </Text>
-              <TextInput
-                multiline
-                numberOfLines={5}
-                placeholder="Escribe los medicamentos, dosis e indicaciones para el paciente..."
-                value={prescriptionText}
-                onChangeText={setPrescriptionText}
-                className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-neutral-900 mb-5 min-h-[120px]"
-                placeholderTextColor="#9ca3af"
-                textAlignVertical="top"
-              />
-
-              <View className="flex-row gap-3">
-                <Button
-                  text="Cancelar"
-                  variant="outline"
-                  onPress={() => setCreateModalVisible(false)}
-                  className="flex-1"
+                <Text className="text-xs font-bold text-neutral-900 mb-1.5">
+                  Descripción / Indicaciones de la Receta
+                </Text>
+                <TextInput
+                  multiline
+                  numberOfLines={5}
+                  placeholder="Escribe los medicamentos, dosis e indicaciones para el paciente..."
+                  value={prescriptionText}
+                  editable={!savingPrescription}
+                  onChangeText={setPrescriptionText}
+                  className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-neutral-900 mb-5 min-h-[120px]"
+                  placeholderTextColor="#9ca3af"
+                  textAlignVertical="top"
                 />
-                <Button
-                  text={savingPrescription ? 'Guardando...' : 'Asignar Receta'}
-                  onPress={handleSavePrescription}
-                  loading={savingPrescription}
-                  disabled={savingPrescription || !prescriptionText.trim()}
-                  className="flex-1"
-                />
-              </View>
-            </ScrollView>
-          </View>
-        </View>
-        </KeyboardAvoidingView>
-      </Modal>
 
-      <Modal visible={editModalVisible} transparent animationType="slide">
-        <KeyboardAvoidingView behavior={Platform.OS === 'ios' ? 'padding' : 'padding'} style={{ flex: 1 }}>
-          <View className="flex-1 bg-black/50 justify-end">
-          <View className="bg-white rounded-t-3xl p-5 max-h-[85%]">
-            <View className="flex-row justify-between items-center mb-4 border-b border-gray-100 pb-3">
-              <View>
-                <Text className="text-xs font-bold text-primary uppercase">Editar Fórmula Médica</Text>
-                <Text className="text-base font-bold text-neutral-900">ID #{editingPrescriptionId}</Text>
-              </View>
-              <TouchableOpacity onPress={() => setEditModalVisible(false)} className="p-2 rounded-full bg-gray-100 active:bg-gray-200">
-                <Ionicons name="close" size={18} color="#6b7280" />
-              </TouchableOpacity>
+                <View className="flex-row gap-3">
+                  <Button
+                    text="Cancelar"
+                    variant="outline"
+                    onPress={() => setCreateModalVisible(false)}
+                    disabled={savingPrescription}
+                    className="flex-1"
+                  />
+                  <Button
+                    text={savingPrescription ? 'Guardando...' : 'Asignar Receta'}
+                    onPress={handleSavePrescription}
+                    loading={savingPrescription}
+                    disabled={savingPrescription || !prescriptionText.trim()}
+                    className="flex-1"
+                  />
+                </View>
+              </ScrollView>
             </View>
-
-            <ScrollView keyboardShouldPersistTaps="handled" keyboardDismissMode="on-drag" contentContainerStyle={{ paddingBottom: 24 }}>
-              <Text className="text-xs font-bold text-neutral-900 mb-1.5">
-                Descripción / Indicaciones
-              </Text>
-              <TextInput
-                multiline
-                numberOfLines={5}
-                placeholder="Modifica los medicamentos, dosis e indicaciones..."
-                value={editPrescriptionText}
-                onChangeText={setEditPrescriptionText}
-                className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-neutral-900 mb-5 min-h-[120px]"
-                placeholderTextColor="#9ca3af"
-                textAlignVertical="top"
-              />
-
-              <View className="flex-row gap-3">
-                <Button
-                  text="Cancelar"
-                  variant="outline"
-                  onPress={() => setEditModalVisible(false)}
-                  className="flex-1"
-                />
-                <Button
-                  text={updatingPrescription ? 'Actualizando...' : 'Guardar Cambios'}
-                  onPress={handleSaveEditPrescription}
-                  loading={updatingPrescription}
-                  disabled={updatingPrescription || !editPrescriptionText.trim()}
-                  className="flex-1"
-                />
-              </View>
-            </ScrollView>
           </View>
-        </View>
-        </KeyboardAvoidingView>
+        </ModalViewport>
       </Modal>
-    </SafeAreaView>
+
+      <Modal
+        visible={editModalVisible}
+        transparent
+        animationType="slide"
+        onRequestClose={() => {
+          if (!updatingPrescription) setEditModalVisible(false);
+        }}
+      >
+        <ModalViewport style={{ backgroundColor: 'rgba(0,0,0,0.5)' }}>
+          <View style={{ flex: 1, minHeight: 0, justifyContent: 'flex-end' }}>
+            <View
+              className="bg-white rounded-t-3xl"
+              style={{
+                height: '85%',
+                maxHeight: '100%',
+                minHeight: 0,
+                flexShrink: 1,
+              }}
+            >
+              <ScrollView
+                style={{ flex: 1, minHeight: 0 }}
+                keyboardShouldPersistTaps="handled"
+                keyboardDismissMode="on-drag"
+                contentContainerStyle={{ padding: 20, paddingBottom: 24 }}
+              >
+                <View className="flex-row justify-between items-center mb-4 border-b border-gray-100 pb-3">
+                  <View className="flex-1 mr-2">
+                    <Text className="text-xs font-bold text-primary uppercase">
+                      Editar Fórmula Médica
+                    </Text>
+                    <Text className="text-base font-bold text-neutral-900">
+                      ID #{editingPrescriptionId}
+                    </Text>
+                  </View>
+                  <TouchableOpacity
+                    onPress={() => setEditModalVisible(false)}
+                    disabled={updatingPrescription}
+                    accessibilityRole="button"
+                    accessibilityLabel="Cerrar edición de receta"
+                    style={{
+                      minWidth: 48,
+                      minHeight: 48,
+                      alignItems: 'center',
+                      justifyContent: 'center',
+                    }}
+                    className="rounded-full bg-gray-100 active:bg-gray-200"
+                  >
+                    <Ionicons name="close" size={18} color="#6b7280" />
+                  </TouchableOpacity>
+                </View>
+
+                <Text className="text-xs font-bold text-neutral-900 mb-1.5">
+                  Descripción / Indicaciones
+                </Text>
+                <TextInput
+                  multiline
+                  numberOfLines={5}
+                  placeholder="Modifica los medicamentos, dosis e indicaciones..."
+                  value={editPrescriptionText}
+                  editable={!updatingPrescription}
+                  onChangeText={setEditPrescriptionText}
+                  className="bg-gray-50 border border-gray-200 rounded-xl p-3 text-sm text-neutral-900 mb-5 min-h-[120px]"
+                  placeholderTextColor="#9ca3af"
+                  textAlignVertical="top"
+                />
+
+                <View className="flex-row gap-3">
+                  <Button
+                    text="Cancelar"
+                    variant="outline"
+                    onPress={() => setEditModalVisible(false)}
+                    disabled={updatingPrescription}
+                    className="flex-1"
+                  />
+                  <Button
+                    text={
+                      updatingPrescription ? 'Actualizando...' : 'Guardar Cambios'
+                    }
+                    onPress={handleSaveEditPrescription}
+                    loading={updatingPrescription}
+                    disabled={
+                      updatingPrescription || !editPrescriptionText.trim()
+                    }
+                    className="flex-1"
+                  />
+                </View>
+              </ScrollView>
+            </View>
+          </View>
+        </ModalViewport>
+      </Modal>
+    </View>
   );
 }
 

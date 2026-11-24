@@ -1,6 +1,7 @@
 import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
+import { useKeyboardVisibility } from '../hooks/useKeyboardVisibility';
 
 const BRAND_PRIMARY = '#259487';
 const TEXT_MUTED = '#4b5563';
@@ -57,6 +58,8 @@ const TAB_CONFIG: Record<string, TabConfig> = {
  * implementado con Tailwind / NativeWind y @expo/vector-icons.
  */
 export const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
+  const keyboardVisible = useKeyboardVisibility();
+  if (keyboardVisible) return null;
   return (
     <View
       className="bg-white border-t border-gray-200 shadow-sm pb-2"

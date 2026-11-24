@@ -42,7 +42,7 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
       className={`bg-white border-b border-gray-200 px-4 py-3 flex-row items-center justify-between shadow-sm ${className}`}
     >
       {/* Extremo Izquierdo: Botón de regreso a la izquierda del todo */}
-      <View className="w-20 items-start justify-center">
+      <View className="shrink-0 items-start justify-center">
         {canGoBack ? (
           <Pressable
             onPress={handleBack}
@@ -60,25 +60,19 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
       </View>
 
       {/* Centro: Título de página en la mitad */}
-      <View className="flex-1 items-center justify-center px-1">
-        <Text
-          className="text-base font-bold text-neutral-900 text-center"
-          numberOfLines={1}
-        >
+      <View className="flex-1 min-w-0 items-center justify-center px-2">
+        <Text className="text-base font-bold text-neutral-900 text-center">
           {title}
         </Text>
         {subtitle ? (
-          <Text
-            className="text-xs text-gray-500 text-center mt-0.5"
-            numberOfLines={1}
-          >
+          <Text className="text-xs text-gray-500 text-center mt-0.5">
             {subtitle}
           </Text>
         ) : null}
       </View>
 
       {/* Extremo Derecho: Acción secundaria o espacio para balance simétrico */}
-      <View className="flex-shrink-0 items-end justify-center" style={{ minWidth: 80 }}>
+      <View className="shrink-0 items-end justify-center">
         {rightAction ? rightAction : null}
       </View>
     </View>

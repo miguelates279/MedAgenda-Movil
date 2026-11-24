@@ -3,7 +3,6 @@ import {
   ActivityIndicator,
   Pressable,
   RefreshControl,
-  SafeAreaView,
   ScrollView,
   Text,
   View,
@@ -13,15 +12,11 @@ import { Badge, Card, ScreenHeader } from '../../components';
 import { usePrescriptionsScreen } from './usePrescriptionsScreen';
 
 export function PrescriptionsScreen() {
-  const {
-    prescriptions,
-    loading,
-    groups,
-    loadPrescriptions,
-  } = usePrescriptionsScreen();
+  const { prescriptions, loading, groups, loadPrescriptions } =
+    usePrescriptionsScreen();
 
   return (
-    <SafeAreaView className="flex-1 bg-white">
+    <View className="flex-1 bg-white">
       <ScreenHeader
         title="Mis Fórmulas Médicas"
         rightAction={
@@ -53,21 +48,30 @@ export function PrescriptionsScreen() {
             Recetas e Indicaciones
           </Text>
           <Text className="text-xs text-teal-900 leading-relaxed">
-            Aquí puedes consultar todas las prescripciones y fórmulas emitidas por tus médicos en cada clínica.
+            Aquí puedes consultar todas las prescripciones y fórmulas emitidas
+            por tus médicos en cada clínica.
           </Text>
         </View>
 
         {loading && prescriptions.length === 0 ? (
           <Card className="p-8 items-center justify-center">
             <ActivityIndicator size="small" color="#259487" />
-            <Text className="text-xs text-gray-500 mt-2">Cargando fórmulas médicas...</Text>
+            <Text className="text-xs text-gray-500 mt-2">
+              Cargando fórmulas médicas...
+            </Text>
           </Card>
         ) : groups.length === 0 ? (
           <Card className="p-8 items-center justify-center">
             <View className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center mb-3">
-              <Ionicons name="document-text-outline" size={28} color="#9ca3af" />
+              <Ionicons
+                name="document-text-outline"
+                size={28}
+                color="#9ca3af"
+              />
             </View>
-            <Text className="text-sm font-bold text-neutral-800 mb-1">Sin Fórmulas Médicas</Text>
+            <Text className="text-sm font-bold text-neutral-800 mb-1">
+              Sin Fórmulas Médicas
+            </Text>
             <Text className="text-xs text-gray-500 text-center">
               Aún no tienes fórmulas ni recetas registradas por tus médicos.
             </Text>
@@ -84,7 +88,10 @@ export function PrescriptionsScreen() {
                     <Text className="text-xs text-teal-700 font-bold uppercase tracking-wider">
                       Clínica
                     </Text>
-                    <Text className="font-bold text-sm text-neutral-900" numberOfLines={1}>
+                    <Text
+                      className="font-bold text-sm text-neutral-900"
+                      numberOfLines={1}
+                    >
                       {group.clinicName}
                     </Text>
                   </View>
@@ -97,11 +104,17 @@ export function PrescriptionsScreen() {
 
               <View className="p-3.5">
                 {group.items.map((item, idx) => {
-                  const doctorName = [item.doctor_first_name, item.doctor_second_name, item.doctor_last_name]
+                  const doctorName = [
+                    item.doctor_first_name,
+                    item.doctor_second_name,
+                    item.doctor_last_name,
+                  ]
                     .filter(Boolean)
                     .join(' ');
 
-                  const formattedDate = new Date(item.date_emitted).toLocaleDateString('es-ES', {
+                  const formattedDate = new Date(
+                    item.date_emitted,
+                  ).toLocaleDateString('es-ES', {
                     day: 'numeric',
                     month: 'long',
                     year: 'numeric',
@@ -116,7 +129,11 @@ export function PrescriptionsScreen() {
                     >
                       <View className="flex-row justify-between items-center mb-1.5">
                         <View className="flex-row items-center">
-                          <Ionicons name="calendar-outline" size={13} color="#259487" />
+                          <Ionicons
+                            name="calendar-outline"
+                            size={13}
+                            color="#259487"
+                          />
                           <Text className="text-xs font-bold text-primary ml-1">
                             {formattedDate}
                           </Text>
@@ -138,7 +155,7 @@ export function PrescriptionsScreen() {
           ))
         )}
       </ScrollView>
-    </SafeAreaView>
+    </View>
   );
 }
 
