@@ -22,45 +22,35 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
 
   return (
     <View className="w-full">
-      <View className="flex-row flex-wrap gap-x-2">
-        <View className="flex-1 min-w-action-sm max-w-full">
-          <Field
-            control={control}
-            name="first_name"
-            label="Primer nombre *"
-            placeholder="Juan"
-            rules={{ required: 'Requerido' }}
-          />
-        </View>
-        <View className="flex-1 min-w-action-sm max-w-full">
-          <Field
-            control={control}
-            name="second_name"
-            label="Segundo nombre"
-            placeholder="Carlos"
-          />
-        </View>
-      </View>
+      <Field
+        control={control}
+        name="first_name"
+        label="Primer nombre *"
+        placeholder="Juan"
+        rules={{ required: 'Requerido' }}
+      />
 
-      <View className="flex-row flex-wrap gap-x-2">
-        <View className="flex-1 min-w-action-sm max-w-full">
-          <Field
-            control={control}
-            name="first_last_name"
-            label="Primer apellido *"
-            placeholder="Pérez"
-            rules={{ required: 'Requerido' }}
-          />
-        </View>
-        <View className="flex-1 min-w-action-sm max-w-full">
-          <Field
-            control={control}
-            name="second_last_name"
-            label="Segundo apellido"
-            placeholder="García"
-          />
-        </View>
-      </View>
+      <Field
+        control={control}
+        name="second_name"
+        label="Segundo nombre"
+        placeholder="Carlos"
+      />
+
+      <Field
+        control={control}
+        name="first_last_name"
+        label="Primer apellido *"
+        placeholder="Pérez"
+        rules={{ required: 'Requerido' }}
+      />
+
+      <Field
+        control={control}
+        name="second_last_name"
+        label="Segundo apellido"
+        placeholder="García"
+      />
 
       <Field
         control={control}
