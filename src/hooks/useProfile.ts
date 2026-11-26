@@ -36,7 +36,9 @@ export const useProfile = () => {
     try {
       await refreshProfile();
     } catch (err: any) {
-      setProfileError(err?.message || 'No se pudo cargar la información del perfil.');
+      setProfileError(
+        err?.message || 'No se pudo cargar la información del perfil.',
+      );
     } finally {
       setLoadingProfile(false);
     }
@@ -57,8 +59,13 @@ export const useProfile = () => {
       // Enrutador central '/' gestiona de forma determinista la redirección al destino según el modo activo
       router.replace('/' as any);
     },
-    [activeMode, availableModes, setActiveMode, router]
+    [activeMode, availableModes, setActiveMode, router],
   );
+
+  const handleCreateClinic = useCallback(() => {
+    if (isAuthenticated && activeMode !== null)
+      router.push('/clinics/new' as any);
+  }, [isAuthenticated, activeMode, router]);
 
   const {
     isModalOpen: isLogoutModalOpen,
@@ -87,6 +94,7 @@ export const useProfile = () => {
     activeMode,
     availableModes,
     handleSelectMode,
+    handleCreateClinic,
     loadingProfile,
     profileError,
     handleRetryProfile,

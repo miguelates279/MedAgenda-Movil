@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import clinicsApi from '../../api/clinics';
 import { Clinic, ClinicScheduleRules, PublicDoctor } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
@@ -30,7 +30,9 @@ export function useClinicDetail() {
   const [error, setError] = useState<string | null>(null);
 
   // ID del doctor para agendamiento pendiente tras confirmar cambio al modo Paciente (Fix 3)
-  const [pendingBookingDoctorId, setPendingBookingDoctorId] = useState<number | null>(null);
+  const [pendingBookingDoctorId, setPendingBookingDoctorId] = useState<
+    number | null
+  >(null);
 
   // Request generation counter to guard against race conditions across clinic navigation
   const requestGenRef = useRef<number>(0);
@@ -52,61 +54,64 @@ export function useClinicDetail() {
   // la clínica figura en adminClinics verificadas y su rol es 'Owner'.
   // Al confirmarse la eliminación local, el control se retira inmediatamente sin esperar al refresco.
   const isOwner = useMemo(() => {
-    if (isDeletedLocally || !isAuthenticated || activeMode !== 'admin') return false;
+    if (isDeletedLocally || !isAuthenticated || activeMode !== 'admin')
+      return false;
     return adminClinics.some(
-      (c) => c.clinic_id === clinicId && c.role_within_clinic === 'Owner'
+      (c) => c.clinic_id === clinicId && c.role_within_clinic === 'Owner',
     );
   }, [isDeletedLocally, isAuthenticated, activeMode, adminClinics, clinicId]);
 
-  useEffect(() => {
-    if (!clinicId) return;
-    let active = true;
-    const currentSessionId = getSessionId();
-    const currentGen = ++requestGenRef.current;
-    const targetClinicId = clinicId;
+  useFocusEffect(
+    useCallback(() => {
+      if (!clinicId) return;
+      let active = true;
+      const currentSessionId = getSessionId();
+      const currentGen = ++requestGenRef.current;
+      const targetClinicId = clinicId;
 
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const [cData, dList, rData] = await Promise.all([
-          clinicsApi.getClinicDetails(targetClinicId),
-          clinicsApi.getClinicDoctors(targetClinicId),
-          clinicsApi.getClinicScheduleRules(targetClinicId).catch(() => null),
-        ]);
-        // Guard against unmount, session switch, or navigation to another clinicId
-        if (
-          active &&
-          getSessionId() === currentSessionId &&
-          currentGen === requestGenRef.current
-        ) {
-          setClinic(cData);
-          setDoctors(dList);
-          setRules(rData);
+      (async () => {
+        setLoading(true);
+        setError(null);
+        try {
+          const [cData, dList, rData] = await Promise.all([
+            clinicsApi.getClinicDetails(targetClinicId),
+            clinicsApi.getClinicDoctors(targetClinicId),
+            clinicsApi.getClinicScheduleRules(targetClinicId).catch(() => null),
+          ]);
+          // Guard against unmount, session switch, or navigation to another clinicId
+          if (
+            active &&
+            getSessionId() === currentSessionId &&
+            currentGen === requestGenRef.current
+          ) {
+            setClinic(cData);
+            setDoctors(dList);
+            setRules(rData);
+          }
+        } catch (err: any) {
+          if (
+            active &&
+            getSessionId() === currentSessionId &&
+            currentGen === requestGenRef.current
+          ) {
+            setError(err.message || 'Error al cargar detalles de la clínica');
+          }
+        } finally {
+          if (
+            active &&
+            getSessionId() === currentSessionId &&
+            currentGen === requestGenRef.current
+          ) {
+            setLoading(false);
+          }
         }
-      } catch (err: any) {
-        if (
-          active &&
-          getSessionId() === currentSessionId &&
-          currentGen === requestGenRef.current
-        ) {
-          setError(err.message || 'Error al cargar detalles de la clínica');
-        }
-      } finally {
-        if (
-          active &&
-          getSessionId() === currentSessionId &&
-          currentGen === requestGenRef.current
-        ) {
-          setLoading(false);
-        }
-      }
-    })();
+      })();
 
-    return () => {
-      active = false;
-    };
-  }, [clinicId, getSessionId]);
+      return () => {
+        active = false;
+      };
+    }, [clinicId, getSessionId]),
+  );
 
   // Manejo coherente de agendamiento público según modo y sesión (Fix 3)
   const handleBookWithDoctor = (doctorId: number) => {
@@ -262,6 +267,11 @@ export function useClinicDetail() {
 
   return {
     router,
+    canManage:
+      isAuthenticated &&
+      activeMode === 'admin' &&
+      !isDeletedLocally &&
+      adminClinics.some((item) => item.clinic_id === clinicId),
     isOwner,
     clinic,
     doctors,

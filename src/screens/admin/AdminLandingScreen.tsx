@@ -194,10 +194,10 @@ export const AdminLandingScreen: React.FC = () => {
                       onPress={() => navigateToClinicDetail(clinic.clinic_id)}
                       className="min-h-touch max-w-full justify-center flex-row items-center"
                       accessibilityRole="button"
-                      accessibilityLabel={`Ver detalles de ${clinic.clinic_name}`}
+                      accessibilityLabel={`Gestionar ${clinic.clinic_name}`}
                     >
                       <Text className="min-w-0 max-w-full shrink text-xs font-semibold text-med-primary mr-1">
-                        Ver detalles de sede
+                        Gestionar clínica
                       </Text>
                       <Ionicons
                         name="chevron-forward"

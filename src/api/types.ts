@@ -112,6 +112,61 @@ export interface CreateClinicDto {
   clinic_phone_number: string;
   clinic_description?: string;
   clinic_city_id: number;
+  is_open?: boolean;
+  clinic_opening_time?: string;
+  clinic_close_time?: string;
+  clinic_average_appointment_time?: number;
+  clinic_break_time?: string | null;
+  clinic_break_duration?: number;
+  specialty_ids?: number[];
+}
+
+export type ClinicMemberRole = 'Owner' | 'Admin' | 'Doctor' | 'Employee';
+
+export interface ClinicManagement extends Clinic {
+  clinic_city_id: number;
+  country_id: number;
+  country_name: string;
+  state_id: number;
+  state_name: string;
+  city_name: string;
+  role_within_clinic: 'Owner' | 'Admin';
+  clinic_opening_time: string | null;
+  clinic_close_time: string | null;
+  clinic_average_appointment_time: number | null;
+  clinic_break_time: string | null;
+  clinic_break_duration: number | null;
+  specialty_ids: number[];
+}
+
+export interface ClinicMember {
+  user_id: number;
+  clinic_id: number;
+  first_name: string;
+  second_name?: string | null;
+  first_last_name: string;
+  second_last_name?: string | null;
+  email?: string;
+  user_email_address?: string;
+  role_within_clinic: ClinicMemberRole | null;
+  is_member: boolean;
+  isDoctor: boolean;
+  isAdmin: boolean;
+  specialties: Specialty[];
+  specialty_id?: number | null;
+}
+
+export interface UpdateClinicMemberDto {
+  clinic_id: number;
+  email: string;
+  isDoctor: boolean;
+  isAdmin: boolean;
+  specialty_id?: number;
+}
+
+export interface UpdateClinicOwnerProviderDto {
+  isDoctor: boolean;
+  specialty_id?: number;
 }
 
 export interface CreateClinicResponse {

@@ -1,177 +1,167 @@
-import { useCallback, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import clinicsApi from '../../api/clinics';
-import { CreateClinicDto } from '../../api/types';
+import type { Specialty } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
-import { useClinicSearch } from '../../hooks/useClinicSearch';
-import { SelectOption } from '../../components';
+import { clinicPayload, newClinicValues } from './clinicManagement';
+import type { ClinicEditorValues } from './clinicManagement';
+import { appAlerts } from '../../utils/appAlerts';
 
-export type ClinicFormValues = Omit<CreateClinicDto, 'clinic_city_id'>;
+export type ClinicFormValues = ClinicEditorValues;
 
 export function useCreateClinic() {
   const router = useRouter();
-  const { isAuthenticated, refreshRoleAccess, setActiveMode, getSessionId } = useAuth();
   const {
-    countries,
-    states,
-    cities,
-    countryId,
-    stateId,
-    cityId,
-    setCountryId,
-    setStateId,
-    setCityId,
-  } = useClinicSearch();
-
-  const [modalType, setModalType] = useState<'country' | 'state' | 'city' | null>(null);
+    isAuthenticated,
+    activeMode,
+    refreshRoleAccess,
+    setActiveMode,
+    getSessionId,
+  } = useAuth();
+  const form = useForm<ClinicEditorValues>({
+    defaultValues: newClinicValues(),
+  });
+  const [specialties, setSpecialties] = useState<Specialty[]>([]);
   const [submitError, setSubmitError] = useState<string | null>(null);
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [createdClinicId, setCreatedClinicId] = useState<number | null>(null);
+  const [verifiedClinicId, setVerifiedClinicId] = useState<number | null>(null);
   const [isVerifyingRole, setIsVerifyingRole] = useState(false);
-  const [roleVerificationError, setRoleVerificationError] = useState<string | null>(null);
+  const [roleVerificationError, setRoleVerificationError] = useState<
+    string | null
+  >(null);
+  const [retry, setRetry] = useState(0);
+  const mounted = useRef(true);
+  const busy = useRef(false);
+  const verificationBusy = useRef(false);
+  const session = getSessionId();
+  const liveSession = useRef(session);
+  liveSession.current = session;
 
-  const { control, handleSubmit } = useForm<ClinicFormValues>({
-    defaultValues: {
-      clinic_name: '',
-      clinic_address: '',
-      clinic_phone_number: '',
-      clinic_description: '',
-    },
-  });
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
+  useEffect(() => {
+    let active = true;
+    clinicsApi
+      .getAllSpecialties()
+      .then((data) => {
+        if (active && getSessionId() === session) setSpecialties(data);
+      })
+      .catch((cause) => {
+        if (active && getSessionId() === session)
+          setSubmitError(
+            cause?.message || 'No se pudieron cargar las especialidades.',
+          );
+      });
+    return () => {
+      active = false;
+    };
+  }, [retry, session, getSessionId]);
 
-  const selectedCountry = countries.find((item) => item.country_id === countryId);
-  const selectedState = states.find((item) => item.state_id === stateId);
-  const selectedCity = cities.find((item) => item.city_id === cityId);
+  useEffect(() => {
+    if (activeMode === 'admin' && verifiedClinicId !== null && mounted.current)
+      router.replace(`/clinics/manage/${verifiedClinicId}` as any);
+  }, [activeMode, verifiedClinicId, router]);
 
-  const countryOptions: SelectOption[] = countries.map((item) => ({
-    label: item.country_name,
-    value: item.country_id,
-  }));
-  const stateOptions: SelectOption[] = states.map((item) => ({
-    label: item.state_name,
-    value: item.state_id,
-  }));
-  const cityOptions: SelectOption[] = cities.map((item) => ({
-    label: item.city_name,
-    value: item.city_id,
-  }));
-
-  /**
-   * Verifica que la nueva clínica aparezca en las membresías administrativas del backend,
-   * confirma el rol de Owner y realiza la transición al Modo Administrador (Deliverable E).
-   * NO repite el POST de creación.
-   */
   const verifyRoleAndTransition = useCallback(
     async (clinicId: number) => {
-      const targetSessionId = getSessionId();
+      const targetSession = getSessionId();
+      const current = () =>
+        mounted.current &&
+        liveSession.current === targetSession &&
+        getSessionId() === targetSession;
+      if (!current() || verificationBusy.current) return;
+      verificationBusy.current = true;
       setIsVerifyingRole(true);
       setRoleVerificationError(null);
       try {
-        const verifiedClinics = await refreshRoleAccess();
-        // Guard against stale closures: verify active session generation
-        if (getSessionId() !== targetSessionId) return;
-        const createdClinic = (Array.isArray(verifiedClinics) ? verifiedClinics : []).find(
-          (c) => c.clinic_id === clinicId
-        );
-
-        if (!createdClinic) {
-          setRoleVerificationError(
-            'La clínica fue creada correctamente, pero aún no se refleja en tus membresías de administración. Reintenta la verificación de acceso.'
-          );
-          return;
-        }
-
-        if (createdClinic.role_within_clinic !== 'Owner') {
-          setRoleVerificationError(
-            'La clínica fue creada, pero tu rol reportado no es Propietario. Reintenta la verificación.'
-          );
-          return;
-        }
-
-        // 1. Membresía de propietario verificada.
-        // 2. Seleccionar modo administrador solo tras refresco exitoso.
-        setActiveMode('admin');
-        // 3. Redirigir a través del enrutador central '/' hacia el Administrator Home.
-        router.replace('/' as any);
-      } catch (err: any) {
+        const clinics = await refreshRoleAccess();
+        if (!current()) return;
         if (
-          getSessionId() !== targetSessionId ||
-          err?.message?.includes('canceled') ||
-          err?.message?.includes('invalidated') ||
-          err?.message?.includes('superseded')
+          !clinics.some(
+            (item) =>
+              item.clinic_id === clinicId &&
+              item.role_within_clinic === 'Owner',
+          )
         ) {
+          setRoleVerificationError(
+            'La clínica se creó, pero falta confirmar tu acceso como propietario. Reintenta la verificación sin volver a crearla.',
+          );
           return;
         }
-        setRoleVerificationError(
-          err?.message || 'Error al verificar las membresías de administración tras la creación.'
-        );
+        setVerifiedClinicId(clinicId);
+        setActiveMode('admin');
+      } catch (cause: any) {
+        if (current())
+          setRoleVerificationError(
+            cause?.message ||
+              'La clínica se creó. Reintenta la verificación de permisos.',
+          );
       } finally {
-        if (getSessionId() === targetSessionId) {
+        if (current()) {
+          verificationBusy.current = false;
           setIsVerifyingRole(false);
         }
       }
     },
-    [refreshRoleAccess, setActiveMode, router, getSessionId]
+    [refreshRoleAccess, getSessionId, setActiveMode],
   );
 
-  const onSubmit = async (data: ClinicFormValues) => {
-    if (!cityId) {
-      setSubmitError('Selecciona una ciudad para registrar la clínica.');
-      return;
-    }
-
-    const currentSessionId = getSessionId();
-    setSubmitError(null);
-    setIsSubmitting(true);
+  const onSubmit = async (values: ClinicEditorValues) => {
+    if (!isAuthenticated || busy.current || createdClinicId !== null) return;
+    const targetSession = getSessionId();
+    const current = () =>
+      mounted.current &&
+      liveSession.current === targetSession &&
+      getSessionId() === targetSession;
     try {
-      const response = await clinicsApi.createClinic({ ...data, clinic_city_id: cityId });
-      if (getSessionId() !== currentSessionId) return;
-      const newClinicId = response.clinic_id;
-      setCreatedClinicId(newClinicId);
-      // Iniciar inmediatamente la verificación de membresía y transición de rol
-      await verifyRoleAndTransition(newClinicId);
-    } catch (error: any) {
-      if (getSessionId() !== currentSessionId) return;
-      setSubmitError(error?.message || 'No se pudo crear la clínica.');
+      const payload = clinicPayload(values);
+      busy.current = true;
+      setSubmitError(null);
+      setIsSubmitting(true);
+      const result = await clinicsApi.createClinic(payload);
+      if (!current()) return;
+      setCreatedClinicId(result.clinic_id);
+      await verifyRoleAndTransition(result.clinic_id);
+    } catch (cause: any) {
+      if (current()) {
+        const message = cause?.message || 'No se pudo crear la clínica.';
+        setSubmitError(message);
+        appAlerts.alert('No se pudo crear la clínica', message, undefined, {
+          variant: 'error',
+        });
+      }
     } finally {
-      if (getSessionId() === currentSessionId) {
+      if (current()) {
+        busy.current = false;
         setIsSubmitting(false);
       }
     }
   };
 
-  const handleRetryVerification = useCallback(() => {
-    if (createdClinicId !== null) {
-      verifyRoleAndTransition(createdClinicId);
-    }
-  }, [createdClinicId, verifyRoleAndTransition]);
-
   return {
     router,
     isAuthenticated,
-    control,
-    handleSubmit,
+    form,
+    specialties,
     isSubmitting,
     submitError,
     createdClinicId,
     isVerifyingRole,
     roleVerificationError,
-    handleRetryVerification,
-    modalType,
-    setModalType,
-    countryId,
-    stateId,
-    cityId,
-    setCountryId,
-    setStateId,
-    setCityId,
-    selectedCountry,
-    selectedState,
-    selectedCity,
-    countryOptions,
-    stateOptions,
-    cityOptions,
+    retrySpecialties: () => {
+      setSubmitError(null);
+      setRetry((value) => value + 1);
+    },
+    handleRetryVerification: () => {
+      if (createdClinicId !== null)
+        void verifyRoleAndTransition(createdClinicId);
+    },
     onSubmit,
   };
 }

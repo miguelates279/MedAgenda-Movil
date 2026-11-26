@@ -14,6 +14,8 @@ import { ClinicAppointmentAgenda } from './ClinicAppointmentAgenda';
 
 export function ClinicDetailScreen() {
   const {
+    router,
+    canManage,
     isOwner,
     clinic,
     doctors,
@@ -90,6 +92,17 @@ export function ClinicDetailScreen() {
                 className="mt-4"
               />
             ) : null}
+
+            {canManage && (
+              <Button
+                text="Administrar clínica"
+                variant="outline"
+                onPress={() =>
+                  router.push(`/clinics/manage/${clinic.clinic_id}` as any)
+                }
+                className="mt-3"
+              />
+            )}
 
             {rules && (
               <ClaySurface

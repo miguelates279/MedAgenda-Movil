@@ -169,11 +169,11 @@ export function MyClinicsScreen() {
               <Card className="mb-3">
                 <Pressable
                   onPress={() =>
-                    router.push(`/clinics/${item.clinic_id}` as any)
+                    router.push(`/clinics/manage/${item.clinic_id}` as any)
                   }
                   className="min-h-touch max-w-full justify-center active:opacity-90"
                   accessibilityRole="button"
-                  accessibilityLabel={`Ver detalles de ${item.clinic_name}`}
+                  accessibilityLabel={`Gestionar ${item.clinic_name}`}
                 >
                   <View className="flex-row flex-wrap gap-2 justify-between items-start mb-1.5">
                     <Text className="min-w-0 max-w-full shrink text-base font-bold text-med-text-main flex-1 mr-2">
@@ -209,14 +209,14 @@ export function MyClinicsScreen() {
                 <View className="mt-3 pt-2.5 border-t border-med-border-light flex-row flex-wrap gap-2 justify-between items-center">
                   <Pressable
                     onPress={() =>
-                      router.push(`/clinics/${item.clinic_id}` as any)
+                      router.push(`/clinics/manage/${item.clinic_id}` as any)
                     }
                     className="justify-center flex-row items-center max-w-full min-h-touch"
                     accessibilityRole="button"
-                    accessibilityLabel={`Ver detalles de ${item.clinic_name}`}
+                    accessibilityLabel={`Gestionar ${item.clinic_name}`}
                   >
                     <Text className="min-w-0 max-w-full shrink text-xs font-semibold text-med-primary mr-1">
-                      Ver detalles
+                      Gestionar clínica
                     </Text>
                     <Ionicons
                       name="chevron-forward"

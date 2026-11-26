@@ -29,9 +29,9 @@ export const useAdminLanding = () => {
 
   const navigateToClinicDetail = useCallback(
     (clinicId: number) => {
-      router.push(`/clinics/${clinicId}` as any);
+      router.push(`/clinics/manage/${clinicId}` as any);
     },
-    [router]
+    [router],
   );
 
   return {

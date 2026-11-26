@@ -94,9 +94,136 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
     employee: new Set(),
   };
   const receptionClinics = new Set([1]);
+  const administrationUsers = new Map(
+    Object.values(profiles).map((profile) => [profile.user_id, profile]),
+  );
+  for (const doctor of doctors)
+    administrationUsers.set(doctor.doctor_id, {
+      user_id: doctor.doctor_id,
+      ...doctor,
+      user_email_address: `doctor${doctor.doctor_id}@layout.test`,
+      user_phone_number: '3105550042',
+    });
+  administrationUsers.set(84, {
+    ...administrationUsers.get(84),
+    user_email_address: profiles.doctor.user_email_address,
+    user_phone_number: profiles.doctor.user_phone_number,
+  });
+  administrationUsers.set(9000, {
+    user_id: 9000,
+    first_name: 'Propietario',
+    first_last_name: 'Segunda',
+    second_last_name: 'Clinica',
+    user_email_address: 'owner2@layout.test',
+    user_phone_number: '3105550042',
+  });
+  const clinicMembers = new Map(
+    clinics.map((clinic) => [
+      clinic.clinic_id,
+      new Map([
+        ...doctors.map((doctor) => [
+          doctor.doctor_id,
+          {
+            role: 'Doctor',
+            specialtyIds: doctor.specialties.map((item) => item.specialty_id),
+          },
+        ]),
+        ...(clinic.clinic_id === 2
+          ? [[126, { role: 'Admin', specialtyIds: [] }]]
+          : []),
+        ...(clinic.clinic_id === 1
+          ? [[168, { role: 'Employee', specialtyIds: [] }]]
+          : []),
+      ]),
+    ]),
+  );
+  const ownerProviderSpecialties = new Map();
+  for (const clinic of clinics) {
+    clinic.clinic_owner = clinic.clinic_id === 2 ? 9000 : 126;
+    clinic.clinic_city_id = clinic.city_id;
+    clinic.specialty_ids = specialties.map((item) => item.specialty_id);
+  }
+  const managementRole = (role, clinic) => {
+    const actor = profiles[role].user_id;
+    return clinic.clinic_owner === actor
+      ? 'Owner'
+      : clinicMembers.get(clinic.clinic_id)?.get(actor)?.role;
+  };
+  const manageable = (role, clinic) =>
+    ['Owner', 'Admin'].includes(managementRole(role, clinic));
+  const clinicUserView = (clinic, user) => {
+    const membership = clinicMembers.get(clinic.clinic_id)?.get(user.user_id);
+    const owner = clinic.clinic_owner === user.user_id;
+    const assigned = (
+      owner
+        ? (ownerProviderSpecialties.get(clinic.clinic_id) ?? [])
+        : (membership?.specialtyIds ?? [])
+    )
+      .map((id) => specialties.find((item) => item.specialty_id === id))
+      .filter(Boolean);
+    return {
+      user_id: user.user_id,
+      clinic_id: clinic.clinic_id,
+      email: user.user_email_address,
+      user_email_address: user.user_email_address,
+      first_name: user.first_name,
+      second_name: user.second_name ?? null,
+      first_last_name: user.first_last_name,
+      second_last_name: user.second_last_name,
+      phone_number: user.user_phone_number,
+      role_within_clinic: owner ? 'Owner' : (membership?.role ?? null),
+      is_member: owner || !!membership,
+      isAdmin: owner || membership?.role === 'Admin',
+      isDoctor: membership?.role === 'Doctor' || assigned.length > 0,
+      specialty_id: assigned[0]?.specialty_id ?? null,
+      specialty_name: assigned[0]?.specialty_name ?? null,
+      specialties: assigned,
+    };
+  };
+  const managedClinicView = (role, clinic) => ({
+    ...clinic,
+    clinic_average_appointment_time:
+      clinic.clinic_average_appointment_time == null
+        ? null
+        : Number(clinic.clinic_average_appointment_time),
+    clinic_break_duration:
+      clinic.clinic_break_duration == null
+        ? null
+        : Number(clinic.clinic_break_duration),
+    role_within_clinic: managementRole(role, clinic),
+    country_id: 1,
+    state_id: 1,
+    city_id: clinic.clinic_city_id,
+    country_name: 'Colombia',
+    state_name: 'Caldas',
+    city_name: 'Manizales',
+  });
+  const doctorHasPending = (clinicId, userId) =>
+    appointments.some(
+      (item) =>
+        item.clinic_id === clinicId &&
+        item.doctor_id === userId &&
+        ['scheduled', 'confirmed', 'waiting', 'called', 'in_progress'].includes(
+          item.appointment_status,
+        ) &&
+        (Date.parse(item.start_date_time) >= now() ||
+          item.appointment_status === 'in_progress'),
+    );
+  const isProvider = (clinicId, userId) =>
+    (clinics.find((clinic) => clinic.clinic_id === clinicId)?.clinic_owner ===
+      userId &&
+      ownerProviderSpecialties.get(clinicId)?.length > 0) ||
+    clinicMembers.get(clinicId)?.get(userId)?.role === 'Doctor' ||
+    clinicMembers.get(clinicId)?.get(userId)?.specialtyIds.length > 0;
   const canDispatchClinic = (role, clinicId) =>
-    (role === 'admin' && ownedClinics.admin.has(clinicId)) ||
-    (role === 'employee' && receptionClinics.has(clinicId));
+    clinics.some(
+      (clinic) =>
+        clinic.clinic_id === clinicId &&
+        (clinic.clinic_owner === profiles[role].user_id ||
+          ['Admin', 'Employee'].includes(
+            clinicMembers.get(clinicId)?.get(profiles[role].user_id)?.role,
+          )),
+    );
   let appointments = Array.from({ length: 40 }, (_, index) => {
     const future = index < 20;
     const ordinal = future ? index + 1 : index - 19;
@@ -352,12 +479,7 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
   const availability = (clinicId, doctorId, date, exclude) => {
     const clinic = clinics.find((item) => item.clinic_id === clinicId);
     const rules = clinic && scheduleFor(clinic);
-    if (
-      !clinic ||
-      !doctors.some((item) => item.doctor_id === doctorId) ||
-      !validDay(date) ||
-      !rules
-    )
+    if (!clinic || !isProvider(clinicId, doctorId) || !validDay(date) || !rules)
       return {
         status: 400,
         body: { message: 'La configuracion del horario no es valida.' },
@@ -379,9 +501,7 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
         const start = midnight + minute * 60_000;
         const end = start + rules.duration * 60_000;
         const current =
-          exclude &&
-          Date.parse(exclude.start_date_time) === start &&
-          Date.parse(exclude.end_date_time) === end;
+          exclude && Date.parse(exclude.start_date_time) === start;
         const duringBreak =
           rules.breakDuration > 0 &&
           minute < rules.breakStart + rules.breakDuration &&
@@ -551,7 +671,9 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
       }
       reply(200, {
         token: `layout-${selectedRole}`,
-        isDoctor: selectedRole === 'doctor',
+        isDoctor: clinics.some((clinic) =>
+          isProvider(clinic.clinic_id, profiles[selectedRole].user_id),
+        ),
         isAdmin: selectedRole === 'admin',
       });
       return;
@@ -573,7 +695,16 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
       return;
     }
     if (url.pathname === '/doctors/isUserDoctorAnywhere') {
-      reply(200, role === 'doctor');
+      reply(
+        200,
+        clinics.some((clinic) =>
+          isProvider(clinic.clinic_id, profiles[role].user_id),
+        ),
+      );
+      return;
+    }
+    if (url.pathname.startsWith('/admin/') && !token) {
+      reply(401, { message: 'Inicia sesion.' });
       return;
     }
     if (url.pathname === '/admin/my-clinics') {
@@ -591,13 +722,284 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
           .map((clinic) => ({
             clinic_id: clinic.clinic_id,
             clinic_name: clinic.clinic_name,
-            role_within_clinic: clinic.clinic_id === 2 ? 'Admin' : 'Owner',
+            role_within_clinic: managementRole(role, clinic),
             role_description:
               clinic.clinic_id === 2
                 ? 'Administrador de pruebas'
                 : 'Propietario de pruebas',
           })),
       );
+      return;
+    }
+    if (url.pathname === '/admin/specialties') {
+      reply(200, specialties);
+      return;
+    }
+    const ownerProviderMatch = url.pathname.match(
+      /^\/clinics\/(\d+)\/owner-provider$/,
+    );
+    if (ownerProviderMatch && method === 'PUT') {
+      if (!token) {
+        reply(401, { message: 'Inicia sesion.' });
+        return;
+      }
+      const clinic = clinics.find(
+        (item) => item.clinic_id === Number(ownerProviderMatch[1]),
+      );
+      if (!clinic || clinic.clinic_owner !== profiles[role].user_id) {
+        reply(403, {
+          message: 'Solo el propietario puede cambiar su perfil medico.',
+        });
+        return;
+      }
+      if (
+        typeof body.isDoctor !== 'boolean' ||
+        Object.keys(body).some(
+          (key) => !['isDoctor', 'specialty_id'].includes(key),
+        ) ||
+        (body.isDoctor && !clinic.specialty_ids.includes(body.specialty_id))
+      ) {
+        reply(400, {
+          message: 'Selecciona una especialidad ofrecida por esta clinica.',
+        });
+        return;
+      }
+      if (
+        !body.isDoctor &&
+        doctorHasPending(clinic.clinic_id, clinic.clinic_owner)
+      ) {
+        reply(409, { message: 'Tienes citas pendientes en esta clinica.' });
+        return;
+      }
+      ownerProviderSpecialties.set(
+        clinic.clinic_id,
+        body.isDoctor ? [body.specialty_id] : [],
+      );
+      mutations.push({
+        method,
+        path: url.pathname,
+        role,
+        clinic_id: clinic.clinic_id,
+      });
+      reply(200, { message: 'Perfil medico actualizado.' });
+      return;
+    }
+    const managementMatch = url.pathname.match(
+      /^\/clinics\/(\d+)\/management$/,
+    );
+    if (managementMatch && ['GET', 'PUT'].includes(method)) {
+      if (!token) {
+        reply(401, { message: 'Inicia sesion.' });
+        return;
+      }
+      const clinic = clinics.find(
+        (item) => item.clinic_id === Number(managementMatch[1]),
+      );
+      if (!clinic) {
+        reply(404, { message: 'Clinica no encontrada.' });
+        return;
+      }
+      if (!manageable(role, clinic)) {
+        reply(403, { message: 'No puedes administrar esta clinica.' });
+        return;
+      }
+      if (method === 'PUT') {
+        if (!Object.keys(body).length) {
+          reply(400, { message: 'No hay cambios para guardar.' });
+          return;
+        }
+        const candidate = { ...clinic, ...body };
+        const rulesTouched =
+          body.is_open === true ||
+          [
+            'clinic_opening_time',
+            'clinic_close_time',
+            'clinic_average_appointment_time',
+            'clinic_break_time',
+            'clinic_break_duration',
+          ].some((key) => body[key] !== undefined);
+        if (
+          !Number.isInteger(candidate.clinic_city_id) ||
+          candidate.clinic_city_id < 1 ||
+          candidate.clinic_city_id > 30 ||
+          !candidate.clinic_name?.trim() ||
+          candidate.clinic_name.length > 25 ||
+          !candidate.clinic_address?.trim() ||
+          candidate.clinic_address.length > 30 ||
+          typeof candidate.is_open !== 'boolean' ||
+          (rulesTouched && !scheduleFor(candidate)) ||
+          !Array.isArray(candidate.specialty_ids) ||
+          candidate.specialty_ids.some(
+            (id) => !specialties.some((item) => item.specialty_id === id),
+          )
+        ) {
+          reply(400, {
+            message: 'Los datos y horarios de la clinica no son validos.',
+          });
+          return;
+        }
+        if (
+          [...clinicMembers.get(clinic.clinic_id).values()].some((member) =>
+            member.specialtyIds.some(
+              (id) => !candidate.specialty_ids.includes(id),
+            ),
+          ) ||
+          (ownerProviderSpecialties.get(clinic.clinic_id) ?? []).some(
+            (id) => !candidate.specialty_ids.includes(id),
+          )
+        ) {
+          reply(409, {
+            message:
+              'Hay medicos asignados a una especialidad que deseas retirar.',
+          });
+          return;
+        }
+        Object.assign(clinic, candidate, { city_id: candidate.clinic_city_id });
+        mutations.push({
+          method,
+          path: url.pathname,
+          role,
+          id: clinic.clinic_id,
+        });
+      }
+      reply(200, managedClinicView(role, clinic));
+      return;
+    }
+    const removeMemberMatch = url.pathname.match(
+      /^\/admin\/clinics\/(\d+)\/members\/(\d+)$/,
+    );
+    if (
+      [
+        '/admin/clinic-users',
+        '/admin/search-user',
+        '/admin/update-user-role',
+      ].includes(url.pathname) ||
+      removeMemberMatch
+    ) {
+      const clinicId = Number(
+        removeMemberMatch?.[1] ??
+          (method === 'PUT'
+            ? body.clinic_id
+            : url.searchParams.get('clinic_id')),
+      );
+      if (!Number.isInteger(clinicId) || clinicId < 1) {
+        reply(400, { message: 'Selecciona una clinica.' });
+        return;
+      }
+      const clinic = clinics.find((item) => item.clinic_id === clinicId);
+      if (!clinic || !manageable(role, clinic)) {
+        reply(403, { message: 'No puedes administrar esta clinica.' });
+        return;
+      }
+      const roster = clinicMembers.get(clinicId);
+      if (url.pathname === '/admin/clinic-users') {
+        const ids = new Set([clinic.clinic_owner, ...roster.keys()]);
+        reply(
+          200,
+          [...ids].map((id) =>
+            clinicUserView(clinic, administrationUsers.get(id)),
+          ),
+        );
+        return;
+      }
+      if (url.pathname === '/admin/search-user') {
+        const email = url.searchParams.get('email');
+        if (!email || !email.includes('@')) {
+          reply(400, { message: 'Indica un correo valido.' });
+          return;
+        }
+        const found = [...administrationUsers.values()].find(
+          (user) =>
+            user.user_email_address.toLowerCase() ===
+            email.trim().toLowerCase(),
+        );
+        reply(
+          found ? 200 : 404,
+          found
+            ? clinicUserView(clinic, found)
+            : { message: 'Usuario no encontrado.' },
+        );
+        return;
+      }
+      const target = removeMemberMatch
+        ? administrationUsers.get(Number(removeMemberMatch[2]))
+        : [...administrationUsers.values()].find(
+            (user) => user.user_email_address === body.email,
+          );
+      if (!target) {
+        reply(404, { message: 'Usuario no encontrado.' });
+        return;
+      }
+      const previous = clinicUserView(clinic, target);
+      const actorRole = managementRole(role, clinic);
+      if (
+        target.user_id === profiles[role].user_id ||
+        previous.role_within_clinic === 'Owner' ||
+        (actorRole === 'Admin' &&
+          (previous.role_within_clinic === 'Admin' || body.isAdmin === true))
+      ) {
+        reply(403, {
+          message: 'No puedes modificar este miembro ni asignar ese rol.',
+        });
+        return;
+      }
+      if (removeMemberMatch) {
+        if (!previous.is_member) {
+          reply(404, { message: 'Miembro no encontrado.' });
+          return;
+        }
+        if (doctorHasPending(clinicId, target.user_id)) {
+          reply(409, {
+            message: 'El medico tiene citas pendientes en esta clinica.',
+          });
+          return;
+        }
+        roster.delete(target.user_id);
+        if (target.user_id === profiles.employee.user_id)
+          receptionClinics.delete(clinicId);
+      } else {
+        if (
+          typeof body.isDoctor !== 'boolean' ||
+          typeof body.isAdmin !== 'boolean' ||
+          (body.isDoctor &&
+            (!Number.isInteger(body.specialty_id) ||
+              !clinic.specialty_ids.includes(body.specialty_id)))
+        ) {
+          reply(400, {
+            message:
+              'Indica un rol y una especialidad ofrecida por la clinica.',
+          });
+          return;
+        }
+        if (
+          previous.isDoctor &&
+          !body.isDoctor &&
+          doctorHasPending(clinicId, target.user_id)
+        ) {
+          reply(409, {
+            message: 'El medico tiene citas pendientes en esta clinica.',
+          });
+          return;
+        }
+        roster.set(target.user_id, {
+          role: body.isAdmin ? 'Admin' : body.isDoctor ? 'Doctor' : 'Employee',
+          specialtyIds: body.isDoctor ? [body.specialty_id] : [],
+        });
+        if (target.user_id === profiles.employee.user_id && !body.isDoctor)
+          receptionClinics.add(clinicId);
+      }
+      mutations.push({
+        method,
+        path: url.pathname,
+        role,
+        clinic_id: clinicId,
+        user_id: target.user_id,
+      });
+      reply(200, {
+        message: removeMemberMatch
+          ? 'Miembro retirado.'
+          : 'Miembro actualizado.',
+      });
       return;
     }
     if (url.pathname === '/location/getCountries') {
@@ -658,7 +1060,36 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
       return;
     }
     if (url.pathname === '/clinics/getClinicDoctors') {
-      reply(200, doctors);
+      const clinicId = Number(url.searchParams.get('clinic_id'));
+      const roster = clinicMembers.get(clinicId);
+      const clinic = clinics.find((item) => item.clinic_id === clinicId);
+      const providers = [...(roster ?? [])];
+      if (ownerProviderSpecialties.get(clinicId)?.length)
+        providers.push([
+          clinic.clinic_owner,
+          {
+            specialtyIds: ownerProviderSpecialties.get(clinicId),
+            role: 'Owner',
+          },
+        ]);
+      reply(
+        200,
+        providers
+          .filter(
+            ([, member]) =>
+              member.role === 'Doctor' || member.specialtyIds.length,
+          )
+          .map(([id, member]) => ({
+            doctor_id: id,
+            first_name: administrationUsers.get(id).first_name,
+            second_name: administrationUsers.get(id).second_name ?? null,
+            first_last_name: administrationUsers.get(id).first_last_name,
+            second_last_name: administrationUsers.get(id).second_last_name,
+            specialties: member.specialtyIds.map((specialtyId) =>
+              specialties.find((item) => item.specialty_id === specialtyId),
+            ),
+          })),
+      );
       return;
     }
     if (url.pathname === '/clinics/getClinicScheduleRules') {
@@ -720,10 +1151,13 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
         ...body,
         clinic_id: nextClinicId++,
         city_id: body.clinic_city_id,
-        is_open: true,
+        is_open: body.is_open ?? !!body.clinic_opening_time,
+        clinic_owner: profiles[role].user_id,
+        specialty_ids: body.specialty_ids ?? [],
       };
       clinics.push(clinic);
       ownedClinics[role].add(clinic.clinic_id);
+      clinicMembers.set(clinic.clinic_id, new Map());
       mutations.push({
         method,
         path: url.pathname,
@@ -736,7 +1170,26 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
     const clinicMatch = url.pathname.match(/^\/clinics\/(\d+)$/);
     if (method === 'DELETE' && clinicMatch) {
       const id = Number(clinicMatch[1]);
+      const clinic = clinics.find((item) => item.clinic_id === id);
+      if (!clinic || clinic.clinic_owner !== profiles[role].user_id) {
+        reply(403, {
+          message: 'Solo el propietario puede eliminar esta clinica.',
+        });
+        return;
+      }
+      if (
+        appointments.some((item) => item.clinic_id === id) ||
+        prescriptions.some((item) => item.clinic_id === id)
+      ) {
+        reply(409, {
+          message:
+            'La clinica tiene historial. Puedes cerrarla sin eliminar sus datos.',
+        });
+        return;
+      }
       clinics = clinics.filter((clinic) => clinic.clinic_id !== id);
+      clinicMembers.delete(id);
+      ownerProviderSpecialties.delete(id);
       Object.values(ownedClinics).forEach((ids) => ids.delete(id));
       mutations.push({ method, path: url.pathname, role });
       reply(200, { message: 'Eliminada' });
@@ -983,6 +1436,15 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
           body.start_date_time !== undefined ||
           body.end_date_time !== undefined
         ) {
+          if (
+            Date.parse(body.start_date_time) ===
+            Date.parse(item.start_date_time)
+          ) {
+            reply(400, {
+              message: 'Selecciona un horario diferente al actual.',
+            });
+            return;
+          }
           const invalid = validateSchedule(
             { ...body, clinic_id: item.clinic_id, doctor_id: item.doctor_id },
             item,
@@ -1136,6 +1598,13 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
         absences,
         prescriptions,
         clinics,
+        clinicMembers: [...clinicMembers].map(([clinic_id, members]) => ({
+          clinic_id,
+          members: [...members].map(([user_id, member]) => ({
+            user_id,
+            ...member,
+          })),
+        })),
         roleFailure,
         searchMode,
         failureRoutes,

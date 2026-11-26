@@ -23,7 +23,6 @@ function RootNavigation() {
       <Stack.Screen name="(tabs)" />
       <Stack.Screen name="clinics/[id]" />
 
-      {/* Rutas para cualquier usuario autenticado con sesión y capacidades resueltas */}
       <Stack.Protected guard={isAuthenticated && activeMode !== null}>
         <Stack.Screen name="clinics/new" />
       </Stack.Protected>
@@ -31,6 +30,7 @@ function RootNavigation() {
       {/* Rutas de gestión exclusivas del modo Administrador */}
       <Stack.Protected guard={isAuthenticated && activeMode === 'admin'}>
         <Stack.Screen name="clinics/mine" />
+        <Stack.Screen name="clinics/manage/[id]" />
       </Stack.Protected>
 
       {/* Rutas protegidas exclusivas del modo Paciente */}

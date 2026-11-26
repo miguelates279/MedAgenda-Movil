@@ -26,6 +26,7 @@ export const ProfileScreen: React.FC = () => {
     activeMode,
     availableModes,
     handleSelectMode,
+    handleCreateClinic,
     loadingProfile,
     profileError,
     handleRetryProfile,
@@ -57,6 +58,7 @@ export const ProfileScreen: React.FC = () => {
             availableModes={availableModes}
             onSelectMode={handleSelectMode}
             onLogout={handleLogout}
+            onCreateClinic={handleCreateClinic}
           />
         ) : (
           <ScrollView
@@ -70,6 +72,13 @@ export const ProfileScreen: React.FC = () => {
               activeMode={activeMode}
               availableModes={availableModes}
               onSelectMode={handleSelectMode}
+            />
+
+            <Button
+              text="Registrar clínica"
+              onPress={handleCreateClinic}
+              disabled={activeMode === null}
+              className="mb-4"
             />
 
             {/* Vista de Carga o Recuperación de Perfil para sesión autenticada */}

@@ -1,9 +1,10 @@
 import { useCallback, useEffect, useRef, useState } from 'react';
-import { useRouter } from 'expo-router';
+import { useFocusEffect, useRouter } from 'expo-router';
 import adminApi from '../../api/admin';
 import clinicsApi from '../../api/clinics';
 import { AdminClinic } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
+import { appAlerts } from '../../utils/appAlerts';
 
 export function useMyClinics() {
   const router = useRouter();
@@ -20,8 +21,10 @@ export function useMyClinics() {
   const [syncError, setSyncError] = useState<string | null>(null);
   const [isSyncing, setIsSyncing] = useState(false);
 
-  const [clinicPendingDelete, setClinicPendingDelete] = useState<AdminClinic | null>(null);
+  const [clinicPendingDelete, setClinicPendingDelete] =
+    useState<AdminClinic | null>(null);
   const [deleting, setDeleting] = useState(false);
+  const deleteBusy = useRef(false);
 
   // Lifecyle and race-condition guards
   const listRequestGenRef = useRef<number>(0);
@@ -66,7 +69,9 @@ export function useMyClinics() {
 
       const list = Array.isArray(data) ? data : [];
       // Ensure no previously deleted clinic in this session is restored by a delayed response
-      const filteredList = list.filter((c) => !deletedClinicIdsRef.current.has(c.clinic_id));
+      const filteredList = list.filter(
+        (c) => !deletedClinicIdsRef.current.has(c.clinic_id),
+      );
       setAdminClinics(filteredList);
     } catch (err: any) {
       if (
@@ -76,7 +81,9 @@ export function useMyClinics() {
       ) {
         return;
       }
-      setError(err?.message || 'No se pudieron cargar tus clínicas de administración.');
+      setError(
+        err?.message || 'No se pudieron cargar tus clínicas de administración.',
+      );
     } finally {
       if (
         isMountedRef.current &&
@@ -88,9 +95,14 @@ export function useMyClinics() {
     }
   }, [isAuthenticated, activeMode, getSessionId]);
 
-  useEffect(() => {
-    loadAdminClinics();
-  }, [loadAdminClinics]);
+  useFocusEffect(
+    useCallback(() => {
+      void loadAdminClinics();
+      return () => {
+        ++listRequestGenRef.current;
+      };
+    }, [loadAdminClinics]),
+  );
 
   const handleSyncRoles = useCallback(
     async (expectedSessionId?: number) => {
@@ -106,9 +118,11 @@ export function useMyClinics() {
         if (!isMountedRef.current || getSessionId() !== targetSessionId) {
           return;
         }
-        const verifiedList = Array.isArray(updatedClinics) ? updatedClinics : [];
+        const verifiedList = Array.isArray(updatedClinics)
+          ? updatedClinics
+          : [];
         const filteredList = verifiedList.filter(
-          (c) => !deletedClinicIdsRef.current.has(c.clinic_id)
+          (c) => !deletedClinicIdsRef.current.has(c.clinic_id),
         );
         setAdminClinics(filteredList);
         if (filteredList.length === 0) {
@@ -128,7 +142,7 @@ export function useMyClinics() {
         // Advertencia precisa de sincronización separada de errores de eliminación
         setSyncError(
           syncErr?.message ||
-            'La clínica fue eliminada, pero ocurrió un problema al sincronizar los permisos de administración. Puedes reintentar la sincronización.'
+            'La clínica fue eliminada, pero ocurrió un problema al sincronizar los permisos de administración. Puedes reintentar la sincronización.',
         );
       } finally {
         if (isMountedRef.current && getSessionId() === targetSessionId) {
@@ -136,15 +150,21 @@ export function useMyClinics() {
         }
       }
     },
-    [refreshRoleAccess, router, getSessionId]
+    [refreshRoleAccess, router, getSessionId],
   );
 
   const confirmDelete = async () => {
-    if (!clinicPendingDelete) return;
+    if (
+      !clinicPendingDelete ||
+      clinicPendingDelete.role_within_clinic !== 'Owner' ||
+      deleteBusy.current
+    )
+      return;
     const targetSessionId = getSessionId();
     if (!isAuthenticated || activeMode !== 'admin') return;
 
     const cid = clinicPendingDelete.clinic_id;
+    deleteBusy.current = true;
     setDeleting(true);
     setError(null);
     setSyncError(null);
@@ -153,8 +173,14 @@ export function useMyClinics() {
     try {
       await clinicsApi.deleteClinic(cid);
     } catch (deleteErr: any) {
+      if (!isMountedRef.current || getSessionId() !== targetSessionId) return;
+      deleteBusy.current = false;
       setDeleting(false);
-      setError(deleteErr?.message || 'No se pudo eliminar la clínica.');
+      const message = deleteErr?.message || 'No se pudo eliminar la clínica.';
+      setError(message);
+      appAlerts.alert('No se pudo eliminar la clínica', message, undefined, {
+        variant: 'error',
+      });
       return;
     }
 
@@ -172,6 +198,7 @@ export function useMyClinics() {
     removeAdminClinic(cid);
     setClinicPendingDelete(null);
     setDeleting(false);
+    deleteBusy.current = false;
     setLoading(false);
 
     // 3. Sincronizar capacidades de rol de forma separada sin repetir el DELETE ante fallo

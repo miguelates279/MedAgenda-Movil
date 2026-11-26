@@ -1,7 +1,7 @@
 import React from 'react';
 import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Badge } from '../../../components';
+import { Badge, Button } from '../../../components';
 import { UserProfile } from '../../../api/types';
 import { AppMode } from '../../../context/AuthContext';
 import { ModeSelector } from './ModeSelector';
@@ -18,6 +18,7 @@ export interface UserProfileViewProps {
   availableModes: AppMode[];
   onSelectMode: (mode: AppMode) => void;
   onLogout: () => void;
+  onCreateClinic: () => void;
 }
 
 export const UserProfileView: React.FC<UserProfileViewProps> = ({
@@ -30,6 +31,7 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
   availableModes,
   onSelectMode,
   onLogout,
+  onCreateClinic,
 }) => {
   const { fontScale } = useWindowDimensions();
   const avatarSize = tokens.layout.avatarProfile * Math.max(1, fontScale);
@@ -150,6 +152,21 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
             {user.user_email_address}
           </Text>
         </View>
+      </ClaySurface>
+
+      <ClaySurface className="bg-med-bg border border-med-border-light rounded-clay p-4 mb-4">
+        <Text className="text-base font-bold text-med-text-main mb-2">
+          Administración de clínicas
+        </Text>
+        <Text className="text-sm text-med-text-muted mb-3">
+          Registra tu clínica para configurar sus horarios y gestionar su equipo
+          desde tu cuenta.
+        </Text>
+        <Button
+          text="Registrar clínica"
+          onPress={onCreateClinic}
+          disabled={activeMode === null}
+        />
       </ClaySurface>
 
       {/* Botón de Cerrar Sesión */}
