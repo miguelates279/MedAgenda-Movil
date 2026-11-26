@@ -1,8 +1,9 @@
-const { expo } = require('./app.json');
-const { colors } = require('./src/theme/design-tokens.js');
+const { expo } = require("./app.json");
+const { colors } = require("./src/theme/design-tokens.js");
 
 module.exports = {
   ...expo,
+  plugins: [...expo.plugins, "expo-sharing"],
   splash: { ...expo.splash, backgroundColor: colors.bg },
   android: {
     ...expo.android,

@@ -327,6 +327,20 @@ export interface PrescriptionDoctorView {
   prescription_description: string;
 }
 
+export interface PrescriptionDocument {
+  prescription_id: number;
+  clinic_id: number;
+  clinic_name: string;
+  clinic_address: string;
+  clinic_phone: string | null;
+  doctor_id: number;
+  doctor_name: string;
+  patient_id: number;
+  patient_name: string;
+  date_emitted: string;
+  prescription_description: string;
+}
+
 export interface CreatePrescriptionDto {
   patient_id: number;
   clinic_id: number;

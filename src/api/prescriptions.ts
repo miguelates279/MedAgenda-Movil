@@ -2,16 +2,29 @@
 import {
   CreatePrescriptionDto,
   PrescriptionDoctorView,
+  PrescriptionDocument,
   PrescriptionUserView,
   UpdatePrescriptionDto,
 } from './types';
 
 export const prescriptionsApi = {
-  async getUserPrescriptions(): Promise<PrescriptionUserView[]> {
-    return apiClient.get<PrescriptionUserView[]>('/prescriptions/getUserPrescriptions');
+  async getPrescriptionDocument(
+    prescriptionId: number,
+  ): Promise<PrescriptionDocument> {
+    return apiClient.get<PrescriptionDocument>(
+      `/prescriptions/${prescriptionId}/document`,
+    );
   },
 
-  async getDoctorPrescriptions(clinicId?: number): Promise<PrescriptionDoctorView[]> {
+  async getUserPrescriptions(): Promise<PrescriptionUserView[]> {
+    return apiClient.get<PrescriptionUserView[]>(
+      '/prescriptions/getUserPrescriptions',
+    );
+  },
+
+  async getDoctorPrescriptions(
+    clinicId?: number,
+  ): Promise<PrescriptionDoctorView[]> {
     const url = clinicId
       ? `/prescriptions/getPrescriptionsAssignedByDoctor?clinic_id=${clinicId}`
       : '/prescriptions/getPrescriptionsAssignedByDoctor';
@@ -22,7 +35,10 @@ export const prescriptionsApi = {
     return apiClient.post<void>('/prescriptions/assignPrescription', dto);
   },
 
-  async updatePrescription(prescriptionId: number, dto: UpdatePrescriptionDto): Promise<void> {
+  async updatePrescription(
+    prescriptionId: number,
+    dto: UpdatePrescriptionDto,
+  ): Promise<void> {
     return apiClient.put<void>(`/prescriptions/${prescriptionId}`, dto);
   },
 

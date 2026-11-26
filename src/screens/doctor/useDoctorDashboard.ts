@@ -14,6 +14,7 @@ import { useAuth } from '../../context/AuthContext';
 import { appAlerts } from '../../utils/appAlerts';
 import apiClient from '../../api/client';
 import { useAppointmentAction } from '../../hooks/useAppointmentAction';
+import { usePrescriptionExport } from '../../hooks/usePrescriptionExport';
 import { useFocusedRefresh } from '../../hooks/useFocusedRefresh';
 import {
   isAppointmentActive,
@@ -27,6 +28,7 @@ import {
 export function useDoctorDashboard() {
   const router = useRouter();
   const { user, activeMode, isAuthenticated } = useAuth();
+  const { pdfPending, requestPdfExport } = usePrescriptionExport();
 
   const [loading, setLoading] = useState(false);
   const [appointments, setAppointments] = useState<DoctorAppointmentView[]>([]);
@@ -707,6 +709,8 @@ export function useDoctorDashboard() {
     handleOpenEditModal,
     handleSaveEditPrescription,
     handleDeletePrescription,
+    pdfPending,
+    requestPdfExport,
   };
 }
 

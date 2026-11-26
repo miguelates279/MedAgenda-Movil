@@ -431,5 +431,12 @@ module.exports = {
     "med-sm": "0px 2px 5px rgba(23,23,23,0.08)",
     "med-md": "0px 4px 12px rgba(23,23,23,0.12)"
   },
+  "prescriptionPdf": {
+    "fontFamily": "Arial, Helvetica, sans-serif",
+    "pageWidth": 595,
+    "pageHeight": 842,
+    "pageMargin": 32,
+    "lineHeight": 1.55
+  },
   "statusBarStyle": "dark"
 };

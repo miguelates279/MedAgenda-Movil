@@ -11,10 +11,17 @@ import { Badge, Card, ScreenHeader } from '../../components';
 import { usePrescriptionsScreen } from './usePrescriptionsScreen';
 import { ClaySurface, ClayPressable } from '../../components/ClaySurface';
 import { tokens } from '../../theme/tokens';
+import { PrescriptionPdfActions } from '../../components/PrescriptionPdfActions';
 
 export function PrescriptionsScreen() {
-  const { prescriptions, loading, groups, loadPrescriptions } =
-    usePrescriptionsScreen();
+  const {
+    prescriptions,
+    loading,
+    groups,
+    loadPrescriptions,
+    pdfPending,
+    requestPdfExport,
+  } = usePrescriptionsScreen();
 
   return (
     <View className="min-w-0 max-w-full flex-1 bg-med-bg">
@@ -54,7 +61,8 @@ export function PrescriptionsScreen() {
           </Text>
           <Text className="text-xs text-med-primary-dark leading-relaxed">
             Aquí puedes consultar todas las prescripciones y fórmulas emitidas
-            por tus médicos en cada clínica.
+            por tus médicos en cada clínica. Puedes guardar o compartir cada
+            receta en PDF.
           </Text>
         </ClaySurface>
 
@@ -166,9 +174,14 @@ export function PrescriptionsScreen() {
                           Dr(a). {doctorName}
                         </Text>
                       </View>
+                      <PrescriptionPdfActions
+                        prescriptionId={item.prescription_id}
+                        pending={pdfPending}
+                        onExport={requestPdfExport}
+                      />
                       <ClaySurface
                         depth="inset"
-                        className="bg-med-surface border border-med-border-light rounded-clay p-3 mt-1"
+                        className="bg-med-surface border border-med-border-light rounded-clay p-3 mt-3"
                       >
                         <Text className="text-xs text-med-text-main leading-relaxed font-medium">
                           {item.prescription_description}

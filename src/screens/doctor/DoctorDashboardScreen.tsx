@@ -15,6 +15,7 @@ import { ModalViewport } from '../../components/ModalViewport';
 import { clayClasses } from '../../theme/clay';
 import { ClaySurface, ClayPressable } from '../../components/ClaySurface';
 import { tokens } from '../../theme/tokens';
+import { PrescriptionPdfActions } from '../../components/PrescriptionPdfActions';
 
 export function DoctorDashboardScreen() {
   const {
@@ -53,6 +54,8 @@ export function DoctorDashboardScreen() {
     handleOpenEditModal,
     handleSaveEditPrescription,
     handleDeletePrescription,
+    pdfPending,
+    requestPdfExport,
   } = useDoctorDashboard();
 
   return (
@@ -464,6 +467,7 @@ export function DoctorDashboardScreen() {
                                 {pres.prescriptionId && (
                                   <>
                                     <ClayPressable
+                                      disabled={pdfPending !== null}
                                       onPress={() =>
                                         handleOpenEditModal(
                                           pres.prescriptionId,
@@ -493,6 +497,7 @@ export function DoctorDashboardScreen() {
                                       </View>
                                     </ClayPressable>
                                     <ClayPressable
+                                      disabled={pdfPending !== null}
                                       onPress={() =>
                                         handleDeletePrescription(
                                           pres.prescriptionId,
@@ -524,7 +529,15 @@ export function DoctorDashboardScreen() {
                                 )}
                               </View>
                             </View>
-                            <Text className="text-xs text-med-text-main leading-relaxed font-medium mt-1">
+                            <PrescriptionPdfActions
+                              prescriptionId={pres.prescriptionId}
+                              pending={pdfPending}
+                              onExport={requestPdfExport}
+                              disabled={
+                                savingPrescription || updatingPrescription
+                              }
+                            />
+                            <Text className="text-xs text-med-text-main leading-relaxed font-medium mt-3">
                               {pres.description}
                             </Text>
                           </ClaySurface>

@@ -314,6 +314,11 @@ test("every static design utility used by the UI compiles against the configured
           parent;
           parent = parent.parent
         ) {
+          if (
+            ts.isTemplateExpression(parent) &&
+            /^<!doctype html>/i.test(parent.head.text.trimStart())
+          )
+            return;
           if (ts.isJsxAttribute(parent)) {
             if (!/className$/i.test(parent.name.getText(ast))) return;
             break;
