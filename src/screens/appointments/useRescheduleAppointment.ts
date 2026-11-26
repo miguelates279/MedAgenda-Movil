@@ -46,8 +46,10 @@ export function useRescheduleAppointment(
   const confirm = () => {
     const slot = availability.selectedSlot;
     if (busy.current || confirming.current || !sessionIsCurrent()) return;
-    if (!slot) {
-      setError('Selecciona un horario futuro disponible.');
+    if (!slot || !availability.isSlotAvailable(slot)) {
+      setError(
+        'Selecciona un horario disponible con al menos 1 hora de anticipación.',
+      );
       return;
     }
     confirming.current = true;
@@ -71,6 +73,10 @@ export function useRescheduleAppointment(
             setSaving(true);
             setError(null);
             try {
+              if (!availability.isSlotAvailable(slot))
+                throw new Error(
+                  'El plazo para cambiar la cita o reservar ese horario terminó. Actualiza la disponibilidad.',
+                );
               const result = await rescheduleAppointment(appointment, slot, {
                 update: (id, dates) =>
                   appointmentsApi.updateAppointment(id, dates),
@@ -81,6 +87,9 @@ export function useRescheduleAppointment(
                     throwOnDeviceError: true,
                   }),
                 sessionIsCurrent,
+                now: availability.getServerNow,
+                minimumAdvanceMinutes: availability.minimumAdvanceMinutes,
+                durationMinutes: availability.durationMinutes,
               });
               if (result && sessionIsCurrent()) {
                 try {

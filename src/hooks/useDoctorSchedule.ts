@@ -1,8 +1,9 @@
-import { useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import appointmentsApi from '../api/appointments';
 import apiClient from '../api/client';
 import { refreshAppointmentReminders } from '../screens/appointments/reminders/appointmentReminders';
 import { useAppointmentAvailability } from './useAppointmentAvailability';
+import { minimumAdvanceLabel } from '../utils/appointmentAvailability';
 export { formatDateParam } from '../utils/appointmentAvailability';
 export type {
   SlotStatus,
@@ -17,13 +18,38 @@ export function useDoctorSchedule(clinicId: number, doctorId: number) {
   const [note, setNote] = useState('');
   const [submitting, setSubmitting] = useState(false);
   const [scheduleError, setScheduleError] = useState<string | null>(null);
+  const busy = useRef(false);
+  const mounted = useRef(true);
+  const scope = `${apiClient.getSessionId()}:${clinicId}:${doctorId}`;
+  const currentScope = useRef(scope);
+  currentScope.current = scope;
+  useEffect(() => {
+    mounted.current = true;
+    return () => {
+      mounted.current = false;
+    };
+  }, []);
   const confirmBooking = async (description = note): Promise<boolean> => {
-    if (!selectedSlot || !clinicId || !doctorId) {
-      throw new Error('Selecciona un horario disponible antes de confirmar.');
+    const sessionId = apiClient.getSessionId();
+    const current = () =>
+      mounted.current &&
+      currentScope.current === scope &&
+      apiClient.getSessionId() === sessionId;
+    if (busy.current || !current()) return false;
+    if (
+      !selectedSlot ||
+      !clinicId ||
+      !doctorId ||
+      !availability.isSlotAvailable(selectedSlot)
+    ) {
+      await refreshSlots();
+      throw new Error(
+        `Selecciona un horario disponible con al menos ${minimumAdvanceLabel(availability.minimumAdvanceMinutes)} de anticipación.`,
+      );
     }
     setSubmitting(true);
     setScheduleError(null);
-    const sessionId = apiClient.getSessionId();
+    busy.current = true;
     try {
       await appointmentsApi.scheduleAppointment({
         clinic_id: clinicId,
@@ -32,19 +58,22 @@ export function useDoctorSchedule(clinicId: number, doctorId: number) {
         end_date_time: selectedSlot.end,
         appointment_description: description.trim() || undefined,
       });
-      if (apiClient.getSessionId() !== sessionId) return false;
+      if (!current()) return false;
       setNote('');
       await refreshAppointmentReminders(true);
       await refreshSlots(selectedSlot.start);
-      return apiClient.getSessionId() === sessionId;
+      return current();
     } catch (err: any) {
+      if (!current()) return false;
       let message = err.message || 'No se pudo agendar la cita.';
       if (/409|Conflict/i.test(message))
         message = 'El horario seleccionado ya no se encuentra disponible.';
       setScheduleError(message);
+      await refreshSlots();
       throw new Error(message);
     } finally {
-      setSubmitting(false);
+      busy.current = false;
+      if (mounted.current) setSubmitting(false);
     }
   };
   return {

@@ -1,6 +1,12 @@
-import type { AppointmentSlot, ClinicScheduleRules } from '../api/types';
+import type {
+  AppointmentAvailability,
+  AppointmentAvailabilityStatus,
+  AppointmentSlot,
+  ClinicScheduleRules,
+  DoctorAppointmentView,
+} from '../api/types';
 
-export type SlotStatus = 'available' | 'booked' | 'break' | 'past' | 'current';
+export type SlotStatus = AppointmentAvailabilityStatus;
 export interface TimeSlot {
   id: string;
   start: Date;
@@ -38,6 +44,142 @@ const MONTH_NAMES = [
 const WEEKDAY_SHORT = ['Dom', 'Lun', 'Mar', 'Mié', 'Jue', 'Vie', 'Sáb'];
 const pad = (value: number) => String(value).padStart(2, '0');
 export const CLINIC_TIME_ZONE = 'America/Bogota';
+export const MINIMUM_ADVANCE_MINUTES = 60;
+
+export interface AvailabilityClock {
+  serverNow: number;
+  receivedAt: number;
+}
+
+export function monotonicNow(): number {
+  return globalThis.performance?.now() ?? Date.now();
+}
+
+export function createAvailabilityClock(
+  serverNow: string,
+  roundTripMilliseconds = 0,
+  receivedAt = monotonicNow(),
+): AvailabilityClock {
+  const parsed = Date.parse(serverNow);
+  if (!Number.isFinite(parsed) || !/(?:Z|[+-]\d{2}:\d{2})$/.test(serverNow))
+    throw new Error('No se pudo comprobar la hora del servidor. Reintenta.');
+  return {
+    serverNow: parsed + Math.max(0, roundTripMilliseconds),
+    receivedAt,
+  };
+}
+
+export function availabilityNow(
+  clock: AvailabilityClock,
+  elapsedAt = monotonicNow(),
+): number {
+  return clock.serverNow + Math.max(0, elapsedAt - clock.receivedAt);
+}
+
+export function minimumAdvanceLabel(minutes: number): string {
+  return minutes === 60 ? '1 hora' : `${minutes} minutos`;
+}
+
+export function slotStatusLabel(status: SlotStatus): string {
+  const labels: Record<SlotStatus, string> = {
+    available: 'Disponible',
+    booked: 'Ocupado',
+    break: 'Descanso',
+    past: 'Hora pasada',
+    too_soon: 'Fuera de plazo',
+    unavailable: 'No disponible',
+    current: 'Cita actual',
+  };
+  return labels[status];
+}
+
+export function currentAppointmentCapabilities(
+  appointment: DoctorAppointmentView,
+  now: number,
+): DoctorAppointmentView {
+  if (!Number.isFinite(now)) return appointment;
+  const deadline = appointment.change_deadline
+    ? Date.parse(appointment.change_deadline)
+    : NaN;
+  const expired = Number.isFinite(deadline) && now > deadline;
+  return {
+    ...appointment,
+    can_reschedule: expired ? false : appointment.can_reschedule,
+    can_edit_notes:
+      now >= Date.parse(appointment.start_date_time)
+        ? false
+        : appointment.can_edit_notes,
+    allowed_actions: expired
+      ? appointment.allowed_actions?.filter((action) => action !== 'cancel')
+      : appointment.allowed_actions,
+  };
+}
+
+export function mapAvailabilitySlots(
+  availability: AppointmentAvailability,
+  now: number,
+): TimeSlot[] {
+  if (
+    !Number.isFinite(now) ||
+    availability.time_zone !== CLINIC_TIME_ZONE ||
+    !Number.isInteger(availability.minimum_advance_minutes) ||
+    availability.minimum_advance_minutes < MINIMUM_ADVANCE_MINUTES ||
+    !Number.isInteger(availability.duration_minutes) ||
+    availability.duration_minutes <= 0 ||
+    !Array.isArray(availability.slots) ||
+    ![null, 'closed', 'weekend'].includes(availability.unavailable_reason) ||
+    (availability.unavailable_reason !== null && availability.slots.length > 0)
+  )
+    throw new Error('No se pudo interpretar la disponibilidad. Reintenta.');
+  const timeLabel = (date: Date) =>
+    date.toLocaleTimeString('es-CO', {
+      timeZone: CLINIC_TIME_ZONE,
+      hour: '2-digit',
+      minute: '2-digit',
+      hour12: false,
+    });
+  const ids = new Set<string>();
+  return availability.slots.map((item) => {
+    const start = new Date(item.start_date_time);
+    const end = new Date(item.end_date_time);
+    const id = Number.isFinite(start.getTime()) ? start.toISOString() : '';
+    if (
+      !id ||
+      ids.has(id) ||
+      !Number.isFinite(end.getTime()) ||
+      end.getTime() - start.getTime() !==
+        availability.duration_minutes * 60_000 ||
+      formatDateParam(start) !== availability.date ||
+      ![
+        'available',
+        'booked',
+        'break',
+        'past',
+        'too_soon',
+        'unavailable',
+        'current',
+      ].includes(item.status)
+    )
+      throw new Error('No se pudo interpretar la disponibilidad. Reintenta.');
+    ids.add(id);
+    let status = item.status;
+    if (status === 'available') {
+      if (start.getTime() <= now) status = 'past';
+      else if (
+        start.getTime() - now <
+        availability.minimum_advance_minutes * 60_000
+      )
+        status = 'too_soon';
+    }
+    return {
+      id,
+      start,
+      end,
+      label: `${timeLabel(start)} - ${timeLabel(end)}`,
+      status,
+    };
+  });
+}
 
 export function formatDateParam(date: Date): string {
   const parts = new Intl.DateTimeFormat('en-CA', {
@@ -98,6 +240,28 @@ export function buildDaysForMonth(
       date: clinicDateTime(key),
     };
   }).filter((day) => day.key >= today);
+}
+
+export function buildAvailabilityCalendar(
+  now: number,
+  monthKey = '',
+  dayKey = '',
+) {
+  const date = new Date(now);
+  const months = buildMonths(date);
+  const activeMonth =
+    months.find((month) => month.key === monthKey) ?? months[0];
+  const days = activeMonth ? buildDaysForMonth(activeMonth, date) : [];
+  const selectedDayKey = days.some((day) => day.key === dayKey)
+    ? dayKey
+    : (days[0]?.key ?? '');
+  return {
+    months,
+    days,
+    selectedMonthKey: activeMonth?.key ?? '',
+    selectedDayKey,
+    selectedDate: days.find((day) => day.key === selectedDayKey)?.date ?? null,
+  };
 }
 
 function timeInMinutes(value?: string | null): number | null {

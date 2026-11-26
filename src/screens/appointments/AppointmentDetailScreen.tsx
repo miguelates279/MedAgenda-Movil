@@ -9,7 +9,11 @@ import {
 } from '../../components';
 import { useAppointmentDetail } from './useAppointmentDetail';
 import { RescheduleAppointmentModal } from './components/RescheduleAppointmentModal';
-import { CLINIC_TIME_ZONE } from '../../utils/appointmentAvailability';
+import {
+  CLINIC_TIME_ZONE,
+  formatAppointmentDate,
+  minimumAdvanceLabel,
+} from '../../utils/appointmentAvailability';
 import { ClaySurface } from '../../components/ClaySurface';
 import { tokens } from '../../theme/tokens';
 import { AppointmentStatusBadge } from '../../components/AppointmentStatusBadge';
@@ -168,6 +172,22 @@ export function AppointmentDetailScreen() {
                   Motivo: {appointment.appointment_description}
                 </Text>
               ) : null}
+              {appointment.minimum_advance_minutes !== undefined && (
+                <View className="mt-3">
+                  <Text className="text-xs text-med-text-muted">
+                    Cancelaciones y cambios de horario requieren al menos{' '}
+                    {minimumAdvanceLabel(appointment.minimum_advance_minutes)}{' '}
+                    de anticipación.
+                  </Text>
+                  {appointment.change_deadline && (
+                    <Text className="text-xs text-med-text-muted mt-2">
+                      Plazo para cambiar o cancelar:{' '}
+                      {formatAppointmentDate(appointment.change_deadline)}{' '}
+                      (Colombia).
+                    </Text>
+                  )}
+                </View>
+              )}
               <AppointmentActions
                 appointment={appointment}
                 view="patient"

@@ -4,6 +4,10 @@ import { Badge, Button, Card } from '../../../components';
 import type { useAppointmentAvailability } from '../../../hooks/useAppointmentAvailability';
 import { ClaySurface, ClayPressable } from '../../../components/ClaySurface';
 import { tokens } from '../../../theme/tokens';
+import {
+  minimumAdvanceLabel,
+  slotStatusLabel,
+} from '../../../utils/appointmentAvailability';
 
 type Availability = ReturnType<typeof useAppointmentAvailability>;
 interface Props {
@@ -21,8 +25,8 @@ interface Props {
     | 'slotsError'
     | 'selectedSlotId'
     | 'setSelectedSlotId'
-    | 'loadingRules'
-    | 'rulesError'
+    | 'minimumAdvanceMinutes'
+    | 'unavailableReason'
     | 'retry'
   >;
   disabled?: boolean;
@@ -45,8 +49,8 @@ export function AppointmentSchedulePicker({
     slotsError,
     selectedSlotId,
     setSelectedSlotId,
-    loadingRules,
-    rulesError,
+    minimumAdvanceMinutes,
+    unavailableReason,
     retry,
   } = availability;
   return (
@@ -54,29 +58,16 @@ export function AppointmentSchedulePicker({
       <Text className="text-xs text-med-text-muted mb-3">
         Todos los horarios se muestran en hora de Colombia.
       </Text>
-      {loadingRules && (
-        <View className="items-center py-3">
-          <ActivityIndicator
-            size={tokens.indicator.sm}
-            color={tokens.colors.primary}
-          />
-          <Text className="text-xs text-med-text-muted mt-2">
-            Cargando horario de la clínica...
-          </Text>
-        </View>
-      )}
-      {rulesError && (
-        <ClaySurface className="p-3 mb-3 bg-med-error-bg border border-med-error-border rounded-clay">
-          <Text className="text-sm text-med-error-text">{rulesError}</Text>
-          <Button
-            text="Reintentar disponibilidad"
-            variant="secondary"
-            onPress={retry}
-            disabled={disabled}
-            className="mt-2"
-          />
-        </ClaySurface>
-      )}
+      <Card className="mb-4 bg-med-primary-surface border-med-primary-border">
+        <Text className="text-sm font-semibold text-med-primary-dark">
+          Anticipación mínima: {minimumAdvanceLabel(minimumAdvanceMinutes)}
+        </Text>
+        <Text className="text-xs text-med-text-muted mt-2">
+          Para agendar, cancelar o reprogramar necesitas al menos{' '}
+          {minimumAdvanceLabel(minimumAdvanceMinutes)} antes del inicio de la
+          cita.
+        </Text>
+      </Card>
       <Card className="mb-4">
         <Text className="text-sm font-bold text-med-text-main max-w-full mb-2">
           Selecciona un Mes
@@ -206,7 +197,7 @@ export function AppointmentSchedulePicker({
                   onPress={() => isAvailable && setSelectedSlotId(slot.id)}
                   disabled={disabled || !isAvailable || loadingSlots}
                   accessibilityRole="button"
-                  accessibilityLabel={`${slot.label}, ${isAvailable ? 'Disponible' : slot.status === 'current' ? 'Cita actual' : slot.status === 'break' ? 'Descanso' : slot.status === 'booked' ? 'Ocupado' : 'Hora pasada'}`}
+                  accessibilityLabel={`${slot.label}, ${slotStatusLabel(slot.status)}`}
                   accessibilityState={{
                     selected: isSelected,
                     disabled: disabled || !isAvailable || loadingSlots,
@@ -228,17 +219,7 @@ export function AppointmentSchedulePicker({
                   </Text>
                   <Badge
                     text={
-                      isAvailable
-                        ? isSelected
-                          ? 'Seleccionado'
-                          : 'Disponible'
-                        : slot.status === 'booked'
-                          ? 'Ocupado'
-                          : slot.status === 'break'
-                            ? 'Descanso'
-                            : slot.status === 'current'
-                              ? 'Cita actual'
-                              : 'Pasada'
+                      isSelected ? 'Seleccionado' : slotStatusLabel(slot.status)
                     }
                     variant={
                       isSelected
@@ -256,16 +237,15 @@ export function AppointmentSchedulePicker({
             })}
           </View>
 
-          {!loadingRules &&
-            !rulesError &&
-            !slotsError &&
-            !loadingSlots &&
-            slots.length === 0 && (
-              <Text className="text-xs text-med-text-light text-center my-3">
-                No hay horarios disponibles configurados para este día. Prueba
-                con otra fecha.
-              </Text>
-            )}
+          {!slotsError && !loadingSlots && slots.length === 0 && (
+            <Text className="text-xs text-med-text-light text-center my-3">
+              {unavailableReason === 'closed'
+                ? 'La clínica está cerrada y no recibe nuevas reservas.'
+                : unavailableReason === 'weekend'
+                  ? 'La clínica atiende de lunes a viernes. Elige un día hábil.'
+                  : 'No hay horarios disponibles para este día. Prueba con otra fecha.'}
+            </Text>
+          )}
         </Card>
       )}
     </>

@@ -1,14 +1,22 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from 'react';
-import clinicsApi from '../api/clinics';
+import { useFocusEffect } from 'expo-router';
+import appointmentsApi from '../api/appointments';
 import apiClient from '../api/client';
-import type { ClinicScheduleRules } from '../api/types';
+import type { AppointmentAvailability } from '../api/types';
+import { useFocusedRefresh } from './useFocusedRefresh';
 import {
-  buildDaysForMonth,
-  buildMonths,
-  buildTimeSlots,
+  buildAvailabilityCalendar,
+  availabilityNow,
+  createAvailabilityClock,
   formatDateParam,
+  mapAvailabilitySlots,
+  MINIMUM_ADVANCE_MINUTES,
+  monotonicNow,
 } from '../utils/appointmentAvailability';
-import type { TimeSlot } from '../utils/appointmentAvailability';
+import type {
+  AvailabilityClock,
+  TimeSlot,
+} from '../utils/appointmentAvailability';
 
 export interface AvailabilityOptions {
   excludeAppointmentId?: number;
@@ -22,29 +30,32 @@ export function useAppointmentAvailability(
 ) {
   const { excludeAppointmentId, initialStart } = options;
   const scope = `${apiClient.getSessionId()}:${clinicId}:${doctorId}:${excludeAppointmentId ?? ''}`;
-  const months = useMemo(() => buildMonths(), []);
+  const [state, setState] = useState<{
+    key: string;
+    response: AppointmentAvailability | null;
+    clock: AvailabilityClock | null;
+    error: string | null;
+    loading: boolean;
+  }>({ key: '', response: null, clock: null, error: null, loading: false });
+  const [, updateClock] = useState(0);
+  const now = state.clock ? availabilityNow(state.clock) : Date.now();
+  const today = formatDateParam(new Date(now));
   const initialDay =
     initialStart && Number.isFinite(Date.parse(initialStart))
       ? formatDateParam(new Date(initialStart))
       : '';
-  const [selectedMonthKey, setSelectedMonthKey] = useState(
-    () =>
-      months.find((month) => initialDay.startsWith(month.key))?.key ??
-      months[0]?.key ??
-      '',
-  );
-  const activeMonth =
-    months.find((month) => month.key === selectedMonthKey) ?? months[0];
-  const days = useMemo(
-    () => (activeMonth ? buildDaysForMonth(activeMonth) : []),
-    [activeMonth],
-  );
+  const [monthKey, setSelectedMonthKey] = useState(initialDay.slice(0, 7));
   const [dayKey, setDayKey] = useState(initialDay);
-  const selectedDayKey = days.some((day) => day.key === dayKey)
-    ? dayKey
-    : (days[0]?.key ?? '');
-  const selectedDate =
-    days.find((day) => day.key === selectedDayKey)?.date ?? null;
+  const { months, days, selectedMonthKey, selectedDayKey, selectedDate } =
+    useMemo(
+      () =>
+        buildAvailabilityCalendar(
+          new Date(`${today}T12:00:00-05:00`).getTime(),
+          monthKey,
+          dayKey,
+        ),
+      [today, monthKey, dayKey],
+    );
   const selectedDayLabel =
     selectedDate?.toLocaleDateString('es-CO', {
       timeZone: 'America/Bogota',
@@ -52,26 +63,15 @@ export function useAppointmentAvailability(
       month: 'long',
       day: 'numeric',
     }) ?? 'Elige un día';
-  const [rulesState, setRulesState] = useState<{
-    scope: string;
-    rules: ClinicScheduleRules | null;
-    error: string | null;
-    loading: boolean;
-  }>({ scope: '', rules: null, error: null, loading: false });
-  const [rulesRevision, setRulesRevision] = useState(0);
-  const [slotState, setSlotState] = useState<{
-    key: string;
-    slots: TimeSlot[];
-    error: string | null;
-    loading: boolean;
-  }>({ key: '', slots: [], error: null, loading: false });
+  const queryKey = `${scope}:${selectedDayKey}`;
   const [selectedSlotId, setSelectedSlotId] = useState<string | null>(null);
   const request = useRef(0);
   const mounted = useRef(true);
-  const rules = rulesState.scope === scope ? rulesState.rules : null;
-  const loadingRules = rulesState.scope !== scope || rulesState.loading;
-  const rulesError = rulesState.scope === scope ? rulesState.error : null;
-  const queryKey = `${scope}:${selectedDayKey}`;
+  const currentKey = useRef(queryKey);
+  currentKey.current = queryKey;
+  const live = useRef(state);
+  live.current = state;
+  const loaded = useRef(false);
 
   useEffect(() => {
     mounted.current = true;
@@ -81,116 +81,181 @@ export function useAppointmentAvailability(
     };
   }, []);
 
-  useEffect(() => {
-    let active = true;
-    const sessionId = apiClient.getSessionId();
-    setSelectedSlotId(null);
-    setRulesState({ scope, rules: null, error: null, loading: true });
-    if (!clinicId || !doctorId) {
-      setRulesState({
-        scope,
-        rules: null,
-        error: 'No se pudo identificar la clínica o el médico de la cita.',
-        loading: false,
-      });
-      return;
-    }
-    clinicsApi
-      .getClinicScheduleRules(clinicId)
-      .then((data) => {
-        if (active && sessionId === apiClient.getSessionId())
-          setRulesState({ scope, rules: data, error: null, loading: false });
-      })
-      .catch((error: Error) => {
-        if (active && sessionId === apiClient.getSessionId())
-          setRulesState({
-            scope,
-            rules: null,
-            error:
-              error.message || 'No se pudo cargar el horario de la clínica.',
-            loading: false,
-          });
-      });
-    return () => {
-      active = false;
-    };
-  }, [clinicId, doctorId, scope, rulesRevision]);
-
   const refreshSlots = useCallback(
-    async (explicitDate?: Date) => {
-      const revision = ++request.current;
+    async (explicitDate?: Date, quiet = false) => {
       const day = explicitDate ? formatDateParam(explicitDate) : selectedDayKey;
       const key = `${scope}:${day}`;
+      if (key !== currentKey.current) return;
+      const revision = ++request.current;
       const sessionId = apiClient.getSessionId();
-      setSelectedSlotId(null);
-      if (!rules || !day || !clinicId || !doctorId) return;
-      setSlotState({ key, slots: [], error: null, loading: true });
       const valid = () =>
         mounted.current &&
         revision === request.current &&
-        sessionId === apiClient.getSessionId();
-      try {
-        const booked = await clinicsApi.getClinicDoctorAppointmentsForDay(
-          clinicId,
-          doctorId,
-          day,
-        );
-        const slots = buildTimeSlots(day, rules, booked, {
-          excludeAppointmentId,
-          currentStart: initialStart,
+        sessionId === apiClient.getSessionId() &&
+        key === currentKey.current;
+      if (!day || !clinicId || !doctorId) {
+        setState({
+          key,
+          response: null,
+          clock: null,
+          loading: false,
+          error: 'No se pudo identificar la clínica o el médico de la cita.',
         });
-        if (valid()) setSlotState({ key, slots, error: null, loading: false });
-      } catch (error: any) {
-        if (valid())
-          setSlotState({
+        return;
+      }
+      setState((previous) => ({
+        key,
+        response: quiet && previous.key === key ? previous.response : null,
+        clock: previous.clock,
+        error: null,
+        loading: !quiet || previous.key !== key || !previous.response,
+      }));
+      const startedAt = monotonicNow();
+      try {
+        const response = excludeAppointmentId
+          ? await appointmentsApi.getRescheduleAvailability(
+              excludeAppointmentId,
+              day,
+            )
+          : await appointmentsApi.getAvailability(clinicId, doctorId, day);
+        const receivedAt = monotonicNow();
+        if (
+          response.clinic_id !== clinicId ||
+          response.doctor_id !== doctorId ||
+          response.date !== day
+        )
+          throw new Error(
+            'La disponibilidad recibida no corresponde a esta cita.',
+          );
+        const clock = createAvailabilityClock(
+          response.server_now,
+          receivedAt - startedAt,
+          receivedAt,
+        );
+        mapAvailabilitySlots(response, availabilityNow(clock));
+        if (valid()) {
+          loaded.current = true;
+          setState({ key, response, clock, error: null, loading: false });
+        }
+      } catch (cause: any) {
+        if (valid()) {
+          setSelectedSlotId(null);
+          setState((previous) => ({
             key,
-            slots: [],
-            error: error.message || 'No se pudo cargar la disponibilidad.',
+            response: null,
+            clock: previous.clock,
             loading: false,
-          });
+            error: cause?.message || 'No se pudo cargar la disponibilidad.',
+          }));
+        }
       }
     },
-    [
-      clinicId,
-      doctorId,
-      rules,
-      selectedDayKey,
-      scope,
-      excludeAppointmentId,
-      initialStart,
-    ],
+    [clinicId, doctorId, selectedDayKey, scope, excludeAppointmentId],
   );
 
+  const refreshRef = useRef(refreshSlots);
+  refreshRef.current = refreshSlots;
   useEffect(() => {
+    setSelectedSlotId(null);
     void refreshSlots();
     return () => {
       ++request.current;
     };
   }, [refreshSlots]);
 
-  const loadingSlots =
-    !!rules && (slotState.key !== queryKey || slotState.loading);
-  const slots =
-    rules && !loadingRules && slotState.key === queryKey ? slotState.slots : [];
-  const slotsError = slotState.key === queryKey ? slotState.error : null;
+  useFocusEffect(
+    useCallback(() => {
+      if (loaded.current) void refreshRef.current(undefined, true);
+    }, [scope]),
+  );
+  useFocusedRefresh(
+    () => refreshRef.current(undefined, true),
+    !!clinicId && !!doctorId,
+  );
+
+  const response = state.key === queryKey ? state.response : null;
+  const minimumAdvanceMinutes =
+    response?.minimum_advance_minutes ?? MINIMUM_ADVANCE_MINUTES;
+  const slots = useMemo(
+    () => (response ? mapAvailabilitySlots(response, now) : []),
+    [response, now],
+  );
+  const loadingSlots = state.key !== queryKey || state.loading;
+  const slotsError = state.key === queryKey ? state.error : null;
+  const withinChangeDeadline =
+    !initialStart ||
+    Date.parse(initialStart) - now >= minimumAdvanceMinutes * 60_000;
   const selectedSlot =
-    !loadingSlots && !loadingRules
+    !loadingSlots && !slotsError && withinChangeDeadline
       ? (slots.find(
-          (slot) =>
-            slot.id === selectedSlotId &&
-            slot.status === 'available' &&
-            slot.start.getTime() > Date.now(),
+          (slot) => slot.id === selectedSlotId && slot.status === 'available',
         ) ?? null)
       : null;
-  const retry = () => {
-    setSelectedSlotId(null);
-    setRulesRevision((value) => value + 1);
+
+  useEffect(() => {
+    if (selectedSlotId && !loadingSlots && !selectedSlot)
+      setSelectedSlotId(null);
+  }, [selectedSlotId, loadingSlots, selectedSlot]);
+
+  useEffect(() => {
+    if (!response || !state.clock) return;
+    const current = availabilityNow(state.clock);
+    const cutoffs = response.slots
+      .filter((slot) => slot.status === 'available')
+      .map(
+        (slot) =>
+          Date.parse(slot.start_date_time) - minimumAdvanceMinutes * 60_000 + 1,
+      )
+      .filter((cutoff) => cutoff > current);
+    const originalCutoff = initialStart
+      ? Date.parse(initialStart) - minimumAdvanceMinutes * 60_000 + 1
+      : NaN;
+    if (originalCutoff > current) cutoffs.push(originalCutoff);
+    const nextDay = new Date(`${today}T00:00:00-05:00`).getTime() + 86_400_000;
+    const delay = Math.max(1, Math.min(nextDay, ...cutoffs) - current);
+    const timer = setTimeout(() => {
+      updateClock((value) => value + 1);
+      if (
+        Number.isFinite(originalCutoff) &&
+        originalCutoff <= availabilityNow(state.clock!)
+      )
+        void refreshRef.current(undefined, true);
+    }, delay);
+    return () => clearTimeout(timer);
+  }, [response, state.clock, minimumAdvanceMinutes, initialStart, today, now]);
+
+  const getServerNow = () =>
+    live.current.clock && queryKey === currentKey.current
+      ? availabilityNow(live.current.clock)
+      : NaN;
+  const isSlotAvailable = (slot: TimeSlot) => {
+    const snapshot = live.current;
+    if (
+      snapshot.key !== currentKey.current ||
+      queryKey !== currentKey.current ||
+      !snapshot.response ||
+      !snapshot.clock ||
+      snapshot.loading
+    )
+      return false;
+    if (
+      initialStart &&
+      Date.parse(initialStart) - availabilityNow(snapshot.clock) <
+        snapshot.response.minimum_advance_minutes * 60_000
+    )
+      return false;
+    return mapAvailabilitySlots(
+      snapshot.response,
+      availabilityNow(snapshot.clock),
+    ).some(
+      (candidate) =>
+        candidate.id === slot.id &&
+        candidate.end.getTime() === slot.end.getTime() &&
+        candidate.status === 'available',
+    );
   };
 
   return {
-    rules,
-    loadingRules,
-    rulesError,
     months,
     selectedMonthKey,
     setSelectedMonthKey,
@@ -205,7 +270,14 @@ export function useAppointmentAvailability(
     selectedSlotId,
     setSelectedSlotId,
     selectedSlot,
+    minimumAdvanceMinutes,
+    durationMinutes: response?.duration_minutes,
+    unavailableReason: response?.unavailable_reason ?? null,
     refreshSlots,
-    retry,
+    retry: () => {
+      void refreshSlots();
+    },
+    getServerNow,
+    isSlotAvailable,
   };
 }

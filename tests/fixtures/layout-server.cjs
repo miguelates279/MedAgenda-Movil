@@ -46,6 +46,11 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
       ),
     city_id: 1,
     is_open: true,
+    clinic_opening_time: '08:00',
+    clinic_close_time: '18:00',
+    clinic_average_appointment_time: '30',
+    clinic_break_time: '12:00',
+    clinic_break_duration: '60',
   }));
   const doctors = Array.from({ length: 20 }, (_, index) => ({
     doctor_id: 84 + index,
@@ -183,6 +188,8 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
   let nextAppointmentId = 41;
   let nextPrescriptionId = 41;
   const appointmentEvents = [];
+  const absences = [];
+  const minimumAdvanceMinutes = 60;
   const statusTargets = {
     confirm: 'confirmed',
     check_in: 'waiting',
@@ -207,6 +214,9 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
     );
     const today = appointmentDay(item) === dayAt();
     const future = Date.parse(item.start_date_time) > now();
+    const advance =
+      Date.parse(item.start_date_time) - now() >=
+      minimumAdvanceMinutes * 60_000;
     const patient =
       role === 'patient' && item.patient_id === profiles.patient.user_id;
     const staff = canDispatchClinic(role, item.clinic_id);
@@ -237,15 +247,12 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
       !future
     )
       allowed_actions.push('no_show');
-    if (
-      preconsult &&
-      ((patient && future) || (staff && appointmentDay(item) >= dayAt()))
-    )
+    if (preconsult && (patient || staff) && advance)
       allowed_actions.push('cancel');
     return {
       allowed_actions,
       can_reschedule:
-        patient && ['scheduled', 'confirmed'].includes(status) && future,
+        patient && ['scheduled', 'confirmed'].includes(status) && advance,
       can_edit_notes:
         patient && ['scheduled', 'confirmed'].includes(status) && future,
     };
@@ -255,6 +262,11 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
     appointment_status: item.appointment_status,
     status_version: item.status_version,
     status_updated_at: item.status_updated_at,
+    minimum_advance_minutes: minimumAdvanceMinutes,
+    server_now: new Date(now()).toISOString(),
+    change_deadline: new Date(
+      Date.parse(item.start_date_time) - minimumAdvanceMinutes * 60_000,
+    ).toISOString(),
     ...appointmentCapabilities(item, role),
   });
   const appointmentView = (item, role) => ({
@@ -287,6 +299,168 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
       occurred_at: item.status_updated_at,
       version: item.status_version,
     });
+  };
+
+  const validDay = (value) =>
+    typeof value === 'string' &&
+    /^\d{4}-\d{2}-\d{2}$/.test(value) &&
+    Number.isFinite(Date.parse(`${value}T12:00:00Z`)) &&
+    new Date(`${value}T12:00:00Z`).toISOString().slice(0, 10) === value;
+  const strictInstant = (value) => {
+    if (
+      typeof value !== 'string' ||
+      !/^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d{1,3})?(?:Z|[+-]\d{2}:\d{2})$/.test(
+        value,
+      ) ||
+      !validDay(value.slice(0, 10))
+    )
+      return null;
+    const parsed = Date.parse(value);
+    return Number.isFinite(parsed) ? parsed : null;
+  };
+  const minuteOf = (value) => {
+    if (typeof value !== 'string' || !/^\d{2}:\d{2}$/.test(value)) return null;
+    const [hours, minutes] = value.split(':').map(Number);
+    return hours < 24 && minutes < 60 ? hours * 60 + minutes : null;
+  };
+  const scheduleFor = (clinic) => {
+    const opening = minuteOf(clinic.clinic_opening_time);
+    const closing = minuteOf(clinic.clinic_close_time);
+    const breakStart = minuteOf(clinic.clinic_break_time);
+    const duration = /^\d+$/.test(clinic.clinic_average_appointment_time)
+      ? Number(clinic.clinic_average_appointment_time)
+      : NaN;
+    const breakDuration = /^\d+$/.test(clinic.clinic_break_duration)
+      ? Number(clinic.clinic_break_duration)
+      : NaN;
+    if (
+      opening === null ||
+      closing === null ||
+      opening >= closing ||
+      !Number.isInteger(duration) ||
+      duration <= 0 ||
+      !Number.isInteger(breakDuration) ||
+      breakDuration < 0 ||
+      (breakDuration > 0 &&
+        (breakStart === null ||
+          breakStart < opening ||
+          breakStart + breakDuration > closing))
+    )
+      return null;
+    return { opening, closing, breakStart, duration, breakDuration };
+  };
+  const availability = (clinicId, doctorId, date, exclude) => {
+    const clinic = clinics.find((item) => item.clinic_id === clinicId);
+    const rules = clinic && scheduleFor(clinic);
+    if (
+      !clinic ||
+      !doctors.some((item) => item.doctor_id === doctorId) ||
+      !validDay(date) ||
+      !rules
+    )
+      return {
+        status: 400,
+        body: { message: 'La configuracion del horario no es valida.' },
+      };
+    const unavailable_reason = !clinic.is_open
+      ? 'closed'
+      : [0, 6].includes(new Date(`${date}T12:00:00Z`).getUTCDay())
+        ? 'weekend'
+        : null;
+    const snapshot = now();
+    const slots = [];
+    if (!unavailable_reason) {
+      const midnight = Date.parse(`${date}T00:00:00-05:00`);
+      for (
+        let minute = rules.opening;
+        minute + rules.duration <= rules.closing;
+        minute += rules.duration
+      ) {
+        const start = midnight + minute * 60_000;
+        const end = start + rules.duration * 60_000;
+        const current =
+          exclude &&
+          Date.parse(exclude.start_date_time) === start &&
+          Date.parse(exclude.end_date_time) === end;
+        const duringBreak =
+          rules.breakDuration > 0 &&
+          minute < rules.breakStart + rules.breakDuration &&
+          minute + rules.duration > rules.breakStart;
+        const occupied =
+          appointments.some(
+            (item) =>
+              item !== exclude &&
+              item.doctor_id === doctorId &&
+              !['cancelled', 'no_show'].includes(item.appointment_status) &&
+              start < Date.parse(item.end_date_time) &&
+              end > Date.parse(item.start_date_time),
+          ) ||
+          absences.some(
+            (item) =>
+              item.clinic_id === clinicId &&
+              item.doctor_id === doctorId &&
+              start < Date.parse(item.end_date_time) &&
+              end > Date.parse(item.start_date_time),
+          );
+        const status = current
+          ? 'current'
+          : duringBreak
+            ? 'break'
+            : occupied
+              ? 'booked'
+              : start <= snapshot
+                ? 'past'
+                : start - snapshot < minimumAdvanceMinutes * 60_000
+                  ? 'too_soon'
+                  : 'available';
+        slots.push({
+          start_date_time: new Date(start).toISOString(),
+          end_date_time: new Date(end).toISOString(),
+          status,
+        });
+      }
+    }
+    return {
+      status: 200,
+      body: {
+        clinic_id: clinicId,
+        doctor_id: doctorId,
+        date,
+        time_zone: 'America/Bogota',
+        server_now: new Date(snapshot).toISOString(),
+        minimum_advance_minutes: minimumAdvanceMinutes,
+        duration_minutes: rules.duration,
+        unavailable_reason,
+        slots,
+      },
+    };
+  };
+  const validateSchedule = (body, exclude) => {
+    const start = strictInstant(body.start_date_time);
+    const end = strictInstant(body.end_date_time);
+    if (start === null || end === null || end <= start)
+      return { status: 400, message: 'El horario no es valido.' };
+    const result = availability(
+      Number(body.clinic_id),
+      Number(body.doctor_id),
+      new Date(start - 5 * HOUR).toISOString().slice(0, 10),
+      exclude,
+    );
+    if (result.status !== 200)
+      return { status: result.status, message: result.body.message };
+    const slot = result.body.slots.find(
+      (item) =>
+        Date.parse(item.start_date_time) === start &&
+        Date.parse(item.end_date_time) === end,
+    );
+    if (slot?.status === 'available' || slot?.status === 'current') return null;
+    return {
+      status: slot?.status === 'booked' ? 409 : 400,
+      message:
+        slot?.status === 'booked'
+          ? 'El medico no esta disponible.'
+          : 'El horario debe respetar las reglas de la clinica y al menos una hora de anticipacion.',
+    };
   };
 
   const server = http.createServer(async (request, response) => {
@@ -418,7 +592,10 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
             clinic_id: clinic.clinic_id,
             clinic_name: clinic.clinic_name,
             role_within_clinic: clinic.clinic_id === 2 ? 'Admin' : 'Owner',
-            role_description: clinic.clinic_id === 2 ? 'Administrador de pruebas' : 'Propietario de pruebas',
+            role_description:
+              clinic.clinic_id === 2
+                ? 'Administrador de pruebas'
+                : 'Propietario de pruebas',
           })),
       );
       return;
@@ -485,27 +662,45 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
       return;
     }
     if (url.pathname === '/clinics/getClinicScheduleRules') {
-      reply(200, {
-        clinic_opening_time: '08:00',
-        clinic_close_time: '18:00',
-        clinic_average_appointment_time: '30',
-        clinic_break_time: '12:00',
-        clinic_break_duration: '60',
-      });
+      const clinic = clinics.find(
+        (item) => item.clinic_id === Number(url.searchParams.get('clinic_id')),
+      );
+      reply(
+        clinic ? 200 : 404,
+        clinic
+          ? {
+              clinic_opening_time: clinic.clinic_opening_time,
+              clinic_close_time: clinic.clinic_close_time,
+              clinic_average_appointment_time:
+                clinic.clinic_average_appointment_time,
+              clinic_break_time: clinic.clinic_break_time,
+              clinic_break_duration: clinic.clinic_break_duration,
+              is_open: clinic.is_open,
+              minimum_advance_minutes: minimumAdvanceMinutes,
+              time_zone: 'America/Bogota',
+            }
+          : { message: 'Clinica no encontrada.' },
+      );
       return;
     }
     if (url.pathname === '/clinics/getClinicDoctorAppointmentsForDay') {
       reply(
         200,
-        appointments.filter(
-          (item) =>
-            item.clinic_id === Number(url.searchParams.get('clinic_id')) &&
-            item.doctor_id === Number(url.searchParams.get('doctor_id')) &&
-            !['cancelled', 'no_show'].includes(item.appointment_status) &&
-            new Date(Date.parse(item.start_date_time) - 5 * HOUR)
-              .toISOString()
-              .slice(0, 10) === url.searchParams.get('appointment_date'),
-        ),
+        appointments
+          .filter(
+            (item) =>
+              item.clinic_id === Number(url.searchParams.get('clinic_id')) &&
+              item.doctor_id === Number(url.searchParams.get('doctor_id')) &&
+              !['cancelled', 'no_show'].includes(item.appointment_status) &&
+              new Date(Date.parse(item.start_date_time) - 5 * HOUR)
+                .toISOString()
+                .slice(0, 10) === url.searchParams.get('appointment_date'),
+          )
+          .map(({ appointment_id, start_date_time, end_date_time }) => ({
+            appointment_id,
+            start_date_time,
+            end_date_time,
+          })),
       );
       return;
     }
@@ -547,6 +742,59 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
       reply(200, { message: 'Eliminada' });
       return;
     }
+    if (method === 'GET' && url.pathname === '/appointments/availability/day') {
+      if (
+        [...url.searchParams.keys()].some(
+          (key) => !['clinic_id', 'doctor_id', 'date'].includes(key),
+        )
+      ) {
+        reply(400, { message: 'Parametros de disponibilidad invalidos.' });
+        return;
+      }
+      const result = availability(
+        Number(url.searchParams.get('clinic_id')),
+        Number(url.searchParams.get('doctor_id')),
+        url.searchParams.get('date'),
+      );
+      reply(result.status, result.body);
+      return;
+    }
+    const availabilityMatch = url.pathname.match(
+      /^\/appointments\/(\d+)\/availability$/,
+    );
+    if (method === 'GET' && availabilityMatch) {
+      if (!token) {
+        reply(401, { message: 'Inicia sesion.' });
+        return;
+      }
+      const item = appointments.find(
+        (appointment) =>
+          appointment.appointment_id === Number(availabilityMatch[1]),
+      );
+      if (
+        !item ||
+        role !== 'patient' ||
+        item.patient_id !== profiles.patient.user_id
+      ) {
+        reply(404, { message: 'Cita no encontrada.' });
+        return;
+      }
+      if (
+        !appointmentCapabilities(item, role).can_reschedule ||
+        [...url.searchParams.keys()].some((key) => key !== 'date')
+      ) {
+        reply(400, { message: 'Esta cita ya no se puede reprogramar.' });
+        return;
+      }
+      const result = availability(
+        item.clinic_id,
+        item.doctor_id,
+        url.searchParams.get('date'),
+        item,
+      );
+      reply(result.status, result.body);
+      return;
+    }
     if (url.pathname === '/appointments/patient') {
       reply(
         200,
@@ -564,7 +812,12 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
           .map((clinic) => ({
             clinic_id: clinic.clinic_id,
             clinic_name: clinic.clinic_name,
-            role_within_clinic: role === 'admin' ? (clinic.clinic_id === 2 ? 'Admin' : 'Owner') : 'Employee',
+            role_within_clinic:
+              role === 'admin'
+                ? clinic.clinic_id === 2
+                  ? 'Admin'
+                  : 'Owner'
+                : 'Employee',
           })),
       );
       return;
@@ -573,6 +826,11 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
       method === 'POST' &&
       url.pathname === '/appointments/scheduleAppointment'
     ) {
+      const invalid = validateSchedule(body);
+      if (invalid) {
+        reply(invalid.status, { message: invalid.message });
+        return;
+      }
       const item = {
         ...appointments[0],
         ...body,
@@ -709,7 +967,15 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
           });
           return;
         }
-        if (!appointmentCapabilities(item, role).can_reschedule) {
+        const changesTime =
+          body.start_date_time !== undefined ||
+          body.end_date_time !== undefined;
+        const capabilities = appointmentCapabilities(item, role);
+        if (
+          changesTime
+            ? !capabilities.can_reschedule
+            : !capabilities.can_edit_notes
+        ) {
           reply(400, { message: 'Esta cita ya no se puede modificar.' });
           return;
         }
@@ -717,15 +983,12 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
           body.start_date_time !== undefined ||
           body.end_date_time !== undefined
         ) {
-          if (
-            !Number.isFinite(Date.parse(body.start_date_time)) ||
-            !Number.isFinite(Date.parse(body.end_date_time)) ||
-            Date.parse(body.start_date_time) <= now() ||
-            Date.parse(body.end_date_time) -
-              Date.parse(body.start_date_time) !==
-              30 * 60_000
-          ) {
-            reply(400, { message: 'El nuevo horario no es valido.' });
+          const invalid = validateSchedule(
+            { ...body, clinic_id: item.clinic_id, doctor_id: item.doctor_id },
+            item,
+          );
+          if (invalid) {
+            reply(invalid.status, { message: invalid.message });
             return;
           }
           item.start_date_time = body.start_date_time;
@@ -870,6 +1133,7 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
         mutations,
         appointments,
         appointmentEvents,
+        absences,
         prescriptions,
         clinics,
         roleFailure,
@@ -901,12 +1165,50 @@ function createLayoutServer({ now = Date.now, log = console.log } = {}) {
         'start_date_time',
         'end_date_time',
         'appointment_description',
+        'clinic_id',
+        'doctor_id',
+        'patient_id',
       ]) {
         if (body[key] !== undefined) item[key] = body[key];
       }
       item.status_version += 1;
       item.status_updated_at = new Date(now()).toISOString();
       reply(200, item);
+      return;
+    }
+    if (method === 'POST' && url.pathname === '/__qa/clinic') {
+      const clinic = clinics.find(
+        (item) => item.clinic_id === Number(body.clinic_id),
+      );
+      if (!clinic) {
+        reply(404, { message: 'Clinica de prueba no encontrada.' });
+        return;
+      }
+      for (const key of [
+        'is_open',
+        'clinic_opening_time',
+        'clinic_close_time',
+        'clinic_average_appointment_time',
+        'clinic_break_time',
+        'clinic_break_duration',
+      ]) {
+        if (body[key] !== undefined) clinic[key] = body[key];
+      }
+      reply(200, clinic);
+      return;
+    }
+    if (method === 'POST' && url.pathname === '/__qa/absence') {
+      if (
+        !Number.isInteger(body.doctor_id) ||
+        strictInstant(body.start_date_time) === null ||
+        strictInstant(body.end_date_time) === null ||
+        Date.parse(body.end_date_time) <= Date.parse(body.start_date_time)
+      ) {
+        reply(400, { message: 'Ausencia de prueba invalida.' });
+        return;
+      }
+      absences.push(body);
+      reply(201, body);
       return;
     }
     if (method === 'POST' && url.pathname === '/__qa/role-error') {

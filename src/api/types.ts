@@ -119,6 +119,8 @@ export interface CreateClinicResponse {
 }
 
 export interface ClinicScheduleRules {
+  is_open?: boolean;
+  minimum_advance_minutes?: number;
   clinic_opening_time: string;
   clinic_close_time: string;
   clinic_average_appointment_time: string;
@@ -130,6 +132,31 @@ export interface AppointmentSlot {
   appointment_id?: number;
   start_date_time: string;
   end_date_time: string;
+}
+
+export type AppointmentAvailabilityStatus =
+  | 'available'
+  | 'booked'
+  | 'break'
+  | 'past'
+  | 'too_soon'
+  | 'unavailable'
+  | 'current';
+
+export interface AppointmentAvailability {
+  clinic_id: number;
+  doctor_id: number;
+  date: string;
+  time_zone: 'America/Bogota';
+  server_now: string;
+  minimum_advance_minutes: number;
+  duration_minutes: number;
+  unavailable_reason: 'closed' | 'weekend' | null;
+  slots: {
+    start_date_time: string;
+    end_date_time: string;
+    status: AppointmentAvailabilityStatus;
+  }[];
 }
 
 export type AppointmentStatus =
@@ -153,6 +180,9 @@ export interface AppointmentState {
   allowed_actions: AppointmentAction[];
   can_reschedule: boolean;
   can_edit_notes: boolean;
+  minimum_advance_minutes: number;
+  change_deadline: string;
+  server_now?: string;
 }
 
 export interface DispatchClinic {
@@ -184,6 +214,9 @@ export interface DoctorAppointmentView {
   allowed_actions?: AppointmentAction[];
   can_reschedule?: boolean;
   can_edit_notes?: boolean;
+  minimum_advance_minutes?: number;
+  change_deadline?: string;
+  server_now?: string;
 }
 
 export interface CreateAppointmentDto {

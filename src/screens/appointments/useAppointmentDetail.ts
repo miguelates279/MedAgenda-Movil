@@ -1,4 +1,4 @@
-import { useCallback, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import appointmentsApi from '../../api/appointments';
@@ -8,6 +8,13 @@ import { DoctorAppointmentView } from '../../api/types';
 import { appAlerts } from '../../utils/appAlerts';
 import { useAppointmentAction } from '../../hooks/useAppointmentAction';
 import { useFocusedRefresh } from '../../hooks/useFocusedRefresh';
+import {
+  availabilityNow,
+  createAvailabilityClock,
+  currentAppointmentCapabilities,
+  monotonicNow,
+} from '../../utils/appointmentAvailability';
+import type { AvailabilityClock } from '../../utils/appointmentAvailability';
 
 export interface EditAppointmentForm {
   appointment_description: string;
@@ -30,6 +37,8 @@ export function useAppointmentDetail() {
   const loadedRouteId = useRef<number | null>(null);
   routeId.current = appointmentId;
   const notesBusy = useRef(false);
+  const clock = useRef<AvailabilityClock | null>(null);
+  const [clockRevision, updateClock] = useState(0);
   const {
     control,
     handleSubmit,
@@ -56,8 +65,12 @@ export function useAppointmentDetail() {
         sessionId === apiClient.getSessionId();
       if (!quiet) setLoading(true);
       try {
+        const startedAt = monotonicNow();
         const data = await appointmentsApi.getAppointment(appointmentId);
         if (!current()) return;
+        clock.current = data.server_now
+          ? createAvailabilityClock(data.server_now, monotonicNow() - startedAt)
+          : null;
         setAppointment(data);
         setError(null);
         if (resetNotes || !dirty.current)
@@ -98,6 +111,25 @@ export function useAppointmentDetail() {
   );
   useFocusedRefresh(() => loadAppointment(true));
 
+  useEffect(() => {
+    if (!appointment || !clock.current) return;
+    const now = availabilityNow(clock.current);
+    const deadline = appointment.change_deadline
+      ? Date.parse(appointment.change_deadline)
+      : NaN;
+    const start = Date.parse(appointment.start_date_time);
+    const next = [deadline + 1, start + 1].filter((value) => value > now);
+    if (!next.length) return;
+    const timer = setTimeout(
+      () => {
+        updateClock((value) => value + 1);
+        void loadAppointment(true);
+      },
+      Math.min(Math.min(...next) - now, 2_147_000_000),
+    );
+    return () => clearTimeout(timer);
+  }, [appointment, loadAppointment, clockRevision]);
+
   const { pending, requestAction } = useAppointmentAction(async (state) => {
     if (state.appointment_id !== routeId.current) return;
     setAppointment((previous) => (previous ? { ...previous, ...state } : null));
@@ -106,7 +138,11 @@ export function useAppointmentDetail() {
 
   const onUpdate = (data: EditAppointmentForm) => {
     if (
-      !appointment?.can_edit_notes ||
+      !appointment ||
+      !currentAppointmentCapabilities(
+        appointment,
+        clock.current ? availabilityNow(clock.current) : NaN,
+      ).can_edit_notes ||
       !isDirty ||
       notesBusy.current ||
       pending
@@ -166,7 +202,15 @@ export function useAppointmentDetail() {
   };
 
   const handleOpenReschedule = () => {
-    if (!updating && !pending && appointment?.can_reschedule)
+    if (
+      !updating &&
+      !pending &&
+      appointment &&
+      currentAppointmentCapabilities(
+        appointment,
+        clock.current ? availabilityNow(clock.current) : NaN,
+      ).can_reschedule
+    )
       setRescheduleVisible(true);
   };
   const onRescheduled = (result: {
@@ -191,7 +235,12 @@ export function useAppointmentDetail() {
     router,
     appointmentId,
     appointment:
-      appointment?.appointment_id === appointmentId ? appointment : null,
+      appointment?.appointment_id === appointmentId
+        ? currentAppointmentCapabilities(
+            appointment,
+            clock.current ? availabilityNow(clock.current) : NaN,
+          )
+        : null,
     loading,
     updating,
     error,

@@ -1,6 +1,7 @@
 import apiClient from './client';
 import {
   AppointmentAction,
+  AppointmentAvailability,
   AppointmentState,
   CreateAppointmentDto,
   DispatchClinic,
@@ -9,6 +10,27 @@ import {
 } from './types';
 
 export const appointmentsApi = {
+  async getAvailability(
+    clinicId: number,
+    doctorId: number,
+    date: string,
+  ): Promise<AppointmentAvailability> {
+    return apiClient.get<AppointmentAvailability>(
+      `/appointments/availability/day?clinic_id=${clinicId}&doctor_id=${doctorId}&date=${encodeURIComponent(date)}`,
+      undefined,
+      { skipAuth: true },
+    );
+  },
+
+  async getRescheduleAvailability(
+    appointmentId: number,
+    date: string,
+  ): Promise<AppointmentAvailability> {
+    return apiClient.get<AppointmentAvailability>(
+      `/appointments/${appointmentId}/availability?date=${encodeURIComponent(date)}`,
+    );
+  },
+
   async getDispatchClinics(): Promise<DispatchClinic[]> {
     return apiClient.get<DispatchClinic[]>('/appointments/dispatch-clinics');
   },

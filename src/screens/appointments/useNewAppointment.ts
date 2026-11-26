@@ -34,9 +34,8 @@ export function useNewAppointment() {
   const [loadingDetails, setLoadingDetails] = useState(false);
 
   const {
-    rules,
-    loadingRules,
-    rulesError,
+    minimumAdvanceMinutes,
+    unavailableReason,
     retry,
     months,
     selectedMonthKey,
@@ -111,10 +110,11 @@ export function useNewAppointment() {
           text: 'Confirmar y Agendar',
           onPress: async () => {
             try {
-              if (!(await confirmBooking(formData.appointment_description))) return;
+              if (!(await confirmBooking(formData.appointment_description)))
+                return;
               appAlerts.alert(
                 '¡Cita Agendada!',
-                'Tu cita ha sido confirmada con éxito.',
+                'Tu cita ha sido agendada con éxito.',
                 [
                   {
                     text: 'Ver Mis Citas',
@@ -165,9 +165,8 @@ export function useNewAppointment() {
     loadingDetails,
     control,
     handleSubmit,
-    rules,
-    loadingRules,
-    rulesError,
+    minimumAdvanceMinutes,
+    unavailableReason,
     retry,
     months,
     selectedMonthKey,
