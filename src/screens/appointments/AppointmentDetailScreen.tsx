@@ -11,6 +11,8 @@ import {
 import { useAppointmentDetail } from './useAppointmentDetail';
 import { RescheduleAppointmentModal } from './components/RescheduleAppointmentModal';
 import { CLINIC_TIME_ZONE } from '../../utils/appointmentAvailability';
+import { ClaySurface } from '../../components/ClaySurface';
+import { tokens } from '../../theme/tokens';
 
 export function AppointmentDetailScreen() {
   const {
@@ -32,10 +34,13 @@ export function AppointmentDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-white">
-        <View className="flex-1 items-center justify-center p-6 bg-gray-50">
-          <ActivityIndicator size="large" color="#259487" />
-          <Text className="mt-3 text-sm text-gray-600">
+      <View className="min-w-0 max-w-full flex-1 bg-med-bg">
+        <View className="min-w-0 max-w-full flex-1 items-center justify-center p-6 bg-med-surface">
+          <ActivityIndicator
+            size={tokens.indicator.lg}
+            color={tokens.colors.primary}
+          />
+          <Text className="mt-3 text-sm text-med-text-muted">
             Cargando cita médica...
           </Text>
         </View>
@@ -71,21 +76,21 @@ export function AppointmentDetailScreen() {
       : '';
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="min-w-0 max-w-full flex-1 bg-med-bg">
       <ScreenHeader title="Gestionar Cita" />
 
       <KeyboardAwareScrollView contentContainerClassName="p-4 pb-16">
         {error ? (
-          <View className="bg-red-50 border border-red-200 p-3 mb-4 rounded-md">
-            <Text className="text-red-700 text-sm">{error}</Text>
-          </View>
+          <ClaySurface className="bg-med-error-bg border border-med-error-border p-3 mb-4 rounded-clay">
+            <Text className="text-med-error-badge-text text-sm">{error}</Text>
+          </ClaySurface>
         ) : null}
 
         {appointment && (
           <>
             <Card className="mb-4">
-              <View className="flex-row justify-between items-center mb-3">
-                <Text className="text-[15px] font-bold text-neutral-900">
+              <View className="flex-row flex-wrap gap-2 justify-between items-center mb-3">
+                <Text className="min-w-0 max-w-full shrink text-sm font-bold text-med-text-main">
                   Detalles de la Consulta
                 </Text>
                 <Badge
@@ -94,42 +99,60 @@ export function AppointmentDetailScreen() {
                 />
               </View>
 
-              <View className="flex-row justify-between py-1.5 border-b border-gray-100">
-                <Text className="text-sm text-gray-600">Fecha:</Text>
-                <Text className="text-sm text-neutral-900 font-semibold capitalize flex-1 text-right ml-2">
+              <View className="flex-row flex-wrap gap-x-3 gap-y-1 justify-between py-1.5 border-b border-med-border-light">
+                <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted">
+                  Fecha:
+                </Text>
+                <Text
+                  className="shrink text-sm text-med-text-main font-semibold capitalize grow min-w-0 max-w-full text-right"
+                  style={{ flexBasis: tokens.layout.cardMinWidth }}
+                >
                   {dateStr}
                 </Text>
               </View>
 
-              <View className="flex-row justify-between py-1.5 border-b border-gray-100">
-                <Text className="text-sm text-gray-600">
+              <View className="flex-row flex-wrap gap-x-3 gap-y-1 justify-between py-1.5 border-b border-med-border-light">
+                <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted">
                   Horario (Colombia):
                 </Text>
-                <Text className="text-sm text-primary font-bold">
+                <Text
+                  className="shrink text-sm text-med-primary font-bold grow min-w-0 max-w-full text-right"
+                  style={{ flexBasis: tokens.layout.cardMinWidth }}
+                >
                   {timeStr}
                 </Text>
               </View>
 
-              <View className="flex-row justify-between py-1.5 border-b border-gray-100">
-                <Text className="text-sm text-gray-600">Doctor:</Text>
-                <Text className="text-sm text-neutral-900 font-semibold flex-1 text-right ml-2">
+              <View className="flex-row flex-wrap gap-x-3 gap-y-1 justify-between py-1.5 border-b border-med-border-light">
+                <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted">
+                  Doctor:
+                </Text>
+                <Text
+                  className="shrink text-sm text-med-text-main font-semibold grow min-w-0 max-w-full text-right"
+                  style={{ flexBasis: tokens.layout.cardMinWidth }}
+                >
                   Dr(a). {appointment.first_name} {appointment.first_last_name}
                 </Text>
               </View>
 
-              <View className="flex-row justify-between py-1.5">
-                <Text className="text-sm text-gray-600">Clínica:</Text>
-                <Text className="text-sm text-neutral-900 font-semibold flex-1 text-right ml-2">
+              <View className="flex-row flex-wrap gap-x-3 gap-y-1 justify-between py-1.5">
+                <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted">
+                  Clínica:
+                </Text>
+                <Text
+                  className="shrink text-sm text-med-text-main font-semibold grow min-w-0 max-w-full text-right"
+                  style={{ flexBasis: tokens.layout.cardMinWidth }}
+                >
                   {appointment.clinic_name}
                 </Text>
               </View>
             </Card>
 
             <Card className="mb-4">
-              <Text className="text-[15px] font-bold text-neutral-900 mb-1">
+              <Text className="text-sm font-bold text-med-text-main mb-1">
                 Modificar Motivo / Notas
               </Text>
-              <Text className="text-xs text-gray-600 mb-3 leading-4">
+              <Text className="text-xs text-med-text-muted mb-3 leading-4">
                 Edita la descripción o síntomas asociados a esta cita. Solo se
                 guardarán los campos modificados.
               </Text>
@@ -153,11 +176,11 @@ export function AppointmentDetailScreen() {
             </Card>
 
             {isUpcoming && (
-              <Card className="mb-4 border-teal-200 bg-teal-50/40">
-                <Text className="text-[15px] font-bold text-teal-900 mb-1">
+              <Card className="mb-4 border-med-primary-border-strong bg-med-primary-surface/40">
+                <Text className="text-sm font-bold text-med-primary-dark mb-1">
                   Cambiar fecha u hora
                 </Text>
-                <Text className="text-xs text-gray-600 mb-3 leading-4">
+                <Text className="text-xs text-med-text-muted mb-3 leading-4">
                   Consulta los horarios disponibles y elige cuándo asistir con
                   el mismo médico.
                 </Text>
@@ -170,11 +193,11 @@ export function AppointmentDetailScreen() {
             )}
 
             {isUpcoming && (
-              <Card className="mb-4 border-red-200 bg-red-50/40">
-                <Text className="text-[15px] font-bold text-red-800 mb-1">
+              <Card className="mb-4 border-med-error-border bg-med-error-bg/40">
+                <Text className="text-sm font-bold text-med-error-text mb-1">
                   Cancelar Cita Médica
                 </Text>
-                <Text className="text-xs text-gray-600 mb-3 leading-4">
+                <Text className="text-xs text-med-text-muted mb-3 leading-4">
                   Si no puedes asistir a tu cita, puedes cancelarla para que
                   otro paciente pueda utilizar el horario.
                 </Text>

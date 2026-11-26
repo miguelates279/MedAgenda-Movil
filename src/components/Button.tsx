@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   ActivityIndicator,
-  Pressable,
   StyleProp,
   Text,
   TextStyle,
@@ -9,6 +8,7 @@ import {
 } from 'react-native';
 
 import { tokens } from '../theme/tokens';
+import { ClayPressable } from './ClaySurface';
 
 export type ButtonVariant = 'primary' | 'secondary' | 'danger' | 'outline';
 
@@ -30,17 +30,17 @@ const variantClassNames: Record<
   primary: {
     base: 'bg-med-primary border-0',
     pressed: 'bg-med-secondary',
-    text: 'text-white',
+    text: 'text-med-on-primary',
   },
   secondary: {
     base: 'bg-med-surface-muted border border-med-border-light',
-    pressed: 'bg-gray-200',
+    pressed: 'bg-med-border-light',
     text: 'text-med-text-main',
   },
   danger: {
     base: 'bg-med-error-text border-0',
-    pressed: 'bg-red-900',
-    text: 'text-white',
+    pressed: 'bg-med-error-pressed',
+    text: 'text-med-on-primary',
   },
   outline: {
     base: 'bg-med-bg border border-med-border',
@@ -64,13 +64,13 @@ export const Button: React.FC<ButtonProps> = ({
     variantClassNames[variant] || variantClassNames.primary;
 
   return (
-    <Pressable
+    <ClayPressable
       onPress={isInteractive ? onPress : undefined}
       disabled={!isInteractive}
-      className={`py-2.5 px-4 rounded-md items-center justify-center flex-row gap-2 ${currentVariant.base} ${
+      className={`min-h-touch min-w-0 max-w-full py-2.5 px-4 rounded-control items-center justify-center flex-row gap-2 ${currentVariant.base} ${
         disabled ? 'opacity-50' : ''
       } ${className}`}
-      style={[{ minHeight: 48, minWidth: 0, maxWidth: '100%' }, style]}
+      style={style}
       accessibilityRole="button"
       accessibilityLabel={text}
       accessibilityState={{ disabled: !isInteractive, busy: loading }}
@@ -78,7 +78,7 @@ export const Button: React.FC<ButtonProps> = ({
       {({ pressed }) =>
         loading ? (
           <ActivityIndicator
-            size="small"
+            size={tokens.indicator.sm}
             color={
               variant === 'outline' || variant === 'secondary'
                 ? tokens.colors.primary
@@ -87,16 +87,16 @@ export const Button: React.FC<ButtonProps> = ({
           />
         ) : (
           <Text
-            className={`text-sm font-semibold ${currentVariant.text} ${
+            className={`text-sm font-semibold shrink text-center ${currentVariant.text} ${
               pressed && isInteractive ? 'opacity-90' : ''
             }`}
-            style={[{ flexShrink: 1, textAlign: 'center' }, textStyle]}
+            style={textStyle}
           >
             {text}
           </Text>
         )
       }
-    </Pressable>
+    </ClayPressable>
   );
 };
 

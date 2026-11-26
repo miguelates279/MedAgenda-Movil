@@ -16,6 +16,8 @@ import {
   ScreenHeader,
 } from '../../components';
 import { useMyClinics } from './useMyClinics';
+import { ClaySurface, ClayPressable } from '../../components/ClaySurface';
+import { tokens } from '../../theme/tokens';
 
 export function MyClinicsScreen() {
   const {
@@ -37,31 +39,38 @@ export function MyClinicsScreen() {
 
   if (!isAuthenticated || activeMode !== 'admin') {
     return (
-      <View className="flex-1 bg-white">
+      <View className="min-w-0 max-w-full flex-1 bg-med-bg">
         <ScreenHeader title="Mis Clínicas" />
         <ScrollView
-          className="flex-1 bg-gray-50"
+          className="min-w-0 max-w-full flex-1 bg-med-surface"
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            padding: 24,
+            padding: tokens.spacing.lg,
           }}
         >
-          <View className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 items-center justify-center mb-3">
-            <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
-          </View>
-          <Text className="text-base font-bold text-neutral-900 text-center mb-2">
+          <ClaySurface
+            depth="badge"
+            className="w-14 h-14 rounded-full bg-med-warning-bg border border-med-warning-border items-center justify-center mb-3"
+          >
+            <Ionicons
+              name="lock-closed-outline"
+              size={tokens.iconSize[26]}
+              color={tokens.colors.warning.badgeText}
+            />
+          </ClaySurface>
+          <Text className="text-base font-bold text-med-text-main text-center mb-2">
             Acceso Administrativo Requerido
           </Text>
-          <Text className="text-xs text-gray-600 text-center max-w-[260px] mb-4">
+          <Text className="text-xs text-med-text-muted text-center max-w-copy-sm mb-4">
             Esta sección es exclusiva para la gestión de sedes clínicas en el
             modo Administrador.
           </Text>
           <Button
             text="Volver al inicio"
             onPress={() => router.replace('/' as any)}
-            className="min-w-[200px]"
+            className="min-w-action-md"
           />
         </ScrollView>
       </View>
@@ -69,57 +78,61 @@ export function MyClinicsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="min-w-0 max-w-full flex-1 bg-med-bg">
       <ScreenHeader
         title="Mis Clínicas"
         rightAction={
-          <Pressable
+          <ClayPressable
             onPress={() => router.push('/clinics/new' as any)}
-            className="flex-row items-center py-1 px-2.5 bg-teal-50 border border-teal-100 rounded-md active:bg-teal-100"
+            className="min-h-touch max-w-full flex-row items-center py-1 px-2.5 bg-med-primary-surface border border-med-primary-border rounded-control active:bg-med-primary-light"
             accessibilityRole="button"
             accessibilityLabel="Nueva clínica"
           >
-            <Ionicons name="add" size={16} color="#259487" />
-            <Text className="text-xs font-semibold text-primary ml-0.5">
+            <Ionicons
+              name="add"
+              size={tokens.iconSize[16]}
+              color={tokens.colors.primary}
+            />
+            <Text className="min-w-0 max-w-full shrink text-xs font-semibold text-med-primary ml-0.5">
               Nueva
             </Text>
-          </Pressable>
+          </ClayPressable>
         }
       />
 
-      <View className="flex-1 bg-gray-50">
+      <View className="min-w-0 max-w-full flex-1 bg-med-surface">
         <FlatList
           style={{ flex: 1 }}
           ListHeaderComponent={
             <>
-              <View className="bg-white border-b border-gray-200 px-4 py-3">
-                <Text className="text-xs text-gray-600">
+              <ClaySurface className="bg-med-bg border-b border-med-border-light px-4 py-3 rounded-none">
+                <Text className="text-xs text-med-text-muted">
                   Sedes asignadas para administración directa. Solo puedes
                   eliminar las sedes de las que eres propietario verificado.
                 </Text>
-              </View>
+              </ClaySurface>
 
               {error ? (
-                <View className="bg-red-50 border border-red-200 p-3 m-4 rounded-md">
-                  <Text className="text-red-700 text-xs font-medium">
+                <ClaySurface className="bg-med-error-bg border border-med-error-border p-3 m-4 rounded-clay">
+                  <Text className="text-med-error-badge-text text-xs font-medium">
                     {error}
                   </Text>
-                </View>
+                </ClaySurface>
               ) : null}
 
               {syncError ? (
-                <View className="bg-amber-50 border border-amber-200 p-3.5 m-4 mb-2 rounded-md">
+                <ClaySurface className="bg-med-warning-bg border border-med-warning-border p-3.5 m-4 mb-2 rounded-clay">
                   <View className="flex-row items-center mb-1">
                     <Ionicons
                       name="alert-circle-outline"
-                      size={16}
-                      color="#b45309"
+                      size={tokens.iconSize[16]}
+                      color={tokens.colors.warning.badgeText}
                     />
-                    <Text className="text-xs font-bold text-amber-800 ml-1.5">
+                    <Text className="min-w-0 max-w-full shrink text-xs font-bold text-med-warning-text ml-1.5">
                       Sincronización pendiente
                     </Text>
                   </View>
-                  <Text className="text-xs text-amber-700 leading-relaxed mb-2.5">
+                  <Text className="text-xs text-med-warning-text leading-relaxed mb-2.5">
                     {syncError}
                   </Text>
                   <Button
@@ -134,7 +147,7 @@ export function MyClinicsScreen() {
                     onPress={handleRetrySync}
                     className="py-1 px-3 self-start"
                   />
-                </View>
+                </ClaySurface>
               ) : null}
             </>
           }
@@ -145,8 +158,8 @@ export function MyClinicsScreen() {
             <RefreshControl
               refreshing={loading}
               onRefresh={loadAdminClinics}
-              tintColor="#259487"
-              colors={['#259487']}
+              tintColor={tokens.colors.primary}
+              colors={[tokens.colors.primary]}
             />
           }
           renderItem={({ item }) => {
@@ -158,12 +171,12 @@ export function MyClinicsScreen() {
                   onPress={() =>
                     router.push(`/clinics/${item.clinic_id}` as any)
                   }
-                  className="active:opacity-90"
+                  className="min-h-touch max-w-full justify-center active:opacity-90"
                   accessibilityRole="button"
                   accessibilityLabel={`Ver detalles de ${item.clinic_name}`}
                 >
-                  <View className="flex-row justify-between items-start mb-1.5">
-                    <Text className="text-base font-bold text-neutral-900 flex-1 mr-2">
+                  <View className="flex-row flex-wrap gap-2 justify-between items-start mb-1.5">
+                    <Text className="min-w-0 max-w-full shrink text-base font-bold text-med-text-main flex-1 mr-2">
                       {item.clinic_name}
                     </Text>
                     <Badge
@@ -175,17 +188,17 @@ export function MyClinicsScreen() {
                   <View className="flex-row items-center mb-1">
                     <Ionicons
                       name="business-outline"
-                      size={14}
-                      color="#4b5563"
+                      size={tokens.iconSize[14]}
+                      color={tokens.colors.textMuted}
                     />
-                    <Text className="text-xs text-gray-600 ml-1">
+                    <Text className="min-w-0 max-w-full shrink text-xs text-med-text-muted ml-1">
                       Sede ID #{item.clinic_id}
                     </Text>
                   </View>
 
                   {item.role_description ? (
                     <Text
-                      className="text-xs text-gray-500 mt-0.5"
+                      className="text-xs text-med-text-soft mt-0.5"
                       numberOfLines={2}
                     >
                       {item.role_description}
@@ -193,22 +206,22 @@ export function MyClinicsScreen() {
                   ) : null}
                 </Pressable>
 
-                <View className="mt-3 pt-2.5 border-t border-gray-100 flex-row flex-wrap gap-2 justify-between items-center">
+                <View className="mt-3 pt-2.5 border-t border-med-border-light flex-row flex-wrap gap-2 justify-between items-center">
                   <Pressable
                     onPress={() =>
                       router.push(`/clinics/${item.clinic_id}` as any)
                     }
-                    className="flex-row items-center"
+                    className="justify-center flex-row items-center max-w-full min-h-touch"
                     accessibilityRole="button"
                     accessibilityLabel={`Ver detalles de ${item.clinic_name}`}
                   >
-                    <Text className="text-xs font-semibold text-primary mr-1">
+                    <Text className="min-w-0 max-w-full shrink text-xs font-semibold text-med-primary mr-1">
                       Ver detalles
                     </Text>
                     <Ionicons
                       name="chevron-forward"
-                      size={14}
-                      color="#259487"
+                      size={tokens.iconSize[14]}
+                      color={tokens.colors.primary}
                     />
                   </Pressable>
 
@@ -228,29 +241,32 @@ export function MyClinicsScreen() {
           ListEmptyComponent={
             <View className="py-12 px-6 items-center justify-center">
               {loading ? (
-                <Text className="text-sm text-gray-400 text-center">
+                <Text className="text-sm text-med-text-light text-center">
                   Cargando tus clínicas...
                 </Text>
               ) : (
                 <View className="items-center">
-                  <View className="w-14 h-14 rounded-full bg-gray-100 items-center justify-center mb-3">
+                  <ClaySurface
+                    depth="badge"
+                    className="w-14 h-14 rounded-full bg-med-surface-muted items-center justify-center mb-3"
+                  >
                     <Ionicons
                       name="business-outline"
-                      size={28}
-                      color="#9ca3af"
+                      size={tokens.iconSize[28]}
+                      color={tokens.colors.textLight}
                     />
-                  </View>
-                  <Text className="text-base font-bold text-neutral-900 mb-1 text-center">
+                  </ClaySurface>
+                  <Text className="text-base font-bold text-med-text-main mb-1 text-center">
                     Sin sedes asignadas
                   </Text>
-                  <Text className="text-xs text-gray-500 text-center max-w-[260px] mb-4">
+                  <Text className="text-xs text-med-text-soft text-center max-w-copy-sm mb-4">
                     No tienes sedes vinculadas para administración. Puedes
                     registrar una nueva sede clínica.
                   </Text>
                   <Button
                     text="Registrar nueva clínica"
                     onPress={() => router.push('/clinics/new' as any)}
-                    className="min-w-[200px]"
+                    className="min-w-action-md"
                   />
                 </View>
               )}

@@ -1,7 +1,6 @@
 import React from 'react';
 import {
   FlatList,
-  Pressable,
   RefreshControl,
   Text,
   TextInput,
@@ -11,6 +10,9 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { AppointmentCard, Button } from '../../components';
 import { useAppointmentsScreen } from './useAppointmentsScreen';
+import { clayClasses } from '../../theme/clay';
+import { ClaySurface, ClayPressable } from '../../components/ClaySurface';
+import { tokens } from '../../theme/tokens';
 
 export function AppointmentsScreen() {
   const {
@@ -33,26 +35,35 @@ export function AppointmentsScreen() {
 
   if (!isAuthenticated) {
     return (
-      <View className="flex-1 bg-white">
-        <View className="px-4 py-3 bg-white border-b border-gray-200">
-          <Text className="text-xl font-bold text-neutral-900">Mis Citas</Text>
-        </View>
+      <View className="min-w-0 max-w-full flex-1 bg-med-bg">
+        <ClaySurface className="px-4 py-3 bg-med-bg border-b border-med-border-light rounded-none">
+          <Text className="text-xl font-bold text-med-text-main">
+            Mis Citas
+          </Text>
+        </ClaySurface>
         <ScrollView
-          className="flex-1 bg-gray-50"
+          className="min-w-0 max-w-full flex-1 bg-med-surface"
           contentContainerStyle={{
             flexGrow: 1,
             justifyContent: 'center',
             alignItems: 'center',
-            padding: 24,
+            padding: tokens.spacing.lg,
           }}
         >
-          <View className="w-14 h-14 rounded-full bg-amber-50 border border-amber-100 items-center justify-center mb-3">
-            <Ionicons name="lock-closed-outline" size={26} color="#b45309" />
-          </View>
-          <Text className="text-base font-bold text-neutral-900 mb-1.5 text-center">
+          <ClaySurface
+            depth="badge"
+            className="w-14 h-14 rounded-full bg-med-warning-bg border border-med-warning-border items-center justify-center mb-3"
+          >
+            <Ionicons
+              name="lock-closed-outline"
+              size={tokens.iconSize[26]}
+              color={tokens.colors.warning.badgeText}
+            />
+          </ClaySurface>
+          <Text className="text-base font-bold text-med-text-main mb-1.5 text-center">
             Inicia sesión para ver tus citas
           </Text>
-          <Text className="text-xs text-gray-500 text-center leading-5 max-w-[280px]">
+          <Text className="text-xs text-med-text-soft text-center leading-5 max-w-copy">
             Debes tener una sesión activa para consultar tu historial y próximas
             citas médicas.
           </Text>
@@ -67,26 +78,28 @@ export function AppointmentsScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="min-w-0 max-w-full flex-1 bg-med-bg">
       {/* Encabezado Principal de Citas */}
-      <View className="flex-row flex-wrap items-center justify-between gap-2 px-4 py-3 bg-white border-b border-gray-200">
-        <Text className="text-xl font-bold text-neutral-900">Mis Citas</Text>
+      <ClaySurface className="flex-row flex-wrap items-center justify-between gap-2 px-4 py-3 bg-med-bg border-b border-med-border-light rounded-none">
+        <Text className="min-w-0 max-w-full shrink text-xl font-bold text-med-text-main">
+          Mis Citas
+        </Text>
         <Button
           text="+ Agendar Cita"
           onPress={() => router.push('/clinics' as any)}
           className="py-1.5 px-3"
         />
-      </View>
+      </ClaySurface>
 
-      <View className="flex-1 bg-gray-50">
+      <View className="min-w-0 max-w-full flex-1 bg-med-surface">
         <FlatList
           style={{ flex: 1 }}
           ListHeaderComponent={
             <>
               {remindersSupported &&
                 (!remindersEnabled || !remindersPrecise) && (
-                  <View className="mx-4 mt-3 p-3 bg-white border border-gray-200 rounded-lg">
-                    <Text className="text-sm text-neutral-900 mb-2">
+                  <ClaySurface className="mx-4 mt-3 p-3 bg-med-bg border border-med-border-light rounded-clay">
+                    <Text className="text-sm text-med-text-main mb-2">
                       {remindersEnabled
                         ? 'Para recibir los avisos a la hora programada, permite las alarmas y recordatorios en los ajustes de Android.'
                         : 'Recibe un aviso 24 horas y 1 hora antes de cada cita. Los avisos abren el detalle de tu cita.'}
@@ -102,24 +115,26 @@ export function AppointmentsScreen() {
                       loading={enablingReminders}
                       disabled={enablingReminders}
                     />
-                  </View>
+                  </ClaySurface>
                 )}
-              <View className="px-4 py-2.5 bg-white border-b border-gray-200">
+              <ClaySurface className="px-4 py-2.5 bg-med-bg border-b border-med-border-light rounded-none">
                 <TextInput
                   value={search}
                   onChangeText={setSearch}
                   placeholder="Buscar por doctor, clínica o motivo..."
-                  placeholderTextColor="#9ca3af"
-                  className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-neutral-900"
+                  placeholderTextColor={tokens.colors.textLight}
+                  className={`${clayClasses.inset} bg-med-surface border border-med-border rounded-input px-3 py-2 text-sm text-med-text-main`}
                   clearButtonMode="while-editing"
                 />
-              </View>
+              </ClaySurface>
 
-              <View className="flex-row bg-white border-b border-gray-200">
-                <Pressable
+              <ClaySurface className="flex-row bg-med-bg border-b border-med-border-light rounded-none">
+                <ClayPressable
                   onPress={() => setTab('upcoming')}
-                  className={`flex-1 py-3 items-center border-b-2 ${
-                    tab === 'upcoming' ? 'border-primary' : 'border-transparent'
+                  className={`min-w-0 max-w-full min-h-touch flex-1 py-3 items-center border-b-2 ${
+                    tab === 'upcoming'
+                      ? 'border-med-primary'
+                      : 'border-transparent'
                   }`}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: tab === 'upcoming' }}
@@ -127,17 +142,17 @@ export function AppointmentsScreen() {
                   <Text
                     className={`text-sm ${
                       tab === 'upcoming'
-                        ? 'text-primary font-bold'
-                        : 'text-gray-500 font-medium'
+                        ? 'text-med-primary font-bold'
+                        : 'text-med-text-soft font-medium'
                     }`}
                   >
                     Próximas Citas
                   </Text>
-                </Pressable>
-                <Pressable
+                </ClayPressable>
+                <ClayPressable
                   onPress={() => setTab('past')}
-                  className={`flex-1 py-3 items-center border-b-2 ${
-                    tab === 'past' ? 'border-primary' : 'border-transparent'
+                  className={`min-w-0 max-w-full min-h-touch flex-1 py-3 items-center border-b-2 ${
+                    tab === 'past' ? 'border-med-primary' : 'border-transparent'
                   }`}
                   accessibilityRole="tab"
                   accessibilityState={{ selected: tab === 'past' }}
@@ -145,19 +160,21 @@ export function AppointmentsScreen() {
                   <Text
                     className={`text-sm ${
                       tab === 'past'
-                        ? 'text-primary font-bold'
-                        : 'text-gray-500 font-medium'
+                        ? 'text-med-primary font-bold'
+                        : 'text-med-text-soft font-medium'
                     }`}
                   >
                     Historial
                   </Text>
-                </Pressable>
-              </View>
+                </ClayPressable>
+              </ClaySurface>
 
               {error ? (
-                <View className="bg-red-50 border border-red-200 p-3 m-4 rounded-md">
-                  <Text className="text-red-700 text-sm">{error}</Text>
-                </View>
+                <ClaySurface className="bg-med-error-bg border border-med-error-border p-3 m-4 rounded-clay">
+                  <Text className="text-med-error-badge-text text-sm">
+                    {error}
+                  </Text>
+                </ClaySurface>
               ) : null}
             </>
           }
@@ -178,18 +195,18 @@ export function AppointmentsScreen() {
             <RefreshControl
               refreshing={loading}
               onRefresh={loadAppointments}
-              tintColor="#259487"
-              colors={['#259487']}
+              tintColor={tokens.colors.primary}
+              colors={[tokens.colors.primary]}
             />
           }
           ListEmptyComponent={
             <View className="py-8 px-4 items-center justify-center">
-              <Text className="text-base font-bold text-neutral-900 mb-1.5 text-center">
+              <Text className="text-base font-bold text-med-text-main mb-1.5 text-center">
                 {tab === 'upcoming'
                   ? 'No tienes citas próximas'
                   : 'No tienes citas en tu historial'}
               </Text>
-              <Text className="text-xs text-gray-400 text-center leading-5">
+              <Text className="text-xs text-med-text-light text-center leading-5">
                 {tab === 'upcoming'
                   ? 'Busca una clínica en el catálogo para ver sus médicos disponibles y agendar tu cita.'
                   : 'Las citas finalizadas aparecerán aquí.'}

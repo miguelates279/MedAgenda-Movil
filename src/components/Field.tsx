@@ -16,6 +16,7 @@ import {
   RegisterOptions,
 } from 'react-hook-form';
 import { tokens } from '../theme/tokens';
+import { clayClasses } from '../theme/clay';
 import { useFormScroll } from './KeyboardAwareScrollView';
 
 export type FieldProps<
@@ -83,7 +84,9 @@ export function Field<
           style={containerStyle}
         >
           {label ? (
-            <Text className="text-sm font-medium mb-1 text-med-text-muted">{label}</Text>
+            <Text className="text-sm font-medium mb-1 text-med-text-muted">
+              {label}
+            </Text>
           ) : null}
 
           <TextInput
@@ -108,7 +111,7 @@ export function Field<
             editable={editable}
             multiline={multiline}
             numberOfLines={numberOfLines}
-            className={`border rounded-med-md px-3 py-2 text-sm bg-med-bg text-med-text-main ${
+            className={`${clayClasses.inset} min-h-touch border rounded-input px-3 py-2 text-sm bg-med-bg text-med-text-main ${
               isFocused ? 'border-med-primary' : 'border-med-border'
             } ${fieldState.error ? 'border-med-error-border bg-med-error-bg' : ''} ${
               !editable ? 'bg-med-surface-muted text-med-text-light' : ''
@@ -117,7 +120,9 @@ export function Field<
           />
 
           {fieldState.error ? (
-            <Text className="mt-1 text-xs text-med-error-text">{fieldState.error.message}</Text>
+            <Text className="mt-1 text-xs text-med-error-text">
+              {fieldState.error.message}
+            </Text>
           ) : null}
         </View>
       )}

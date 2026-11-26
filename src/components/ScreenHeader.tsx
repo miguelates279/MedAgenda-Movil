@@ -1,7 +1,9 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { useRouter } from 'expo-router';
 import { Ionicons } from '@expo/vector-icons';
+import { tokens } from '../theme/tokens';
+import { ClayPressable, ClaySurface } from './ClaySurface';
 
 export interface ScreenHeaderProps {
   title: string;
@@ -12,13 +14,6 @@ export interface ScreenHeaderProps {
   className?: string;
 }
 
-/**
- * Encabezado estándar para pantallas secundarias o de detalle (Stack Navigation).
- * Disposición:
- * - Botón de regreso a la izquierda del todo.
- * - Título de la página en la mitad (centrado).
- * - Acción derecha alineada al extremo opuesto.
- */
 export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   title,
   subtitle,
@@ -38,44 +33,41 @@ export const ScreenHeader: React.FC<ScreenHeaderProps> = ({
   };
 
   return (
-    <View
-      className={`bg-white border-b border-gray-200 px-4 py-3 flex-row items-center justify-between shadow-sm ${className}`}
+    <ClaySurface
+      className={`bg-med-bg rounded-none border-b border-med-border-light px-4 py-3 flex-row items-center justify-between ${className}`}
     >
-      {/* Extremo Izquierdo: Botón de regreso a la izquierda del todo */}
       <View className="shrink-0 items-start justify-center">
         {canGoBack ? (
-          <Pressable
+          <ClayPressable
             onPress={handleBack}
-            className="flex-row items-center py-1 -ml-1 active:opacity-70"
+            className="min-h-touch flex-row items-center px-2 py-1 -ml-1 rounded-control bg-med-bg active:opacity-70"
             accessibilityRole="button"
             accessibilityLabel="Volver a la pantalla anterior"
-            hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
+            hitSlop={tokens.spacing.xs}
           >
-            <Ionicons name="chevron-back" size={20} color="#259487" />
-            <Text className="text-primary text-sm font-semibold ml-0.5">
+            <Ionicons name="chevron-back" size={tokens.iconSize[20]} color={tokens.colors.primary} />
+            <Text className="text-med-primary text-sm font-semibold ml-0.5">
               Volver
             </Text>
-          </Pressable>
+          </ClayPressable>
         ) : null}
       </View>
 
-      {/* Centro: Título de página en la mitad */}
       <View className="flex-1 min-w-0 items-center justify-center px-2">
-        <Text className="text-base font-bold text-neutral-900 text-center">
+        <Text className="text-base font-bold text-med-text-main text-center">
           {title}
         </Text>
         {subtitle ? (
-          <Text className="text-xs text-gray-500 text-center mt-0.5">
+          <Text className="text-xs text-med-text-soft text-center mt-0.5">
             {subtitle}
           </Text>
         ) : null}
       </View>
 
-      {/* Extremo Derecho: Acción secundaria o espacio para balance simétrico */}
       <View className="shrink-0 items-end justify-center">
         {rightAction ? rightAction : null}
       </View>
-    </View>
+    </ClaySurface>
   );
 };
 

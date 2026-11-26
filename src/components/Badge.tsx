@@ -1,5 +1,6 @@
 import React from 'react';
-import { StyleProp, Text, View, ViewStyle } from 'react-native';
+import { StyleProp, Text, ViewStyle } from 'react-native';
+import { ClaySurface } from './ClaySurface';
 
 export type BadgeVariant =
   | 'primary'
@@ -57,12 +58,13 @@ export const Badge: React.FC<BadgeProps> = ({
   const currentVariant = variantClassNames[variant] || variantClassNames.primary;
 
   return (
-    <View
-      className={`px-2 py-0.5 rounded-full border self-start flex-row items-center ${currentVariant.container} ${className}`}
+    <ClaySurface
+      depth="badge"
+      className={`max-w-full shrink px-2 py-0.5 rounded-badge border self-start flex-row items-center ${currentVariant.container} ${className}`}
       style={style}
     >
-      <Text className={`${textClassName || 'text-xs'} font-semibold ${currentVariant.text}`}>{text}</Text>
-    </View>
+      <Text className={`${textClassName || 'text-xs'} shrink font-semibold ${currentVariant.text}`}>{text}</Text>
+    </ClaySurface>
   );
 };
 

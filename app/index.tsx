@@ -4,6 +4,7 @@ import { ActivityIndicator, View } from 'react-native';
 import { Redirect } from 'expo-router';
 import { useAuth } from '../src/context/AuthContext';
 import { RoleResolutionRecoveryScreen } from '../src/screens/auth';
+import { tokens } from '../src/theme/tokens';
 
 export default function IndexScreen() {
   const {
@@ -16,8 +17,8 @@ export default function IndexScreen() {
   // Si está cargando la autenticación o resolviendo modos para un usuario autenticado
   if (isLoading || (isAuthenticated && isResolvingModes && !activeMode)) {
     return (
-      <View className="flex-1 items-center justify-center bg-gray-50">
-        <ActivityIndicator size="large" color="#259487" />
+      <View className="flex-1 items-center justify-center bg-med-surface">
+        <ActivityIndicator size={tokens.indicator.lg} color={tokens.colors.primary} />
       </View>
     );
   }

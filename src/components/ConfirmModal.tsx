@@ -1,5 +1,5 @@
 import React from 'react';
-import { Pressable, StyleSheet, View } from 'react-native';
+import { Pressable, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppModal } from './AppModal';
 import { DialogCard, dialogBackdropColor } from './DialogCard';
@@ -42,11 +42,10 @@ export const ConfirmModal: React.FC<ConfirmModalProps> = ({
   >
     <ModalViewport style={{ backgroundColor: dialogBackdropColor }}>
       <View
-        className="flex-1 justify-center items-center px-5 py-4"
-        style={{ minHeight: 0 }}
+        className="flex-1 min-h-0 justify-center items-center px-5 py-4"
       >
         <Pressable
-          style={StyleSheet.absoluteFill}
+          className="absolute inset-0"
           onPress={loading ? undefined : onClose}
           accessible={false}
         />

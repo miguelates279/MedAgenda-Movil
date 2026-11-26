@@ -1,7 +1,9 @@
 import React from 'react';
-import { ActivityIndicator, Text, TouchableOpacity, View } from 'react-native';
+import { ActivityIndicator, Text, View } from 'react-native';
 import { Badge, Button, Card } from '../../../components';
 import type { useAppointmentAvailability } from '../../../hooks/useAppointmentAvailability';
+import { ClaySurface, ClayPressable } from '../../../components/ClaySurface';
+import { tokens } from '../../../theme/tokens';
 
 type Availability = ReturnType<typeof useAppointmentAvailability>;
 interface Props {
@@ -49,20 +51,23 @@ export function AppointmentSchedulePicker({
   } = availability;
   return (
     <>
-      <Text className="text-xs text-gray-600 mb-3">
+      <Text className="text-xs text-med-text-muted mb-3">
         Todos los horarios se muestran en hora de Colombia.
       </Text>
       {loadingRules && (
         <View className="items-center py-3">
-          <ActivityIndicator color="#259487" />
-          <Text className="text-xs text-gray-600 mt-2">
+          <ActivityIndicator
+            size={tokens.indicator.sm}
+            color={tokens.colors.primary}
+          />
+          <Text className="text-xs text-med-text-muted mt-2">
             Cargando horario de la clínica...
           </Text>
         </View>
       )}
       {rulesError && (
-        <View className="p-3 mb-3 bg-red-50 border border-red-200 rounded-md">
-          <Text className="text-sm text-red-800">{rulesError}</Text>
+        <ClaySurface className="p-3 mb-3 bg-med-error-bg border border-med-error-border rounded-clay">
+          <Text className="text-sm text-med-error-text">{rulesError}</Text>
           <Button
             text="Reintentar disponibilidad"
             variant="secondary"
@@ -70,37 +75,37 @@ export function AppointmentSchedulePicker({
             disabled={disabled}
             className="mt-2"
           />
-        </View>
+        </ClaySurface>
       )}
       <Card className="mb-4">
-        <Text className="text-[15px] font-bold text-neutral-900 mb-2">
+        <Text className="text-sm font-bold text-med-text-main max-w-full mb-2">
           Selecciona un Mes
         </Text>
         <View className="flex-row flex-wrap gap-2">
           {months.map((m) => {
             const isSelected = m.key === selectedMonthKey;
             return (
-              <TouchableOpacity
+              <ClayPressable
                 key={m.key}
-                style={{ maxWidth: '100%' }}
+                style={{ maxWidth: tokens.layout.full }}
                 onPress={() => setSelectedMonthKey(m.key)}
                 disabled={disabled}
                 accessibilityRole="button"
                 accessibilityState={{ selected: isSelected, disabled }}
-                className={`px-3 py-1.5 rounded-med-md border ${
+                className={`min-h-touch max-w-full px-3 py-1.5 rounded-control border ${
                   isSelected
-                    ? 'bg-primary border-primary'
-                    : 'bg-gray-100 border-gray-200'
+                    ? 'bg-med-primary border-med-primary'
+                    : 'bg-med-surface-muted border-med-border-light'
                 }`}
               >
                 <Text
                   className={`text-xs font-medium ${
-                    isSelected ? 'text-white' : 'text-neutral-900'
+                    isSelected ? 'text-med-on-primary' : 'text-med-text-main'
                   }`}
                 >
                   {m.label}
                 </Text>
-              </TouchableOpacity>
+              </ClayPressable>
             );
           })}
         </View>
@@ -108,41 +113,41 @@ export function AppointmentSchedulePicker({
 
       {selectedMonthKey && (
         <Card className="mb-4">
-          <Text className="text-[15px] font-bold text-neutral-900 mb-2">
+          <Text className="text-sm font-bold text-med-text-main max-w-full mb-2">
             Selecciona un Día
           </Text>
           <View className="flex-row flex-wrap gap-2">
             {days.map((d) => {
               const isSelected = d.key === selectedDayKey;
               return (
-                <TouchableOpacity
+                <ClayPressable
                   key={d.key}
                   onPress={() => setSelectedDayKey(d.key)}
                   disabled={disabled}
                   accessibilityLabel={`Día ${d.label}, ${d.weekLabel}`}
                   accessibilityRole="button"
                   accessibilityState={{ selected: isSelected, disabled }}
-                  className={`p-2 rounded-med-md border items-center min-w-[50px] ${
+                  className={`min-h-touch p-2 rounded-control border items-center max-w-full min-w-day ${
                     isSelected
-                      ? 'bg-primary border-primary'
-                      : 'bg-gray-100 border-gray-200'
+                      ? 'bg-med-primary border-med-primary'
+                      : 'bg-med-surface-muted border-med-border-light'
                   }`}
                 >
                   <Text
                     className={`text-xs font-semibold uppercase ${
-                      isSelected ? 'text-white' : 'text-gray-500'
+                      isSelected ? 'text-med-on-primary' : 'text-med-text-soft'
                     }`}
                   >
                     {d.weekLabel}
                   </Text>
                   <Text
                     className={`text-sm font-bold ${
-                      isSelected ? 'text-white' : 'text-neutral-900'
+                      isSelected ? 'text-med-on-primary' : 'text-med-text-main'
                     }`}
                   >
                     {d.label}
                   </Text>
-                </TouchableOpacity>
+                </ClayPressable>
               );
             })}
           </View>
@@ -152,11 +157,11 @@ export function AppointmentSchedulePicker({
       {selectedDayKey && (
         <Card className="mb-4">
           <View className="flex-row flex-wrap justify-between items-center gap-2 mb-2">
-            <Text className="text-[15px] font-bold text-neutral-900">
+            <Text className="min-w-0 shrink text-sm font-bold text-med-text-main max-w-full">
               Horarios Disponibles
             </Text>
             {selectedDayLabel && (
-              <Text className="text-xs text-primary font-medium capitalize">
+              <Text className="text-xs text-med-primary font-medium capitalize max-w-full">
                 {selectedDayLabel}
               </Text>
             )}
@@ -164,16 +169,21 @@ export function AppointmentSchedulePicker({
 
           {loadingSlots && (
             <View className="py-4 items-center">
-              <ActivityIndicator size="small" color="#259487" />
-              <Text className="text-xs text-gray-500 mt-1">
+              <ActivityIndicator
+                size={tokens.indicator.sm}
+                color={tokens.colors.primary}
+              />
+              <Text className="text-xs text-med-text-soft mt-1">
                 Cargando turnos...
               </Text>
             </View>
           )}
 
           {slotsError && (
-            <View className="bg-red-50 border border-red-200 p-2.5 rounded-md mb-2">
-              <Text className="text-red-700 text-xs">{slotsError}</Text>
+            <ClaySurface className="bg-med-error-bg border border-med-error-border p-2.5 rounded-clay mb-2">
+              <Text className="text-med-error-badge-text text-xs">
+                {slotsError}
+              </Text>
               <Button
                 text="Reintentar disponibilidad"
                 variant="secondary"
@@ -181,7 +191,7 @@ export function AppointmentSchedulePicker({
                 disabled={disabled}
                 className="mt-2"
               />
-            </View>
+            </ClaySurface>
           )}
 
           <View className="flex-row flex-wrap gap-2">
@@ -190,9 +200,9 @@ export function AppointmentSchedulePicker({
               const isAvailable = slot.status === 'available';
 
               return (
-                <TouchableOpacity
+                <ClayPressable
                   key={slot.id}
-                  style={{ maxWidth: '100%' }}
+                  style={{ maxWidth: tokens.layout.full }}
                   onPress={() => isAvailable && setSelectedSlotId(slot.id)}
                   disabled={disabled || !isAvailable || loadingSlots}
                   accessibilityRole="button"
@@ -201,17 +211,17 @@ export function AppointmentSchedulePicker({
                     selected: isSelected,
                     disabled: disabled || !isAvailable || loadingSlots,
                   }}
-                  className={`p-2.5 rounded-med-md border items-center min-w-[90px] ${
+                  className={`min-h-touch p-2.5 rounded-control border items-center max-w-full min-w-control-lg ${
                     isSelected
-                      ? 'bg-teal-50 border-primary'
+                      ? 'bg-med-primary-surface border-med-primary'
                       : isAvailable
-                        ? 'bg-white border-gray-200'
-                        : 'bg-gray-100 border-gray-200 opacity-60'
+                        ? 'bg-med-bg border-med-border-light'
+                        : 'bg-med-surface-muted border-med-border-light opacity-60'
                   }`}
                 >
                   <Text
                     className={`text-xs font-semibold ${
-                      isSelected ? 'text-primary' : 'text-neutral-900'
+                      isSelected ? 'text-med-primary' : 'text-med-text-main'
                     }`}
                   >
                     {slot.label}
@@ -241,7 +251,7 @@ export function AppointmentSchedulePicker({
                     }
                     className="mt-1"
                   />
-                </TouchableOpacity>
+                </ClayPressable>
               );
             })}
           </View>
@@ -251,7 +261,7 @@ export function AppointmentSchedulePicker({
             !slotsError &&
             !loadingSlots &&
             slots.length === 0 && (
-              <Text className="text-xs text-gray-400 text-center my-3">
+              <Text className="text-xs text-med-text-light text-center my-3">
                 No hay horarios disponibles configurados para este día. Prueba
                 con otra fecha.
               </Text>

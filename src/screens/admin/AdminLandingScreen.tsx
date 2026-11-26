@@ -10,6 +10,8 @@ import {
 import { Ionicons } from '@expo/vector-icons';
 import { Badge, Button, Card } from '../../components';
 import { useAdminLanding } from './useAdminLanding';
+import { ClaySurface, ClayPressable } from '../../components/ClaySurface';
+import { tokens } from '../../theme/tokens';
 
 export const AdminLandingScreen: React.FC = () => {
   const {
@@ -24,57 +26,67 @@ export const AdminLandingScreen: React.FC = () => {
   } = useAdminLanding();
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="min-w-0 max-w-full flex-1 bg-med-bg">
       {/* Encabezado Principal */}
-      <View className="flex-row flex-wrap items-center justify-between gap-2 px-4 py-3 bg-white border-b border-gray-200">
+      <ClaySurface className="flex-row flex-wrap items-center justify-between gap-2 px-4 py-3 bg-med-bg border-b border-med-border-light rounded-none">
         <View>
           <View className="flex-row items-center">
-            <Ionicons name="shield-checkmark" size={14} color="#259487" />
-            <Text className="text-xs font-bold text-primary uppercase tracking-wider ml-1">
+            <Ionicons
+              name="shield-checkmark"
+              size={tokens.iconSize[14]}
+              color={tokens.colors.primary}
+            />
+            <Text className="min-w-0 max-w-full shrink text-xs font-bold text-med-primary uppercase tracking-wider ml-1">
               MedAgenda
             </Text>
           </View>
-          <Text className="text-xl font-bold text-neutral-900 mt-0.5">
+          <Text className="text-xl font-bold text-med-text-main mt-0.5">
             Administración
           </Text>
         </View>
         <Badge text="Modo Administrador" variant="primary" />
-      </View>
+      </ClaySurface>
 
       <ScrollView
-        className="flex-1 bg-gray-50"
+        className="min-w-0 max-w-full flex-1 bg-med-surface"
         contentContainerClassName="p-4 pb-8"
         refreshControl={
           <RefreshControl
             refreshing={isResolvingModes}
             onRefresh={handleRefresh}
-            tintColor="#259487"
-            colors={['#259487']}
+            tintColor={tokens.colors.primary}
+            colors={[tokens.colors.primary]}
           />
         }
       >
         {/* Tarjeta de Bienvenida y Contexto de Administración */}
-        <View className="bg-white p-4 rounded-lg border border-gray-200 shadow-sm mb-4">
-          <Text className="text-xs text-gray-600">Sesión Administrativa</Text>
-          <Text className="text-base font-bold text-neutral-900 mt-0.5">
+        <ClaySurface className="bg-med-bg p-4 rounded-clay border border-med-border-light mb-4">
+          <Text className="text-xs text-med-text-muted">
+            Sesión Administrativa
+          </Text>
+          <Text className="text-base font-bold text-med-text-main mt-0.5">
             Hola, {user?.first_name || 'Administrador'}
           </Text>
-          <Text className="text-xs text-gray-600 mt-1 leading-relaxed">
+          <Text className="text-xs text-med-text-muted mt-1 leading-relaxed">
             Desde este espacio puedes gestionar las sedes clínicas asignadas a
             tu cargo, consultar sus detalles o registrar nuevas sedes.
           </Text>
-        </View>
+        </ClaySurface>
 
         {/* Error en resolución de capacidades/sedes */}
         {modeResolutionError ? (
-          <View className="bg-red-50 border border-red-200 rounded-md p-4 mb-4">
+          <ClaySurface className="bg-med-error-bg border border-med-error-border rounded-clay p-4 mb-4">
             <View className="flex-row items-center mb-1">
-              <Ionicons name="alert-circle-outline" size={16} color="#991b1b" />
-              <Text className="text-xs font-bold text-red-800 ml-1.5">
+              <Ionicons
+                name="alert-circle-outline"
+                size={tokens.iconSize[16]}
+                color={tokens.colors.error.text}
+              />
+              <Text className="min-w-0 max-w-full shrink text-xs font-bold text-med-error-text ml-1.5">
                 Error de sincronización de permisos
               </Text>
             </View>
-            <Text className="text-xs text-red-700 mb-3 leading-relaxed">
+            <Text className="text-xs text-med-error-badge-text mb-3 leading-relaxed">
               {modeResolutionError}
             </Text>
             <Button
@@ -83,13 +95,13 @@ export const AdminLandingScreen: React.FC = () => {
               onPress={handleRefresh}
               className="py-1 px-3 self-start"
             />
-          </View>
+          </ClaySurface>
         ) : null}
 
         {/* Sección de Sedes Clínicas Asignadas */}
         <View className="mb-4">
-          <View className="flex-row justify-between items-center mb-3">
-            <Text className="text-base font-bold text-neutral-900">
+          <View className="flex-row flex-wrap gap-2 justify-between items-center mb-3">
+            <Text className="min-w-0 max-w-full shrink text-base font-bold text-med-text-main">
               Sedes Asignadas ({adminClinics.length})
             </Text>
             {adminClinics.length > 0 && (
@@ -98,7 +110,7 @@ export const AdminLandingScreen: React.FC = () => {
                 accessibilityRole="button"
                 accessibilityLabel="Ver todas las clínicas"
               >
-                <Text className="text-xs font-semibold text-primary">
+                <Text className="text-xs font-semibold text-med-primary">
                   Ver todas
                 </Text>
               </Pressable>
@@ -109,27 +121,37 @@ export const AdminLandingScreen: React.FC = () => {
           adminClinics.length === 0 &&
           !modeResolutionError ? (
             <Card className="items-center p-6">
-              <ActivityIndicator size="small" color="#259487" />
-              <Text className="text-xs text-gray-500 mt-2">
+              <ActivityIndicator
+                size={tokens.indicator.sm}
+                color={tokens.colors.primary}
+              />
+              <Text className="text-xs text-med-text-soft mt-2">
                 Cargando sedes administrativas...
               </Text>
             </Card>
           ) : adminClinics.length === 0 ? (
             <Card className="items-center p-6">
-              <View className="w-12 h-12 rounded-full bg-gray-100 items-center justify-center mb-3">
-                <Ionicons name="business-outline" size={24} color="#9ca3af" />
-              </View>
-              <Text className="text-sm font-semibold text-neutral-900 mb-1 text-center">
+              <ClaySurface
+                depth="badge"
+                className="w-12 h-12 rounded-full bg-med-surface-muted items-center justify-center mb-3"
+              >
+                <Ionicons
+                  name="business-outline"
+                  size={tokens.iconSize[24]}
+                  color={tokens.colors.textLight}
+                />
+              </ClaySurface>
+              <Text className="text-sm font-semibold text-med-text-main mb-1 text-center">
                 Sin sedes vinculadas actualmente
               </Text>
-              <Text className="text-xs text-gray-600 text-center max-w-[260px] mb-4">
+              <Text className="text-xs text-med-text-muted text-center max-w-copy-sm mb-4">
                 Aún no tienes sedes asignadas para administración directa.
                 Puedes registrar una nueva sede clínica.
               </Text>
               <Button
                 text="Registrar Nueva Clínica"
                 onPress={navigateToNewClinic}
-                className="min-w-[180px]"
+                className="min-w-action"
               />
             </Card>
           ) : (
@@ -137,23 +159,26 @@ export const AdminLandingScreen: React.FC = () => {
               const isOwner = clinic.role_within_clinic === 'Owner';
               return (
                 <Card key={clinic.clinic_id} className="mb-3">
-                  <View className="flex-row justify-between items-start mb-2">
-                    <View className="flex-1 mr-2">
-                      <Text className="text-sm font-bold text-neutral-900">
+                  <View className="flex-row flex-wrap gap-2 justify-between items-start mb-2">
+                    <View
+                      className="grow min-w-0 max-w-full"
+                      style={{ flexBasis: tokens.layout.cardMinWidth }}
+                    >
+                      <Text className="text-sm font-bold text-med-text-main">
                         {clinic.clinic_name}
                       </Text>
                       <View className="flex-row items-center mt-1">
                         <Ionicons
                           name="business-outline"
-                          size={13}
-                          color="#4b5563"
+                          size={tokens.iconSize[13]}
+                          color={tokens.colors.textMuted}
                         />
-                        <Text className="text-xs text-gray-600 ml-1">
+                        <Text className="min-w-0 max-w-full shrink text-xs text-med-text-muted ml-1">
                           Sede ID #{clinic.clinic_id}
                         </Text>
                       </View>
                       {clinic.role_description ? (
-                        <Text className="text-xs text-gray-500 mt-1">
+                        <Text className="text-xs text-med-text-soft mt-1">
                           {clinic.role_description}
                         </Text>
                       ) : null}
@@ -164,20 +189,20 @@ export const AdminLandingScreen: React.FC = () => {
                     />
                   </View>
 
-                  <View className="flex-row items-center justify-between mt-3 pt-2.5 border-t border-gray-100">
+                  <View className="flex-row items-center justify-between mt-3 pt-2.5 border-t border-med-border-light">
                     <Pressable
                       onPress={() => navigateToClinicDetail(clinic.clinic_id)}
-                      className="flex-row items-center"
+                      className="min-h-touch max-w-full justify-center flex-row items-center"
                       accessibilityRole="button"
                       accessibilityLabel={`Ver detalles de ${clinic.clinic_name}`}
                     >
-                      <Text className="text-xs font-semibold text-primary mr-1">
+                      <Text className="min-w-0 max-w-full shrink text-xs font-semibold text-med-primary mr-1">
                         Ver detalles de sede
                       </Text>
                       <Ionicons
                         name="chevron-forward"
-                        size={14}
-                        color="#259487"
+                        size={tokens.iconSize[14]}
+                        color={tokens.colors.primary}
                       />
                     </Pressable>
                   </View>
@@ -189,44 +214,58 @@ export const AdminLandingScreen: React.FC = () => {
 
         {/* Acciones Rápidas Administrativas */}
         <View className="mb-4">
-          <Text className="text-base font-bold text-neutral-900 mb-3">
+          <Text className="text-base font-bold text-med-text-main mb-3">
             Acciones de Gestión
           </Text>
 
-          <View className="flex-row gap-3">
-            <Pressable
+          <View className="flex-row flex-wrap gap-3">
+            <ClayPressable
               onPress={navigateToNewClinic}
-              className="flex-1 bg-white border border-gray-200 rounded-lg p-4 shadow-sm active:bg-gray-50"
+              className="max-w-full min-h-touch flex-1 min-w-action-sm bg-med-bg border border-med-border-light rounded-control p-4 active:bg-med-surface"
               accessibilityRole="button"
               accessibilityLabel="Registrar nueva sede clínica"
             >
-              <View className="w-9 h-9 rounded-full bg-teal-50 items-center justify-center mb-2">
-                <Ionicons name="add-circle-outline" size={20} color="#259487" />
-              </View>
-              <Text className="text-sm font-bold text-neutral-900">
+              <ClaySurface
+                depth="badge"
+                className="w-9 h-9 rounded-full bg-med-primary-surface items-center justify-center mb-2"
+              >
+                <Ionicons
+                  name="add-circle-outline"
+                  size={tokens.iconSize[20]}
+                  color={tokens.colors.primary}
+                />
+              </ClaySurface>
+              <Text className="text-sm font-bold text-med-text-main">
                 Nueva Sede
               </Text>
-              <Text className="text-xs text-gray-600 mt-0.5">
+              <Text className="text-xs text-med-text-muted mt-0.5">
                 Registra una sede clínica
               </Text>
-            </Pressable>
+            </ClayPressable>
 
-            <Pressable
+            <ClayPressable
               onPress={navigateToMyClinics}
-              className="flex-1 bg-white border border-gray-200 rounded-lg p-4 shadow-sm active:bg-gray-50"
+              className="max-w-full min-h-touch flex-1 min-w-action-sm bg-med-bg border border-med-border-light rounded-control p-4 active:bg-med-surface"
               accessibilityRole="button"
               accessibilityLabel="Consultar listado de mis clínicas"
             >
-              <View className="w-9 h-9 rounded-full bg-gray-100 items-center justify-center mb-2">
-                <Ionicons name="business-outline" size={20} color="#4b5563" />
-              </View>
-              <Text className="text-sm font-bold text-neutral-900">
+              <ClaySurface
+                depth="badge"
+                className="w-9 h-9 rounded-full bg-med-surface-muted items-center justify-center mb-2"
+              >
+                <Ionicons
+                  name="business-outline"
+                  size={tokens.iconSize[20]}
+                  color={tokens.colors.textMuted}
+                />
+              </ClaySurface>
+              <Text className="text-sm font-bold text-med-text-main">
                 Mis Clínicas
               </Text>
-              <Text className="text-xs text-gray-600 mt-0.5">
+              <Text className="text-xs text-med-text-muted mt-0.5">
                 Ver todas mis sedes
               </Text>
-            </Pressable>
+            </ClayPressable>
           </View>
         </View>
       </ScrollView>

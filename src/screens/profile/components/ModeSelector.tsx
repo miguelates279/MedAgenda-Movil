@@ -1,8 +1,10 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { AppMode } from '../../../context/AuthContext';
 import { Badge } from '../../../components';
+import { ClaySurface, ClayPressable } from '../../../components/ClaySurface';
+import { tokens } from '../../../theme/tokens';
 
 export interface ModeSelectorProps {
   activeMode: AppMode | null;
@@ -52,22 +54,33 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
   const activeLabel = activeMode ? MODE_CONFIG[activeMode]?.label : 'Ninguno';
 
   return (
-    <View className="bg-white rounded-lg border border-gray-200 shadow-sm p-4 mb-4">
+    <ClaySurface className="bg-med-bg rounded-clay border border-med-border-light p-4 mb-4">
       {/* Encabezado del Selector */}
-      <View className="flex-row items-center justify-between mb-1.5">
-        <View className="flex-row items-center flex-1 mr-2">
-          <View className="w-8 h-8 rounded-full bg-teal-50 items-center justify-center mr-2.5">
-            <Ionicons name="swap-horizontal" size={18} color="#259487" />
-          </View>
-          <Text className="text-base font-bold text-neutral-900">
+      <View className="flex-row flex-wrap gap-2 items-center justify-between mb-1.5">
+        <View
+          className="flex-row items-center grow min-w-header max-w-full"
+          style={{ flexBasis: tokens.layout.cardMinWidth }}
+        >
+          <ClaySurface
+            depth="badge"
+            className="w-8 h-8 rounded-full bg-med-primary-surface items-center justify-center mr-2.5"
+          >
+            <Ionicons
+              name="swap-horizontal"
+              size={tokens.iconSize[18]}
+              color={tokens.colors.primary}
+            />
+          </ClaySurface>
+          <Text className="min-w-0 max-w-full shrink text-base font-bold text-med-text-main">
             Modo de Navegación
           </Text>
         </View>
         <Badge text={activeLabel} variant="primary" />
       </View>
 
-      <Text className="text-sm text-gray-600 mb-3.5 leading-5">
-        Tienes múltiples roles habilitados. Cambia el modo activo para adaptar las pestañas y vistas:
+      <Text className="text-sm text-med-text-muted mb-3.5 leading-5">
+        Tienes múltiples roles habilitados. Cambia el modo activo para adaptar
+        las pestañas y vistas:
       </Text>
 
       {/* Lista de Roles Disponibles */}
@@ -77,7 +90,7 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
           const isActive = mode === activeMode;
 
           return (
-            <Pressable
+            <ClayPressable
               key={mode}
               onPress={() => {
                 if (!isActive) {
@@ -89,53 +102,79 @@ export const ModeSelector: React.FC<ModeSelectorProps> = ({
               accessibilityLabel={`Cambiar al modo ${config.label}${
                 isActive ? ' (modo actualmente activo)' : ''
               }`}
-              className={`p-3 rounded-lg border flex-row items-center justify-between ${
+              className={`min-h-touch max-w-full p-3 rounded-control border flex-row flex-wrap gap-2 items-center justify-between ${
                 isActive
-                  ? 'bg-teal-50/70 border-primary shadow-xs'
-                  : 'bg-white border-gray-200 active:bg-gray-50'
+                  ? 'bg-med-primary-surface/70 border-med-primary'
+                  : 'bg-med-bg border-med-border-light active:bg-med-surface'
               }`}
             >
-              <View className="flex-row items-center flex-1 mr-3">
-                <View
+              <View
+                className="flex-row items-center grow min-w-header max-w-full"
+                style={{ flexBasis: tokens.layout.cardMinWidth }}
+              >
+                <ClaySurface
+                  depth="badge"
                   className={`w-9 h-9 rounded-full items-center justify-center mr-3 ${
-                    isActive ? 'bg-primary' : 'bg-gray-100 border border-gray-200'
+                    isActive
+                      ? 'bg-med-primary'
+                      : 'bg-med-surface-muted border border-med-border-light'
                   }`}
                 >
                   <Ionicons
                     name={isActive ? config.activeIcon : config.icon}
-                    size={18}
-                    color={isActive ? '#ffffff' : '#4b5563'}
+                    size={tokens.iconSize[18]}
+                    color={
+                      isActive
+                        ? tokens.colors.onPrimary
+                        : tokens.colors.textMuted
+                    }
                   />
-                </View>
-                <View className="flex-1">
+                </ClaySurface>
+                <View className="min-w-0 max-w-full flex-1">
                   <Text
                     className={`text-base ${
-                      isActive ? 'text-primary-dark font-bold' : 'text-neutral-900 font-semibold'
+                      isActive
+                        ? 'text-med-primary-dark font-bold'
+                        : 'text-med-text-main font-semibold'
                     }`}
                   >
                     {config.label}
                   </Text>
-                  <Text className="text-xs text-gray-500 mt-0.5">
+                  <Text className="text-xs text-med-text-soft mt-0.5">
                     {config.description}
                   </Text>
                 </View>
               </View>
 
               {isActive ? (
-                <View className="flex-row items-center bg-teal-100 px-2.5 py-1 rounded-full border border-teal-200">
-                  <Ionicons name="checkmark-circle" size={14} color="#1d7369" />
-                  <Text className="text-xs font-bold text-teal-900 ml-1">Activo</Text>
-                </View>
+                <ClaySurface
+                  depth="badge"
+                  className="flex-row items-center bg-med-primary-light px-2.5 py-1 rounded-full border border-med-primary-border-strong"
+                >
+                  <Ionicons
+                    name="checkmark-circle"
+                    size={tokens.iconSize[14]}
+                    color={tokens.colors.primaryDark}
+                  />
+                  <Text className="min-w-0 max-w-full shrink text-xs font-bold text-med-primary-dark ml-1">
+                    Activo
+                  </Text>
+                </ClaySurface>
               ) : (
-                <View className="px-3 py-1 rounded-full border border-gray-300 bg-gray-50">
-                  <Text className="text-xs font-semibold text-gray-600">Cambiar</Text>
-                </View>
+                <ClaySurface
+                  depth="badge"
+                  className="px-3 py-1 rounded-full border border-med-border bg-med-surface"
+                >
+                  <Text className="text-xs font-semibold text-med-text-muted">
+                    Cambiar
+                  </Text>
+                </ClaySurface>
               )}
-            </Pressable>
+            </ClayPressable>
           );
         })}
       </View>
-    </View>
+    </ClaySurface>
   );
 };
 

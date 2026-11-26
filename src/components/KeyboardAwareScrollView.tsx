@@ -16,6 +16,7 @@ import {
   View,
   ViewStyle,
 } from 'react-native';
+import { tokens } from '../theme/tokens';
 
 export interface FormScrollContextType {
   scrollToField: (targetView: View | null) => void;
@@ -44,7 +45,7 @@ export const KeyboardAwareScrollView = React.forwardRef<
     {
       children,
       keyboardVerticalOffset,
-      extraScrollHeight = 50,
+      extraScrollHeight = tokens.layout.keyboardClearance,
       contentContainerStyle,
       style,
       className = '',
@@ -78,7 +79,7 @@ export const KeyboardAwareScrollView = React.forwardRef<
         )
           return;
         setViewportTop((previous) =>
-          Math.abs(previous - y) < 0.5 ? previous : y,
+          Math.abs(previous - y) < tokens.motion.measurementTolerance ? previous : y,
         );
       });
     }, []);
@@ -113,7 +114,7 @@ export const KeyboardAwareScrollView = React.forwardRef<
                 });
             });
           });
-      }, 70);
+      }, tokens.motion.formScrollDelay);
     };
 
     const scrollToField = (targetView: View | null) => {
@@ -157,23 +158,23 @@ export const KeyboardAwareScrollView = React.forwardRef<
 
     return (
       <FormScrollContext.Provider value={{ scrollToField }}>
-        <View style={[{ flex: 1, minHeight: 0 }, containerStyle]}>
+        <View className="flex-1 min-h-0" style={containerStyle}>
           <View
             ref={viewportRef}
             collapsable={false}
-            style={{ flex: 1, minHeight: 0 }}
+            className="flex-1 min-h-0"
             onLayout={measureViewport}
           >
             <KeyboardAvoidingView
               behavior="padding"
               keyboardVerticalOffset={keyboardVerticalOffset ?? viewportTop}
-              style={{ flex: 1, minHeight: 0 }}
+              className="flex-1 min-h-0"
             >
               <ScrollView
                 ref={setRef}
                 keyboardShouldPersistTaps="handled"
                 keyboardDismissMode="on-drag"
-                scrollEventThrottle={16}
+                scrollEventThrottle={tokens.motion.scrollThrottle}
                 onLayout={(event) => {
                   measureViewport();
                   onLayout?.(event);
@@ -190,8 +191,8 @@ export const KeyboardAwareScrollView = React.forwardRef<
                   contentContainerStyle,
                   {
                     paddingBottom: Math.max(
-                      160,
-                      (contentContainerStyle as any)?.paddingBottom || 160,
+                      tokens.layout.formBottom,
+                      (contentContainerStyle as any)?.paddingBottom || tokens.layout.formBottom,
                     ),
                   },
                 ]}
@@ -201,7 +202,7 @@ export const KeyboardAwareScrollView = React.forwardRef<
                 <View
                   ref={innerContainerRef}
                   collapsable={false}
-                  style={{ flexGrow: 1 }}
+                  className="grow"
                 >
                   {children}
                 </View>

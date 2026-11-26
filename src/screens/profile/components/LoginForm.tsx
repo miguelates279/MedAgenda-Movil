@@ -2,13 +2,15 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Button, Field } from '../../../components';
 import { useLoginForm } from '../../../hooks/useLoginForm';
+import { ClaySurface } from '../../../components/ClaySurface';
 
 export interface LoginFormProps {
   onSwitchToRegister: () => void;
 }
 
 export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
-  const { control, handleSubmit, onSubmit, loading, serverError } = useLoginForm();
+  const { control, handleSubmit, onSubmit, loading, serverError } =
+    useLoginForm();
 
   return (
     <View className="w-full">
@@ -32,9 +34,11 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
       />
 
       {serverError ? (
-        <View className="bg-red-50 border border-red-200 rounded-md p-2.5 mb-3">
-          <Text className="text-red-700 text-sm font-medium">{serverError}</Text>
-        </View>
+        <ClaySurface className="bg-med-error-bg border border-med-error-border rounded-clay p-2.5 mb-3">
+          <Text className="text-med-error-badge-text text-sm font-medium">
+            {serverError}
+          </Text>
+        </ClaySurface>
       ) : null}
 
       <Button
@@ -46,13 +50,13 @@ export const LoginForm: React.FC<LoginFormProps> = ({ onSwitchToRegister }) => {
 
       <Pressable
         onPress={onSwitchToRegister}
-        className="mt-4 py-2 items-center active:opacity-70"
+        className="min-h-touch max-w-full justify-center mt-4 py-2 items-center active:opacity-70"
         accessibilityRole="button"
         accessibilityLabel="Cambiar a registro"
       >
-        <Text className="text-sm text-gray-600">
+        <Text className="text-sm text-med-text-muted">
           ¿No tienes cuenta?{' '}
-          <Text className="text-primary font-bold">Regístrate</Text>
+          <Text className="text-med-primary font-bold">Regístrate</Text>
         </Text>
       </Pressable>
     </View>

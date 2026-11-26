@@ -8,6 +8,8 @@ import {
   ScreenHeader,
 } from '../../components';
 import { useClinicDetail } from './useClinicDetail';
+import { ClaySurface } from '../../components/ClaySurface';
+import { tokens } from '../../theme/tokens';
 
 export function ClinicDetailScreen() {
   const {
@@ -24,10 +26,13 @@ export function ClinicDetailScreen() {
 
   if (loading) {
     return (
-      <View className="flex-1 bg-white">
-        <View className="flex-1 items-center justify-center p-6 bg-gray-50">
-          <ActivityIndicator size="large" color="#259487" />
-          <Text className="mt-3 text-sm text-gray-600">
+      <View className="min-w-0 max-w-full flex-1 bg-med-bg">
+        <View className="min-w-0 max-w-full flex-1 items-center justify-center p-6 bg-med-surface">
+          <ActivityIndicator
+            size={tokens.indicator.lg}
+            color={tokens.colors.primary}
+          />
+          <Text className="mt-3 text-sm text-med-text-muted">
             Cargando información de la clínica...
           </Text>
         </View>
@@ -36,23 +41,23 @@ export function ClinicDetailScreen() {
   }
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="min-w-0 max-w-full flex-1 bg-med-bg">
       <ScreenHeader title={clinic?.clinic_name || 'Detalles de la Clínica'} />
 
       <ScrollView
-        className="flex-1 bg-gray-50"
+        className="min-w-0 max-w-full flex-1 bg-med-surface"
         contentContainerClassName="p-4 pb-8"
       >
         {error ? (
-          <View className="bg-red-50 border border-red-200 p-3 mb-4 rounded-md">
-            <Text className="text-red-700 text-sm">{error}</Text>
-          </View>
+          <ClaySurface className="bg-med-error-bg border border-med-error-border p-3 mb-4 rounded-clay">
+            <Text className="text-med-error-badge-text text-sm">{error}</Text>
+          </ClaySurface>
         ) : null}
 
         {clinic && (
           <Card className="mb-4">
-            <View className="flex-row justify-between items-start mb-2">
-              <Text className="text-lg font-bold text-neutral-900 flex-1 mr-2">
+            <View className="flex-row flex-wrap gap-2 justify-between items-start mb-2">
+              <Text className="min-w-0 max-w-full shrink text-lg font-bold text-med-text-main flex-1 mr-2">
                 {clinic.clinic_name}
               </Text>
               <Badge
@@ -61,15 +66,15 @@ export function ClinicDetailScreen() {
               />
             </View>
 
-            <Text className="text-sm text-gray-600 mb-1">
+            <Text className="text-sm text-med-text-muted mb-1">
               📍 {clinic.clinic_address}
             </Text>
-            <Text className="text-sm text-gray-600 mb-1">
+            <Text className="text-sm text-med-text-muted mb-1">
               📞 {clinic.clinic_phone_number}
             </Text>
 
             {clinic.clinic_description ? (
-              <Text className="text-sm text-neutral-900 mt-2 leading-5">
+              <Text className="text-sm text-med-text-main mt-2 leading-5">
                 {clinic.clinic_description}
               </Text>
             ) : null}
@@ -86,52 +91,73 @@ export function ClinicDetailScreen() {
             ) : null}
 
             {rules && (
-              <View className="bg-gray-50 border border-gray-200 rounded-md p-3 mt-3">
-                <Text className="text-xs font-semibold text-gray-600 uppercase mb-1.5">
+              <ClaySurface
+                depth="inset"
+                className="bg-med-surface border border-med-border-light rounded-clay p-3 mt-3"
+              >
+                <Text className="text-xs font-semibold text-med-text-muted uppercase mb-1.5">
                   Reglas y Horario de Atención
                 </Text>
-                <View className="flex-row justify-between py-0.5">
-                  <Text className="text-sm text-gray-600">Apertura:</Text>
-                  <Text className="text-sm font-semibold text-neutral-900">
+                <View className="flex-row flex-wrap gap-x-3 gap-y-1 justify-between py-0.5">
+                  <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted">
+                    Apertura:
+                  </Text>
+                  <Text
+                    className="shrink text-sm font-semibold text-med-text-main grow min-w-0 max-w-full text-right"
+                    style={{ flexBasis: tokens.layout.cardMinWidth }}
+                  >
                     {rules.clinic_opening_time}
                   </Text>
                 </View>
-                <View className="flex-row justify-between py-0.5">
-                  <Text className="text-sm text-gray-600">Cierre:</Text>
-                  <Text className="text-sm font-semibold text-neutral-900">
+                <View className="flex-row flex-wrap gap-x-3 gap-y-1 justify-between py-0.5">
+                  <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted">
+                    Cierre:
+                  </Text>
+                  <Text
+                    className="shrink text-sm font-semibold text-med-text-main grow min-w-0 max-w-full text-right"
+                    style={{ flexBasis: tokens.layout.cardMinWidth }}
+                  >
                     {rules.clinic_close_time}
                   </Text>
                 </View>
-                <View className="flex-row justify-between py-0.5">
-                  <Text className="text-sm text-gray-600">
+                <View className="flex-row flex-wrap gap-x-3 gap-y-1 justify-between py-0.5">
+                  <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted">
                     Duración de cita:
                   </Text>
-                  <Text className="text-sm font-semibold text-neutral-900">
+                  <Text
+                    className="shrink text-sm font-semibold text-med-text-main grow min-w-0 max-w-full text-right"
+                    style={{ flexBasis: tokens.layout.cardMinWidth }}
+                  >
                     {rules.clinic_average_appointment_time}
                   </Text>
                 </View>
                 {rules.clinic_break_time && (
-                  <View className="flex-row justify-between py-0.5">
-                    <Text className="text-sm text-gray-600">Descanso:</Text>
-                    <Text className="text-sm font-semibold text-neutral-900">
+                  <View className="flex-row flex-wrap gap-x-3 gap-y-1 justify-between py-0.5">
+                    <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted">
+                      Descanso:
+                    </Text>
+                    <Text
+                      className="shrink text-sm font-semibold text-med-text-main grow min-w-0 max-w-full text-right"
+                      style={{ flexBasis: tokens.layout.cardMinWidth }}
+                    >
                       {rules.clinic_break_time} (
                       {rules.clinic_break_duration || '60 min'})
                     </Text>
                   </View>
                 )}
-              </View>
+              </ClaySurface>
             )}
           </Card>
         )}
 
         <View className="mt-2">
-          <Text className="text-base font-bold text-neutral-900 mb-3">
+          <Text className="text-base font-bold text-med-text-main mb-3">
             Médicos Disponibles
           </Text>
 
           {doctors.length === 0 ? (
             <Card className="items-center p-6">
-              <Text className="text-sm text-gray-400 text-center">
+              <Text className="text-sm text-med-text-light text-center">
                 No hay doctores registrados en esta clínica.
               </Text>
             </Card>

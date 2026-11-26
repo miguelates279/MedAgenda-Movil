@@ -1,9 +1,11 @@
 import React from 'react';
-import { Text, View } from 'react-native';
+import { Text, View, useWindowDimensions } from 'react-native';
 import { PublicDoctor } from '../api/types';
 import Card from './Card';
 import Badge from './Badge';
 import Button from './Button';
+import { ClaySurface } from './ClaySurface';
+import { tokens } from '../theme/tokens';
 
 export interface DoctorCardProps {
   doctor: PublicDoctor;
@@ -12,6 +14,8 @@ export interface DoctorCardProps {
 }
 
 export const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, className = '', onBookPress }) => {
+  const { fontScale } = useWindowDimensions();
+  const avatarSize = tokens.layout.avatarDoctor * Math.max(1, fontScale);
   const fullName = [
     doctor.first_name,
     doctor.second_name,
@@ -24,13 +28,17 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, className = '', 
   return (
     <Card className={`mb-3 ${className}`}>
       <View className="flex-row items-center mb-3">
-        <View className="w-11 h-11 rounded-full bg-[#e6f4f2] items-center justify-center mr-3">
-          <Text className="text-lg font-bold text-primary">
+        <ClaySurface
+          depth="badge"
+          className="shrink-0 rounded-full bg-med-primary-light items-center justify-center mr-3"
+          style={{ width: avatarSize, height: avatarSize }}
+        >
+          <Text className="text-lg font-bold text-med-primary">
             {(doctor.first_name?.[0] || 'D').toUpperCase()}
           </Text>
-        </View>
-        <View className="flex-1">
-          <Text className="text-sm font-bold text-neutral-900 mb-1">{fullName}</Text>
+        </ClaySurface>
+        <View className="flex-1 min-w-0">
+          <Text className="text-sm font-bold text-med-text-main mb-1">{fullName}</Text>
           <View className="flex-row flex-wrap gap-1">
             {doctor.specialties && doctor.specialties.length > 0 ? (
               doctor.specialties.map((sp) => (
@@ -42,7 +50,7 @@ export const DoctorCard: React.FC<DoctorCardProps> = ({ doctor, className = '', 
                 />
               ))
             ) : (
-              <Text className="text-xs text-gray-400">Sin especialidades asignadas</Text>
+              <Text className="text-xs text-med-text-light">Sin especialidades asignadas</Text>
             )}
           </View>
         </View>

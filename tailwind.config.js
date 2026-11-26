@@ -1,100 +1,92 @@
-module.exports = {
-  content: [
-    "./app/**/*.{js,jsx,ts,tsx}",
-    "./src/**/*.{js,jsx,ts,tsx}",
-  ],
-  presets: [require("nativewind/preset")],
-  theme: {
-    extend: {
-      fontSize: {
-        xs: ['14px', { lineHeight: '20px' }],
-        sm: ['15.5px', { lineHeight: '22px' }],
-      },
-      colors: {
-        // Mantener compatibilidad existente
-        primary: {
-          DEFAULT: '#259487',
-          hover: '#4682B4',
-          light: '#e6f4f2',
-          dark: '#1d7369',
-        },
-        // Tokens de diseño MedAgenda (dict_styles.md)
-        med: {
-          // Marca
-          primary: {
-            DEFAULT: '#259487',
-            hover: '#4682B4',
-            light: '#e6f4f2',
-            dark: '#1d7369',
-          },
-          secondary: '#4682B4',
+const definitions = require('./src/theme/design-tokens.js');
+const plugin = require('tailwindcss/plugin');
 
-          // Neutros y Superficies
-          bg: '#ffffff',
-          surface: '#f9fafb',
-          'surface-muted': '#f3f4f6',
-          border: '#d1d5db',
-          'border-light': '#e5e7eb',
-
-          // Tipografía
-          'text-main': '#171717',
-          'text-muted': '#4b5563',
-          'text-light': '#9ca3af',
-
-          // Semánticos / Feedback
-          success: {
-            bg: '#ecfdf5',
-            border: '#a7f3d0',
-            text: '#065f46',
-            'badge-bg': '#d1fae5',
-            'badge-text': '#047857',
-          },
-          error: {
-            bg: '#fef2f2',
-            border: '#fecaca',
-            text: '#991b1b',
-            'badge-bg': '#fee2e2',
-            'badge-text': '#b91c1c',
-          },
-          warning: {
-            bg: '#fffbeb',
-            border: '#fde68a',
-            text: '#92400e',
-            'badge-bg': '#fef3c7',
-            'badge-text': '#b45309',
-          },
-          info: {
-            bg: '#eff6ff',
-            border: '#bfdbfe',
-            text: '#1e40af',
-            'badge-bg': '#dbeafe',
-            'badge-text': '#1d4ed8',
-          },
-
-          // Badges especiales
-          badge: {
-            cyan: {
-              bg: '#cffafe',
-              text: '#0e7490',
-            },
-            purple: {
-              bg: '#f3e8ff',
-              text: '#7e22ce',
-            },
-          },
-        },
-      },
-      borderRadius: {
-        'med-sm': '4px',
-        'med-md': '6px',
-        'med-lg': '8px',
-      },
-      boxShadow: {
-        'med-sm': '0 1px 2px 0 rgba(0, 0, 0, 0.05)',
-        'med-md': '0 4px 6px -1px rgba(0, 0, 0, 0.1)',
-      },
-    },
+const pixels = (value) => (typeof value === 'number' ? `${value}px` : value);
+const pixelScale = (scale) =>
+  Object.fromEntries(
+    Object.entries(scale).map(([key, value]) => [key, pixels(value)]),
+  );
+const kebab = (key) =>
+  key.replace(/[A-Z]/g, (letter) => `-${letter.toLowerCase()}`);
+const colorScale = (scale) =>
+  Object.fromEntries(
+    Object.entries(scale).map(([key, value]) => [
+      kebab(key),
+      typeof value === 'object' ? colorScale(value) : value,
+    ]),
+  );
+const brand = {
+  DEFAULT: definitions.colors.primary,
+  hover: definitions.colors.primaryHover,
+  light: definitions.colors.primaryLight,
+  dark: definitions.colors.primaryDark,
+  surface: definitions.colors.primarySurface,
+  border: definitions.colors.primaryBorder,
+  'border-strong': definitions.colors.primaryBorderStrong,
+};
+const med = {
+  ...colorScale(definitions.colors),
+  primary: brand,
+  badge: {
+    cyan: definitions.colors.badgeCyan,
+    purple: definitions.colors.badgePurple,
   },
-  plugins: [],
 };
 
+module.exports = {
+  content: ['./app/**/*.{js,jsx,ts,tsx}', './src/**/*.{js,jsx,ts,tsx}'],
+  presets: [require('nativewind/preset')],
+  theme: {
+    colors: {
+      primary: brand,
+      med,
+      transparent: definitions.colors.transparent,
+    },
+    spacing: pixelScale(definitions.spacingScale),
+    fontSize: Object.fromEntries(
+      Object.entries(definitions.fontSize).map(([key, value]) => [
+        key,
+        [pixels(value), { lineHeight: pixels(definitions.lineHeight[key]) }],
+      ]),
+    ),
+    fontWeight: definitions.fontWeight,
+    lineHeight: Object.fromEntries(
+      Object.entries(definitions.lineHeightScale).map(([key, value]) => [
+        key,
+        Number.isInteger(value) && value > 2 ? pixels(value) : String(value),
+      ]),
+    ),
+    letterSpacing: definitions.letterSpacing,
+    borderRadius: pixelScale(definitions.radius),
+    borderWidth: pixelScale(definitions.borderWidth),
+    boxShadow: {
+      ...definitions.legacyCssShadow,
+      ...Object.fromEntries(
+        Object.entries(definitions.boxShadow).map(([key, value]) => [
+          `clay-${key}`,
+          value,
+        ]),
+      ),
+    },
+    opacity: definitions.opacity,
+    zIndex: definitions.zIndex,
+    maxWidth: pixelScale(definitions.maxWidth),
+    minWidth: pixelScale(definitions.minWidth),
+    extend: {
+      height: { select: definitions.layout.selectHeight },
+      maxHeight: { filter: definitions.layout.filterHeight },
+    },
+  },
+  plugins: [
+    plugin(({ addUtilities }) =>
+      addUtilities(
+        Object.fromEntries(
+          Object.entries(definitions.boxShadow).map(([key, value]) => [
+            `.clay-${key}`,
+            { '-rn-box-shadow': JSON.stringify(value) },
+          ]),
+        ),
+      ),
+    ),
+  ],
+};

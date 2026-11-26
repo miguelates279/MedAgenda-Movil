@@ -1,11 +1,5 @@
 import React from 'react';
-import {
-  ActivityIndicator,
-  Pressable,
-  ScrollView,
-  Text,
-  View,
-} from 'react-native';
+import { ActivityIndicator, ScrollView, Text, View } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import {
   Button,
@@ -18,6 +12,8 @@ import { LoginForm } from './components/LoginForm';
 import { RegisterForm } from './components/RegisterForm';
 import { UserProfileView } from './components/UserProfileView';
 import { ModeSelector } from './components/ModeSelector';
+import { ClaySurface, ClayPressable } from '../../components/ClaySurface';
+import { tokens } from '../../theme/tokens';
 
 export const ProfileScreen: React.FC = () => {
   const {
@@ -43,11 +39,11 @@ export const ProfileScreen: React.FC = () => {
   } = useProfile();
 
   return (
-    <View className="flex-1 bg-white">
+    <View className="min-w-0 max-w-full flex-1 bg-med-bg">
       {/* Encabezado Principal */}
-      <View className="px-4 py-3.5 bg-white border-b border-gray-200">
-        <Text className="text-2xl font-bold text-neutral-900">Mi Perfil</Text>
-      </View>
+      <ClaySurface className="px-4 py-3.5 bg-med-bg border-b border-med-border-light rounded-none">
+        <Text className="text-2xl font-bold text-med-text-main">Mi Perfil</Text>
+      </ClaySurface>
 
       {isAuthenticated ? (
         user ? (
@@ -64,7 +60,7 @@ export const ProfileScreen: React.FC = () => {
           />
         ) : (
           <ScrollView
-            className="flex-1 bg-gray-50"
+            className="min-w-0 max-w-full flex-1 bg-med-surface"
             contentContainerClassName="p-4 pb-10"
             keyboardShouldPersistTaps="handled"
             keyboardDismissMode="on-drag"
@@ -81,30 +77,33 @@ export const ProfileScreen: React.FC = () => {
               {loadingProfile ? (
                 <View className="items-center py-4">
                   <ActivityIndicator
-                    size="large"
-                    color="#259487"
+                    size={tokens.indicator.lg}
+                    color={tokens.colors.primary}
                     className="mb-3"
                   />
-                  <Text className="text-base font-bold text-neutral-900 text-center mb-1">
+                  <Text className="text-base font-bold text-med-text-main text-center mb-1">
                     Cargando información del perfil...
                   </Text>
-                  <Text className="text-sm text-gray-500 text-center">
+                  <Text className="text-sm text-med-text-soft text-center">
                     Obteniendo los datos de tu cuenta.
                   </Text>
                 </View>
               ) : (
                 <View className="items-center w-full">
-                  <View className="w-12 h-12 rounded-full bg-amber-50 border border-amber-200 items-center justify-center mb-3">
+                  <ClaySurface
+                    depth="badge"
+                    className="w-12 h-12 rounded-full bg-med-warning-bg border border-med-warning-border items-center justify-center mb-3"
+                  >
                     <Ionicons
                       name="alert-circle-outline"
-                      size={26}
-                      color="#b45309"
+                      size={tokens.iconSize[26]}
+                      color={tokens.colors.warning.badgeText}
                     />
-                  </View>
-                  <Text className="text-lg font-bold text-neutral-900 text-center mb-1">
+                  </ClaySurface>
+                  <Text className="text-lg font-bold text-med-text-main text-center mb-1">
                     Perfil temporalmente no disponible
                   </Text>
-                  <Text className="text-sm text-gray-600 text-center mb-5 leading-relaxed">
+                  <Text className="text-sm text-med-text-muted text-center mb-5 leading-relaxed">
                     {profileError ||
                       'Ocurrió un problema al obtener los datos personales de tu cuenta. Tu sesión continúa activa.'}
                   </Text>
@@ -128,13 +127,13 @@ export const ProfileScreen: React.FC = () => {
           </ScrollView>
         )
       ) : (
-        <View className="flex-1 bg-gray-50">
+        <View className="min-w-0 max-w-full flex-1 bg-med-surface">
           {/* Pestañas de Iniciar Sesión / Registrarse para Invitados */}
-          <View className="flex-row bg-white border-b border-gray-200">
-            <Pressable
+          <ClaySurface className="flex-row bg-med-bg border-b border-med-border-light rounded-none">
+            <ClayPressable
               onPress={() => setTab('login')}
-              className={`flex-1 py-3 items-center border-b-2 ${
-                tab === 'login' ? 'border-primary' : 'border-transparent'
+              className={`min-w-0 max-w-full min-h-touch flex-1 py-3 items-center border-b-2 ${
+                tab === 'login' ? 'border-med-primary' : 'border-transparent'
               }`}
               accessibilityRole="tab"
               accessibilityState={{ selected: tab === 'login' }}
@@ -143,18 +142,18 @@ export const ProfileScreen: React.FC = () => {
               <Text
                 className={`text-base ${
                   tab === 'login'
-                    ? 'text-primary font-bold'
-                    : 'text-gray-600 font-medium'
+                    ? 'text-med-primary font-bold'
+                    : 'text-med-text-muted font-medium'
                 }`}
               >
                 Iniciar Sesión
               </Text>
-            </Pressable>
+            </ClayPressable>
 
-            <Pressable
+            <ClayPressable
               onPress={() => setTab('register')}
-              className={`flex-1 py-3 items-center border-b-2 ${
-                tab === 'register' ? 'border-primary' : 'border-transparent'
+              className={`min-w-0 max-w-full min-h-touch flex-1 py-3 items-center border-b-2 ${
+                tab === 'register' ? 'border-med-primary' : 'border-transparent'
               }`}
               accessibilityRole="tab"
               accessibilityState={{ selected: tab === 'register' }}
@@ -163,20 +162,20 @@ export const ProfileScreen: React.FC = () => {
               <Text
                 className={`text-base ${
                   tab === 'register'
-                    ? 'text-primary font-bold'
-                    : 'text-gray-600 font-medium'
+                    ? 'text-med-primary font-bold'
+                    : 'text-med-text-muted font-medium'
                 }`}
               >
                 Registrarse
               </Text>
-            </Pressable>
-          </View>
+            </ClayPressable>
+          </ClaySurface>
 
           <KeyboardAwareScrollView
-            className="flex-1 bg-gray-50"
+            className="min-w-0 max-w-full flex-1 bg-med-surface"
             contentContainerClassName="p-4 pb-16"
           >
-            <Text className="text-sm text-gray-600 mb-4 leading-5">
+            <Text className="text-sm text-med-text-muted mb-4 leading-5">
               Inicia sesión para agendar citas médicas, consultar tus recetas y
               ver tu historial.
             </Text>

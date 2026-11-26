@@ -1,4 +1,3 @@
-import { AppModal } from '../../../components/AppModal';
 import React from 'react';
 import {
   ActivityIndicator,
@@ -9,9 +8,12 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
+import { AppModal } from '../../../components/AppModal';
 import { Button, SelectModal } from '../../../components';
 import { ModalViewport } from '../../../components/ModalViewport';
 import type { useClinicsScreen } from '../useClinicsScreen';
+import { ClayPressable, ClaySurface } from '../../../components/ClaySurface';
+import { tokens } from '../../../theme/tokens';
 
 type Filters = ReturnType<typeof useClinicsScreen>['filters'];
 
@@ -31,29 +33,31 @@ function FilterField({
   onPress,
 }: FilterFieldProps) {
   return (
-    <Pressable
+    <ClayPressable
       accessibilityRole="button"
       accessibilityLabel={accessibilityLabel}
       accessibilityValue={{ text: value }}
       accessibilityState={{ disabled }}
       disabled={disabled}
       onPress={onPress}
-      className={`border rounded-md px-3 py-3 mb-3 ${disabled ? 'bg-gray-100 border-gray-200' : 'bg-white border-gray-300 active:bg-gray-50'}`}
+      className={`min-h-touch max-w-full border rounded-control px-3 py-3 mb-3 ${disabled ? 'bg-med-surface-muted border-med-border-light' : 'bg-med-bg border-med-border active:bg-med-surface'}`}
     >
-      <Text className="text-xs font-semibold text-gray-600 mb-1">{label}</Text>
+      <Text className="text-xs font-semibold text-med-text-muted mb-1">
+        {label}
+      </Text>
       <View className="flex-row items-center gap-2">
         <Text
-          className={`text-sm flex-1 ${disabled ? 'text-gray-400' : 'text-neutral-900'}`}
+          className={`min-w-0 max-w-full shrink text-sm flex-1 ${disabled ? 'text-med-text-light' : 'text-med-text-main'}`}
         >
           {value}
         </Text>
         <Ionicons
           name="chevron-forward"
-          size={18}
-          color={disabled ? '#9ca3af' : '#4b5563'}
+          size={tokens.iconSize[18]}
+          color={disabled ? tokens.colors.textLight : tokens.colors.textMuted}
         />
       </View>
-    </Pressable>
+    </ClayPressable>
   );
 }
 
@@ -104,7 +108,10 @@ export function ClinicFiltersModal({ filters }: { filters: Filters }) {
             accessibilityRole="button"
             accessibilityLabel="Cerrar filtros de clínicas"
           />
-          <View style={styles.sheet}>
+          <ClaySurface
+            depth="dialog"
+            className="flex-1 max-h-filter rounded-t-dialog overflow-hidden"
+          >
             {filters.panel !== 'filters' ? (
               <SelectModal
                 embedded
@@ -119,21 +126,25 @@ export function ClinicFiltersModal({ filters }: { filters: Filters }) {
               />
             ) : (
               <>
-                <View className="flex-row items-center px-4 py-3 border-b border-gray-200 gap-2">
+                <View className="flex-row items-center px-4 py-3 border-b border-med-border-light gap-2">
                   <Text
                     accessibilityRole="header"
-                    className="text-lg font-bold text-neutral-900 flex-1"
+                    className="min-w-0 max-w-full shrink text-lg font-bold text-med-text-main flex-1"
                   >
                     Filtros de clínicas
                   </Text>
-                  <Pressable
+                  <ClayPressable
                     onPress={filters.close}
                     accessibilityRole="button"
                     accessibilityLabel="Cerrar filtros"
-                    className="h-11 w-11 items-center justify-center rounded-full active:bg-gray-100"
+                    className="min-h-touch max-w-full h-11 w-11 items-center justify-center rounded-full active:bg-med-surface-muted"
                   >
-                    <Ionicons name="close" size={24} color="#4b5563" />
-                  </Pressable>
+                    <Ionicons
+                      name="close"
+                      size={tokens.iconSize[24]}
+                      color={tokens.colors.textMuted}
+                    />
+                  </ClayPressable>
                 </View>
                 <ScrollView
                   style={styles.form}
@@ -141,7 +152,7 @@ export function ClinicFiltersModal({ filters }: { filters: Filters }) {
                   keyboardShouldPersistTaps="handled"
                   keyboardDismissMode="on-drag"
                 >
-                  <Text className="text-sm text-gray-600 mb-4">
+                  <Text className="text-sm text-med-text-muted mb-4">
                     Selecciona un país. Puedes afinar la búsqueda por
                     departamento, ciudad o especialidad.
                   </Text>
@@ -178,13 +189,16 @@ export function ClinicFiltersModal({ filters }: { filters: Filters }) {
                       className="flex-row items-center gap-2 mb-2"
                       accessibilityLiveRegion="polite"
                     >
-                      <ActivityIndicator color="#259487" size="small" />
-                      <Text className="text-sm text-gray-600">
+                      <ActivityIndicator
+                        color={tokens.colors.primary}
+                        size={tokens.indicator.sm}
+                      />
+                      <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted">
                         Cargando opciones...
                       </Text>
                     </View>
                   )}
-                  <View className="pt-3 border-t border-gray-200 gap-2">
+                  <View className="pt-3 border-t border-med-border-light gap-2">
                     <Button
                       text={
                         filters.loadingClinics
@@ -205,7 +219,7 @@ export function ClinicFiltersModal({ filters }: { filters: Filters }) {
                 </ScrollView>
               </>
             )}
-          </View>
+          </ClaySurface>
         </View>
       </ModalViewport>
     </AppModal>
@@ -213,16 +227,8 @@ export function ClinicFiltersModal({ filters }: { filters: Filters }) {
 }
 
 const styles = StyleSheet.create({
-  backdrop: { backgroundColor: 'rgba(0, 0, 0, 0.4)' },
+  backdrop: { backgroundColor: tokens.colors.overlaySoft },
   positioner: { flex: 1, justifyContent: 'flex-end' },
-  sheet: {
-    flex: 1,
-    maxHeight: '92%',
-    backgroundColor: '#ffffff',
-    borderTopLeftRadius: 20,
-    borderTopRightRadius: 20,
-    overflow: 'hidden',
-  },
   form: { flex: 1, minHeight: 0 },
-  formContent: { padding: 16 },
+  formContent: { padding: tokens.spacing.md },
 });

@@ -1,10 +1,9 @@
 import React from 'react';
-import { Pressable, Text, View } from 'react-native';
+import { Text, View } from 'react-native';
 import { Ionicons, MaterialCommunityIcons } from '@expo/vector-icons';
 import { useKeyboardVisibility } from '../hooks/useKeyboardVisibility';
-
-const BRAND_PRIMARY = '#259487';
-const TEXT_MUTED = '#4b5563';
+import { tokens } from '../theme/tokens';
+import { ClayPressable, ClaySurface } from './ClaySurface';
 
 interface TabConfig {
   label: string;
@@ -52,24 +51,18 @@ const TAB_CONFIG: Record<string, TabConfig> = {
   },
 };
 
-/**
- * TabBar real para el navegador <Tabs> de Expo Router.
- * Reemplaza la simulación manual por un componente nativo gestionado por React Navigation,
- * implementado con Tailwind / NativeWind y @expo/vector-icons.
- */
 export const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
   const keyboardVisible = useKeyboardVisibility();
   if (keyboardVisible) return null;
   return (
-    <View
-      className="bg-white border-t border-gray-200 shadow-sm pb-2"
+    <ClaySurface
+      className="bg-med-bg rounded-none border-t border-med-border-light pb-2"
       accessibilityRole="tablist"
     >
       <View className="flex-row items-center justify-around pt-2">
         {state.routes.map((route: any, index: number) => {
           const { options } = descriptors[route.key];
 
-          // Si href es null, la pestaña está oculta
           if (options.href === null) {
             return null;
           }
@@ -83,7 +76,7 @@ export const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
           };
 
           const displayLabel = options.title || config.label;
-          const iconColor = isFocused ? BRAND_PRIMARY : TEXT_MUTED;
+          const iconColor = isFocused ? tokens.colors.primary : tokens.colors.textMuted;
           const iconName = isFocused ? config.activeIcon : config.inactiveIcon;
 
           const onPress = () => {
@@ -99,13 +92,13 @@ export const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
           };
 
           return (
-            <Pressable
+            <ClayPressable
               key={route.key}
               onPress={onPress}
               accessibilityRole="tab"
               accessibilityState={{ selected: isFocused }}
               accessibilityLabel={displayLabel}
-              className="flex-1 items-center justify-center relative py-1"
+              className="min-h-touch min-w-0 flex-1 items-center justify-center relative mx-1 px-1 py-1 rounded-control bg-med-bg"
             >
               {({ pressed }) => (
                 <View
@@ -113,45 +106,42 @@ export const TabBar: React.FC<any> = ({ state, descriptors, navigation }) => {
                     pressed ? 'opacity-70' : 'opacity-100'
                   }`}
                 >
-                  {/* Indicador superior de pestaña activa */}
                   {isFocused && (
-                    <View className="absolute -top-2 w-8 h-[3px] bg-primary rounded-full" />
+                    <View className="absolute -top-2 w-8 h-indicator bg-med-primary rounded-full" />
                   )}
 
-                  {/* Icono de la pestaña */}
                   <View className="items-center justify-center h-6">
                     {config.iconFamily === 'MaterialCommunityIcons' ? (
                       <MaterialCommunityIcons
                         name={iconName as any}
-                        size={22}
+                        size={tokens.iconSize[22]}
                         color={iconColor}
                       />
                     ) : (
                       <Ionicons
                         name={iconName as any}
-                        size={22}
+                        size={tokens.iconSize[22]}
                         color={iconColor}
                       />
                     )}
                   </View>
 
-                  {/* Texto de la pestaña */}
                   <Text
-                    className={`text-xs mt-1 ${
+                    className={`max-w-full text-center text-xs mt-1 ${
                       isFocused
-                        ? 'text-primary font-semibold'
-                        : 'text-gray-600 font-medium'
+                        ? 'text-med-primary font-semibold'
+                        : 'text-med-text-muted font-medium'
                     }`}
                   >
                     {displayLabel}
                   </Text>
                 </View>
               )}
-            </Pressable>
+            </ClayPressable>
           );
         })}
       </View>
-    </View>
+    </ClaySurface>
   );
 };
 

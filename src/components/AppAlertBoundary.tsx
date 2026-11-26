@@ -1,16 +1,15 @@
 import React, { useEffect, useId, useSyncExternalStore } from 'react';
-import { Keyboard, Pressable, StyleSheet, View } from 'react-native';
+import { Keyboard, Pressable, View } from 'react-native';
 import { appAlerts, AppAlertRequest } from '../utils/appAlerts';
-import { DialogCard, dialogBackdropColor } from './DialogCard';
+import { DialogCard } from './DialogCard';
 
 export function AppAlertContent({ request }: { request: AppAlertRequest }) {
   return (
     <View
-      className="flex-1 justify-center items-center px-5 py-4"
-      style={{ minHeight: 0 }}
+      className="flex-1 min-h-0 justify-center items-center px-5 py-4"
     >
       <Pressable
-        style={StyleSheet.absoluteFill}
+        className="absolute inset-0"
         accessible={false}
         onPress={() => appAlerts.dismiss(request.id)}
       />
@@ -47,9 +46,9 @@ export function AppAlertBoundary({ children }: { children: React.ReactNode }) {
     Keyboard.dismiss();
   }, [current?.id]);
   return (
-    <View style={{ flex: 1, minHeight: 0 }}>
+    <View className="flex-1 min-h-0">
       <View
-        style={{ flex: 1, minHeight: 0 }}
+        className="flex-1 min-h-0"
         importantForAccessibility={current ? 'no-hide-descendants' : 'auto'}
         accessibilityElementsHidden={!!current}
       >
@@ -57,10 +56,7 @@ export function AppAlertBoundary({ children }: { children: React.ReactNode }) {
       </View>
       {current && (
         <View
-          style={[
-            StyleSheet.absoluteFill,
-            { zIndex: 1000, backgroundColor: dialogBackdropColor },
-          ]}
+          className="absolute inset-0 z-overlay bg-med-overlay"
           accessibilityViewIsModal
           onAccessibilityEscape={() => appAlerts.dismiss(current.id)}
         >

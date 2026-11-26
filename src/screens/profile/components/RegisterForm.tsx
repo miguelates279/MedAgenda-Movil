@@ -2,19 +2,28 @@ import React from 'react';
 import { Pressable, Text, View } from 'react-native';
 import { Button, Field } from '../../../components';
 import { useRegisterForm } from '../../../hooks/useRegisterForm';
+import { ClaySurface } from '../../../components/ClaySurface';
 
 export interface RegisterFormProps {
   onSwitchToLogin: () => void;
 }
 
-export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) => {
-  const { control, handleSubmit, onSubmit, loading, serverError, passwordValue } =
-    useRegisterForm();
+export const RegisterForm: React.FC<RegisterFormProps> = ({
+  onSwitchToLogin,
+}) => {
+  const {
+    control,
+    handleSubmit,
+    onSubmit,
+    loading,
+    serverError,
+    passwordValue,
+  } = useRegisterForm();
 
   return (
     <View className="w-full">
-      <View className="flex-row gap-2">
-        <View className="flex-1">
+      <View className="flex-row flex-wrap gap-x-2">
+        <View className="flex-1 min-w-action-sm max-w-full">
           <Field
             control={control}
             name="first_name"
@@ -23,7 +32,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             rules={{ required: 'Requerido' }}
           />
         </View>
-        <View className="flex-1">
+        <View className="flex-1 min-w-action-sm max-w-full">
           <Field
             control={control}
             name="second_name"
@@ -33,8 +42,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         </View>
       </View>
 
-      <View className="flex-row gap-2">
-        <View className="flex-1">
+      <View className="flex-row flex-wrap gap-x-2">
+        <View className="flex-1 min-w-action-sm max-w-full">
           <Field
             control={control}
             name="first_last_name"
@@ -43,7 +52,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
             rules={{ required: 'Requerido' }}
           />
         </View>
-        <View className="flex-1">
+        <View className="flex-1 min-w-action-sm max-w-full">
           <Field
             control={control}
             name="second_last_name"
@@ -99,14 +108,17 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
         secureTextEntry
         rules={{
           required: 'Confirma tu contraseña',
-          validate: (v: string) => v === passwordValue || 'Las contraseñas no coinciden',
+          validate: (v: string) =>
+            v === passwordValue || 'Las contraseñas no coinciden',
         }}
       />
 
       {serverError ? (
-        <View className="bg-red-50 border border-red-200 rounded-md p-2.5 mb-3">
-          <Text className="text-red-700 text-sm font-medium">{serverError}</Text>
-        </View>
+        <ClaySurface className="bg-med-error-bg border border-med-error-border rounded-clay p-2.5 mb-3">
+          <Text className="text-med-error-badge-text text-sm font-medium">
+            {serverError}
+          </Text>
+        </ClaySurface>
       ) : null}
 
       <Button
@@ -118,13 +130,13 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({ onSwitchToLogin }) =
 
       <Pressable
         onPress={onSwitchToLogin}
-        className="mt-4 py-2 items-center active:opacity-70"
+        className="min-h-touch max-w-full justify-center mt-4 py-2 items-center active:opacity-70"
         accessibilityRole="button"
         accessibilityLabel="Cambiar a inicio de sesión"
       >
-        <Text className="text-sm text-gray-600">
+        <Text className="text-sm text-med-text-muted">
           ¿Ya tienes cuenta?{' '}
-          <Text className="text-primary font-bold">Inicia sesión</Text>
+          <Text className="text-med-primary font-bold">Inicia sesión</Text>
         </Text>
       </Pressable>
     </View>

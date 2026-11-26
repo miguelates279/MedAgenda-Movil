@@ -19,8 +19,8 @@ export const ClinicCard: React.FC<ClinicCardProps> = ({
 }) => {
   const clinicContent = (
     <>
-      <View className="flex-row justify-between items-start mb-1.5">
-        <Text className="text-base font-bold text-neutral-900 flex-1 mr-2">
+      <View className="flex-row flex-wrap gap-2 justify-between items-start mb-1.5">
+        <Text className="text-base font-bold text-med-text-main flex-1 min-w-0">
           {clinic.clinic_name}
         </Text>
         <Badge
@@ -29,11 +29,11 @@ export const ClinicCard: React.FC<ClinicCardProps> = ({
         />
       </View>
 
-      <Text className="text-sm text-gray-600 mb-0.5">{clinic.clinic_address}</Text>
-      <Text className="text-sm text-gray-600 mb-1">{clinic.clinic_phone_number}</Text>
+      <Text className="text-sm text-med-text-muted mb-0.5">{clinic.clinic_address}</Text>
+      <Text className="text-sm text-med-text-muted mb-1">{clinic.clinic_phone_number}</Text>
 
       {clinic.clinic_description ? (
-        <Text className="text-xs text-gray-400 mt-1" numberOfLines={2}>
+        <Text className="text-xs text-med-text-light mt-1" numberOfLines={2}>
           {clinic.clinic_description}
         </Text>
       ) : null}
@@ -50,8 +50,8 @@ export const ClinicCard: React.FC<ClinicCardProps> = ({
         clinicContent
       )}
 
-      <View className="mt-2.5 pt-2 border-t border-gray-100 items-end">
-        {footer || <Text className="text-xs font-semibold text-primary">Ver doctores y horarios</Text>}
+      <View className="mt-2.5 pt-2 border-t border-med-border-light items-end">
+        {footer || <Text className="text-xs font-semibold text-med-primary">Ver doctores y horarios</Text>}
       </View>
     </Card>
   );

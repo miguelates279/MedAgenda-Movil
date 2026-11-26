@@ -19,18 +19,18 @@ export function ModalViewport({
   return (
     <SafeAreaProvider style={[{ flex: 1, minHeight: 0 }, style]}>
       <SafeAreaView
-        style={{ flex: 1, minHeight: 0 }}
+        className="flex-1 min-h-0"
         edges={['top', 'right', 'bottom', 'left']}
       >
         <KeyboardAvoidingView
-          style={{ flex: 1, minHeight: 0 }}
+          className="flex-1 min-h-0"
           enabled={keyboardAvoiding}
           behavior="padding"
         >
           {alertHost ? (
             <AppAlertBoundary>{children}</AppAlertBoundary>
           ) : (
-            <View style={{ flex: 1, minHeight: 0 }}>{children}</View>
+            <View className="flex-1 min-h-0">{children}</View>
           )}
         </KeyboardAvoidingView>
       </SafeAreaView>

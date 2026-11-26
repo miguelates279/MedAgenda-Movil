@@ -1,10 +1,12 @@
 import React from 'react';
-import { Pressable, ScrollView, Text, View } from 'react-native';
+import { ScrollView, Text, View, useWindowDimensions } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
 import { Badge } from '../../../components';
 import { UserProfile } from '../../../api/types';
 import { AppMode } from '../../../context/AuthContext';
 import { ModeSelector } from './ModeSelector';
+import { ClaySurface, ClayPressable } from '../../../components/ClaySurface';
+import { tokens } from '../../../theme/tokens';
 
 export interface UserProfileViewProps {
   user: UserProfile;
@@ -29,24 +31,30 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
   onSelectMode,
   onLogout,
 }) => {
+  const { fontScale } = useWindowDimensions();
+  const avatarSize = tokens.layout.avatarProfile * Math.max(1, fontScale);
   return (
     <ScrollView
-      className="flex-1 bg-gray-50"
+      className="min-w-0 max-w-full flex-1 bg-med-surface"
       contentContainerClassName="p-4 pb-10"
     >
       {/* Tarjeta de Avatar e Identidad */}
-      <View className="items-center py-6 bg-white rounded-lg border border-gray-200 shadow-sm mb-4">
-        <View className="w-24 h-24 rounded-full bg-primary items-center justify-center mb-3.5 shadow-sm">
-          <Text className="text-white text-3xl font-bold uppercase tracking-wider">
+      <ClaySurface className="items-center py-6 bg-med-bg rounded-clay border border-med-border-light mb-4">
+        <ClaySurface
+          depth="badge"
+          style={{ width: avatarSize, height: avatarSize }}
+          className="shrink-0 rounded-full bg-med-primary items-center justify-center mb-3.5"
+        >
+          <Text className="text-med-on-primary text-3xl font-bold uppercase tracking-wider">
             {initials || 'U'}
           </Text>
-        </View>
+        </ClaySurface>
 
-        <Text className="text-xl font-bold text-neutral-900 mb-1 text-center px-4">
+        <Text className="text-xl font-bold text-med-text-main mb-1 text-center px-4">
           {fullName || 'Usuario'}
         </Text>
 
-        <Text className="text-sm text-gray-600 mb-3.5 text-center">
+        <Text className="text-sm text-med-text-muted mb-3.5 text-center px-4 max-w-full">
           {user.user_email_address}
         </Text>
 
@@ -59,7 +67,7 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
             textClassName="text-sm font-semibold"
           />
         </View>
-      </View>
+      </ClaySurface>
 
       {/* Selector de Modo de Aplicación (solo si hay 2 o más modos disponibles) */}
       <ModeSelector
@@ -69,59 +77,97 @@ export const UserProfileView: React.FC<UserProfileViewProps> = ({
       />
 
       {/* Información de la Cuenta */}
-      <View className="bg-white rounded-lg border border-gray-200 shadow-sm mb-4">
-        <View className="flex-row items-center px-4 py-3.5 border-b border-gray-100">
-          <View className="w-8 h-8 rounded-full bg-teal-50 items-center justify-center mr-2.5">
-            <Ionicons name="person" size={17} color="#259487" />
-          </View>
-          <Text className="text-base font-bold text-neutral-900">
+      <ClaySurface className="bg-med-bg rounded-clay border border-med-border-light mb-4">
+        <View className="flex-row items-center px-4 py-3.5 border-b border-med-border-light">
+          <ClaySurface
+            depth="badge"
+            className="w-8 h-8 rounded-full bg-med-primary-surface items-center justify-center mr-2.5"
+          >
+            <Ionicons
+              name="person"
+              size={tokens.iconSize[17]}
+              color={tokens.colors.primary}
+            />
+          </ClaySurface>
+          <Text className="min-w-0 max-w-full shrink text-base font-bold text-med-text-main">
             Datos Personales
           </Text>
         </View>
 
-        <View className="flex-row justify-between items-center px-4 py-3.5 border-b border-gray-100">
-          <View className="flex-row items-center">
-            <Ionicons name="card-outline" size={18} color="#9ca3af" />
-            <Text className="text-sm text-gray-600 ml-2.5 font-medium">Identificación</Text>
+        <View className="flex-row flex-wrap gap-x-3 gap-y-2 justify-between items-center px-4 py-3.5 border-b border-med-border-light">
+          <View className="flex-row items-center min-w-0 max-w-full">
+            <Ionicons
+              name="card-outline"
+              size={tokens.iconSize[18]}
+              color={tokens.colors.textLight}
+            />
+            <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted ml-2.5 font-medium">
+              Identificación
+            </Text>
           </View>
-          <Text className="text-sm text-neutral-900 font-semibold max-w-[65%] text-right">
+          <Text
+            className="shrink text-sm text-med-text-main font-semibold grow min-w-0 max-w-full text-right"
+            style={{ flexBasis: tokens.layout.cardMinWidth }}
+          >
             {user.legal_id || '—'}
           </Text>
         </View>
 
-        <View className="flex-row justify-between items-center px-4 py-3.5 border-b border-gray-100">
-          <View className="flex-row items-center">
-            <Ionicons name="call-outline" size={18} color="#9ca3af" />
-            <Text className="text-sm text-gray-600 ml-2.5 font-medium">Teléfono</Text>
+        <View className="flex-row flex-wrap gap-x-3 gap-y-2 justify-between items-center px-4 py-3.5 border-b border-med-border-light">
+          <View className="flex-row items-center min-w-0 max-w-full">
+            <Ionicons
+              name="call-outline"
+              size={tokens.iconSize[18]}
+              color={tokens.colors.textLight}
+            />
+            <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted ml-2.5 font-medium">
+              Teléfono
+            </Text>
           </View>
-          <Text className="text-sm text-neutral-900 font-semibold max-w-[65%] text-right">
+          <Text
+            className="shrink text-sm text-med-text-main font-semibold grow min-w-0 max-w-full text-right"
+            style={{ flexBasis: tokens.layout.cardMinWidth }}
+          >
             {user.user_phone_number || '—'}
           </Text>
         </View>
 
-        <View className="flex-row justify-between items-center px-4 py-3.5">
-          <View className="flex-row items-center">
-            <Ionicons name="mail-outline" size={18} color="#9ca3af" />
-            <Text className="text-sm text-gray-600 ml-2.5 font-medium">Correo</Text>
+        <View className="flex-row flex-wrap gap-x-3 gap-y-2 justify-between items-center px-4 py-3.5">
+          <View className="flex-row items-center min-w-0 max-w-full">
+            <Ionicons
+              name="mail-outline"
+              size={tokens.iconSize[18]}
+              color={tokens.colors.textLight}
+            />
+            <Text className="min-w-0 max-w-full shrink text-sm text-med-text-muted ml-2.5 font-medium">
+              Correo
+            </Text>
           </View>
-          <Text className="text-sm text-neutral-900 font-semibold max-w-[65%] text-right">
+          <Text
+            className="shrink text-sm text-med-text-main font-semibold grow min-w-0 max-w-full text-right"
+            style={{ flexBasis: tokens.layout.cardMinWidth }}
+          >
             {user.user_email_address}
           </Text>
         </View>
-      </View>
+      </ClaySurface>
 
       {/* Botón de Cerrar Sesión */}
-      <Pressable
+      <ClayPressable
         onPress={onLogout}
-        className="flex-row items-center justify-center bg-red-50 border border-red-200 rounded-md py-3.5 px-4 shadow-sm active:bg-red-100"
+        className="min-h-touch max-w-full flex-row items-center justify-center bg-med-error-bg border border-med-error-border rounded-control py-3.5 px-4 active:bg-med-error-badge-bg"
         accessibilityRole="button"
         accessibilityLabel="Cerrar Sesión"
       >
-        <Ionicons name="log-out-outline" size={20} color="#991b1b" />
-        <Text className="text-base font-bold text-red-800 ml-2">
+        <Ionicons
+          name="log-out-outline"
+          size={tokens.iconSize[20]}
+          color={tokens.colors.error.text}
+        />
+        <Text className="min-w-0 max-w-full shrink text-base font-bold text-med-error-text ml-2">
           Cerrar Sesión
         </Text>
-      </Pressable>
+      </ClayPressable>
     </ScrollView>
   );
 };

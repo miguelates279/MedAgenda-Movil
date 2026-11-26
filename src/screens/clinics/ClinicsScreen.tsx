@@ -2,7 +2,6 @@ import React from 'react';
 import {
   ActivityIndicator,
   FlatList,
-  Pressable,
   RefreshControl,
   Text,
   View,
@@ -11,14 +10,16 @@ import { Ionicons } from '@expo/vector-icons';
 import { Button, ClinicCard } from '../../components';
 import { ClinicFiltersModal } from './components/ClinicFiltersModal';
 import { useClinicsScreen } from './useClinicsScreen';
+import { ClaySurface, ClayPressable } from '../../components/ClaySurface';
+import { tokens } from '../../theme/tokens';
 
 export function ClinicsScreen() {
   const screen = useClinicsScreen();
   return (
-    <View className="flex-1 bg-white">
-      <View className="flex-row items-center justify-between px-4 py-3 bg-white border-b border-gray-200 gap-2">
+    <View className="min-w-0 max-w-full flex-1 bg-med-bg">
+      <ClaySurface className="flex-row flex-wrap items-center justify-between px-4 py-3 bg-med-bg border-b border-med-border-light gap-2 rounded-none">
         <Text
-          className="text-xl font-bold text-neutral-900 flex-1"
+          className="min-w-0 max-w-full shrink text-xl font-bold text-med-text-main flex-1"
           accessibilityRole="header"
         >
           Clínicas
@@ -30,49 +31,60 @@ export function ClinicsScreen() {
             className="py-1.5 px-3"
           />
         )}
-        <Pressable
+        <ClayPressable
           onPress={screen.openProfile}
-          className="w-11 h-11 rounded-full bg-gray-100 border border-gray-200 items-center justify-center active:bg-gray-200"
+          className="min-h-touch max-w-full w-11 h-11 rounded-full bg-med-surface-muted border border-med-border-light items-center justify-center active:bg-med-border-light"
           accessibilityRole="button"
           accessibilityLabel="Ver perfil"
         >
-          <Ionicons name="person" size={18} color="#4b5563" />
-        </Pressable>
-      </View>
-      <View className="flex-row items-center bg-white px-4 py-3 border-b border-gray-200 gap-3">
-        <View className="flex-1">
-          <Text className="text-xs text-gray-500 mb-1">
+          <Ionicons
+            name="person"
+            size={tokens.iconSize[18]}
+            color={tokens.colors.textMuted}
+          />
+        </ClayPressable>
+      </ClaySurface>
+      <ClaySurface className="flex-row flex-wrap items-center bg-med-bg px-4 py-3 border-b border-med-border-light gap-3 rounded-none">
+        <View
+          className="grow min-w-0 max-w-full"
+          style={{ flexBasis: tokens.layout.cardMinWidth }}
+        >
+          <Text className="text-xs text-med-text-soft mb-1">
             {screen.hasSearched
               ? 'Última búsqueda'
               : 'Ubicación y especialidades'}
           </Text>
           <Text
-            className="text-sm font-medium text-neutral-900"
+            className="text-sm font-medium text-med-text-main"
             numberOfLines={2}
           >
             {screen.summary}
           </Text>
           {screen.hasPendingFilters && (
             <Text
-              className="text-xs text-amber-800 mt-1"
+              className="text-xs text-med-warning-text mt-1"
               accessibilityLiveRegion="polite"
             >
               Hay filtros sin aplicar
             </Text>
           )}
         </View>
-        <Pressable
+        <ClayPressable
           onPress={() => screen.openFilters()}
-          className="min-h-11 flex-row items-center gap-2 px-3 py-2.5 border border-primary rounded-md bg-teal-50 active:bg-teal-100"
+          className="min-h-touch max-w-full min-h-11 flex-row items-center gap-2 px-3 py-2.5 border border-med-primary rounded-control bg-med-primary-surface active:bg-med-primary-light"
           accessibilityRole="button"
           accessibilityLabel="Abrir filtros de clínicas"
         >
-          <Ionicons name="options-outline" size={20} color="#1d756b" />
-          <Text className="text-sm font-semibold text-teal-800">
+          <Ionicons
+            name="options-outline"
+            size={tokens.iconSize[20]}
+            color={tokens.colors.primaryDark}
+          />
+          <Text className="min-w-0 max-w-full shrink text-sm font-semibold text-med-primary-dark">
             Filtros{screen.filterCount ? ` (${screen.filterCount})` : ''}
           </Text>
-        </Pressable>
-      </View>
+        </ClayPressable>
+      </ClaySurface>
       <FlatList
         style={{ flex: 1 }}
         data={screen.loadingClinics ? [] : screen.clinics}
@@ -84,28 +96,30 @@ export function ClinicsScreen() {
             className="mb-3"
           />
         )}
-        contentContainerStyle={{ padding: 16, flexGrow: 1 }}
+        contentContainerStyle={{ padding: tokens.spacing.md, flexGrow: 1 }}
         keyboardShouldPersistTaps="handled"
         refreshControl={
           <RefreshControl
             refreshing={screen.loadingClinics}
             onRefresh={screen.refresh}
-            tintColor="#259487"
-            colors={['#259487']}
+            tintColor={tokens.colors.primary}
+            colors={[tokens.colors.primary]}
           />
         }
         ListHeaderComponent={
           <>
             {screen.error && (
-              <View
-                className="bg-red-50 border border-red-200 p-3 mb-4 rounded-md"
+              <ClaySurface
+                className="bg-med-error-bg border border-med-error-border p-3 mb-4 rounded-clay"
                 accessibilityLiveRegion="polite"
               >
-                <Text className="text-red-700 text-sm">{screen.error}</Text>
-              </View>
+                <Text className="text-med-error-badge-text text-sm">
+                  {screen.error}
+                </Text>
+              </ClaySurface>
             )}
             {screen.hasSearched && !screen.loadingClinics && (
-              <Text className="text-sm text-gray-600 mb-3">
+              <Text className="text-sm text-med-text-muted mb-3">
                 {screen.clinics.length} clínica
                 {screen.clinics.length === 1 ? '' : 's'} encontrada
                 {screen.clinics.length === 1 ? '' : 's'}
@@ -114,11 +128,14 @@ export function ClinicsScreen() {
           </>
         }
         ListEmptyComponent={
-          <View className="flex-1 justify-center items-center px-3 py-8">
+          <View className="min-w-0 max-w-full flex-1 justify-center items-center px-3 py-8">
             {screen.loadingClinics ? (
               <>
-                <ActivityIndicator size="large" color="#259487" />
-                <Text className="text-sm text-gray-600 mt-3">
+                <ActivityIndicator
+                  size={tokens.indicator.lg}
+                  color={tokens.colors.primary}
+                />
+                <Text className="text-sm text-med-text-muted mt-3">
                   Buscando clínicas...
                 </Text>
               </>
@@ -128,15 +145,15 @@ export function ClinicsScreen() {
                   name={
                     screen.hasSearched ? 'search-outline' : 'business-outline'
                   }
-                  size={36}
-                  color="#259487"
+                  size={tokens.iconSize[36]}
+                  color={tokens.colors.primary}
                 />
-                <Text className="text-base font-bold text-neutral-900 text-center mt-3 mb-2">
+                <Text className="text-base font-bold text-med-text-main text-center mt-3 mb-2">
                   {screen.hasSearched
                     ? 'No se encontraron clínicas'
                     : 'Encuentra tu clínica'}
                 </Text>
-                <Text className="text-sm text-gray-600 text-center mb-4">
+                <Text className="text-sm text-med-text-muted text-center mb-4">
                   {screen.hasSearched
                     ? 'Cambia la ubicación o las especialidades para ampliar tu búsqueda.'
                     : 'Elige un país y, si quieres, filtra por ciudad o especialidad.'}

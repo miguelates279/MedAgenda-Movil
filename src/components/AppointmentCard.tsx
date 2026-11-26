@@ -38,10 +38,10 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
 
   return (
     <Card onPress={onPress} className={`mb-3 ${className}`}>
-      <View className="flex-row justify-between items-start">
-        <View className="flex-1">
-          <Text className="text-sm font-bold text-neutral-900 capitalize">{dateStr}</Text>
-          <Text className="text-xs text-primary font-semibold mt-0.5">{timeStr}</Text>
+      <View className="flex-row flex-wrap gap-2 justify-between items-start">
+        <View className="flex-1 min-w-0">
+          <Text className="text-sm font-bold text-med-text-main capitalize">{dateStr}</Text>
+          <Text className="text-xs text-med-primary font-semibold mt-0.5">{timeStr}</Text>
         </View>
         <Badge
           text={isUpcoming ? 'Programada' : 'Finalizada'}
@@ -49,19 +49,19 @@ export const AppointmentCard: React.FC<AppointmentCardProps> = ({
         />
       </View>
 
-      <View className="h-[1px] bg-gray-100 my-2.5" />
+      <View className="border-t border-med-border-light my-2.5" />
 
-      <Text className="text-sm font-semibold text-neutral-900 mb-1">{doctorName}</Text>
-      <Text className="text-sm text-gray-600 mb-1">{appointment.clinic_name}</Text>
+      <Text className="text-sm font-semibold text-med-text-main mb-1">{doctorName}</Text>
+      <Text className="text-sm text-med-text-muted mb-1">{appointment.clinic_name}</Text>
 
       {appointment.appointment_description ? (
-        <Text className="text-xs text-gray-600 mt-1 italic" numberOfLines={2}>
+        <Text className="text-xs text-med-text-muted mt-1 italic" numberOfLines={2}>
           {appointment.appointment_description}
         </Text>
       ) : null}
 
-      <View className="mt-2.5 pt-2 border-t border-gray-100 items-end">
-        <Text className="text-xs font-semibold text-primary">Ver detalles / Gestionar</Text>
+      <View className="mt-2.5 pt-2 border-t border-med-border-light items-end">
+        <Text className="text-xs font-semibold text-med-primary">Ver detalles / Gestionar</Text>
       </View>
     </Card>
   );

@@ -7,6 +7,7 @@ import { SafeAreaProvider, SafeAreaView } from 'react-native-safe-area-context';
 import { AuthProvider, useAuth } from '../src/context/AuthContext';
 import { AppointmentReminderLifecycle } from '../src/screens/appointments/reminders/AppointmentReminderLifecycle';
 import { AppAlertHost } from '../src/components/AppAlertHost';
+import { tokens } from '../src/theme/tokens';
 
 function RootNavigation() {
   const { isAuthenticated, activeMode } = useAuth();
@@ -15,7 +16,7 @@ function RootNavigation() {
     <Stack
       screenOptions={{
         headerShown: false,
-        contentStyle: { backgroundColor: '#f9fafb' },
+        contentStyle: { backgroundColor: tokens.colors.surface },
       }}
     >
       <Stack.Screen name="index" />
@@ -46,9 +47,9 @@ export default function RootLayout() {
   return (
     <SafeAreaProvider>
       <AuthProvider>
-        <StatusBar style="dark" />
+        <StatusBar style={tokens.statusBarStyle} />
         <SafeAreaView
-          style={{ flex: 1, backgroundColor: '#ffffff' }}
+          style={{ flex: 1, backgroundColor: tokens.colors.bg }}
           edges={['top', 'right', 'bottom', 'left']}
         >
           <RootNavigation />

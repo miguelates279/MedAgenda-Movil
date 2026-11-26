@@ -1,110 +1,22 @@
-/**
- * Basado en dict_styles.md y DESIGN_SYSTEM.md
-*/
+import definitions from './design-tokens.js';
 
 export const tokens = {
-  colors: {
-    // Marca
-    primary: '#259487',
-    primaryHover: '#4682B4',
-    primaryLight: '#e6f4f2',
-    primaryDark: '#1d7369',
-    secondary: '#4682B4',
-
-    // Neutros y Superficies
-    bg: '#ffffff',
-    surface: '#f9fafb',
-    surfaceMuted: '#f3f4f6',
-    border: '#d1d5db',
-    borderLight: '#e5e7eb',
-
-    // Tipografía
-    textMain: '#171717',
-    textMuted: '#4b5563',
-    textLight: '#9ca3af',
-
-    // Semánticos / Feedback
-    success: {
-      bg: '#ecfdf5',
-      border: '#a7f3d0',
-      text: '#065f46',
-      badgeBg: '#d1fae5',
-      badgeText: '#047857',
-    },
-    error: {
-      bg: '#fef2f2',
-      border: '#fecaca',
-      text: '#991b1b',
-      badgeBg: '#fee2e2',
-      badgeText: '#b91c1c',
-    },
-    warning: {
-      bg: '#fffbeb',
-      border: '#fde68a',
-      text: '#92400e',
-      badgeBg: '#fef3c7',
-      badgeText: '#b45309',
-    },
-    info: {
-      bg: '#eff6ff',
-      border: '#bfdbfe',
-      text: '#1e40af',
-      badgeBg: '#dbeafe',
-      badgeText: '#1d4ed8',
-    },
-
-    // Badges Especiales
-    badgeCyan: {
-      bg: '#cffafe',
-      text: '#0e7490',
-    },
-    badgePurple: {
-      bg: '#f3e8ff',
-      text: '#7e22ce',
-    },
-  },
-
-  fontSize: {
-    xs: 14,
-    sm: 15.5,
-    base: 16.5,
-    lg: 18.5,
-    xl: 20.5,
-    '2xl': 24.5,
-  },
-
-  spacing: {
-    xxs: 4,
-    xs: 8,
-    sm: 12,
-    md: 16,
-    lg: 24,
-    xl: 32,
-  },
-
+  ...definitions,
+  statusBarStyle: definitions.statusBarStyle as 'dark',
   borderRadius: {
-    sm: 4,
-    md: 6,
-    lg: 8,
-    full: 9999,
+    ...definitions.radius,
+    sm: definitions.radius['med-sm'],
+    md: definitions.radius['med-md'],
+    lg: definitions.radius['med-lg'],
   },
-
-  shadows: {
-    sm: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 1 },
-      shadowOpacity: 0.05,
-      shadowRadius: 2,
-      elevation: 1,
-    },
-    md: {
-      shadowColor: '#000000',
-      shadowOffset: { width: 0, height: 4 },
-      shadowOpacity: 0.1,
-      shadowRadius: 6,
-      elevation: 3,
-    },
+  indicator: definitions.indicator as { sm: 'small'; lg: 'large' },
+  layout: {
+    ...definitions.layout,
+    selectHeight: definitions.layout.selectHeight as `${number}%`,
+    filterHeight: definitions.layout.filterHeight as `${number}%`,
+    full: definitions.layout.full as `${number}%`,
   },
+  shadows: { sm: definitions.legacyShadow, md: definitions.legacyShadow },
 } as const;
 
 export type AppTokens = typeof tokens;

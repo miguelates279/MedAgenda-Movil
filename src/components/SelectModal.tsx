@@ -3,13 +3,15 @@ import React, { useState } from 'react';
 import {
   FlatList,
   ActivityIndicator,
-  Pressable,
   Text,
   TextInput,
   View,
 } from 'react-native';
 import Button from './Button';
 import { ModalViewport } from './ModalViewport';
+import { ClayPressable, ClaySurface } from './ClaySurface';
+import { tokens } from '../theme/tokens';
+import { clayClasses } from '../theme/clay';
 
 export interface SelectOption {
   label: string;
@@ -85,51 +87,48 @@ export const SelectModal: React.FC<SelectModalProps> = ({
   };
 
   const content = (
-    <View
-      className="bg-white rounded-t-2xl"
-      style={{ flex: 1, minHeight: 0, overflow: 'hidden' }}
+    <ClaySurface
+      depth="dialog"
+      className="flex-1 min-h-0 overflow-hidden bg-med-bg rounded-t-dialog"
     >
       <FlatList
-        style={{ flex: 1, minHeight: 0 }}
+        className="flex-1 min-h-0"
         data={loading ? [] : filteredItems}
         extraData={multiple ? tempMultiSelected : selectedValue}
         keyExtractor={(item) => String(item.value)}
         keyboardShouldPersistTaps="handled"
         keyboardDismissMode="on-drag"
         removeClippedSubviews={false}
-        contentContainerStyle={{ paddingBottom: 8 }}
+        contentContainerClassName="pb-2"
         ListHeaderComponent={
           <View>
-            <View className="flex-row justify-between items-center px-4 pt-2 pb-2 border-b border-gray-200">
+            <View className="flex-row justify-between items-center px-4 pt-2 pb-2 border-b border-med-border-light">
               <Text
-                className="text-base font-bold text-neutral-900 flex-1 mr-2"
+                className="text-base font-bold text-med-text-main flex-1 min-w-0 mr-2"
                 accessibilityRole="header"
               >
                 {title}
               </Text>
-              <Pressable
+              <ClayPressable
                 onPress={onClose}
-                style={{
-                  minWidth: 48,
-                  minHeight: 48,
-                  alignItems: 'center',
-                  justifyContent: 'center',
-                }}
+                className="min-w-touch min-h-touch items-center justify-center rounded-control bg-med-bg"
                 accessibilityRole="button"
                 accessibilityLabel={`Cerrar ${title}`}
               >
-                <Text className="text-lg text-gray-600 font-semibold">✕</Text>
-              </Pressable>
+                <Text className="text-lg text-med-text-muted font-semibold">
+                  ✕
+                </Text>
+              </ClayPressable>
             </View>
-            <View className="px-4 py-2.5 border-b border-gray-100">
+            <View className="px-4 py-2.5 border-b border-med-border-light">
               <TextInput
                 value={search}
                 onChangeText={setSearch}
                 placeholder={placeholder}
-                placeholderTextColor="#9ca3af"
+                placeholderTextColor={tokens.colors.textLight}
                 accessibilityLabel={`Buscar en ${title}`}
-                className="bg-gray-50 border border-gray-300 rounded-md px-3 py-2 text-sm text-neutral-900"
-                style={{ minHeight: 44 }}
+                className={`${clayClasses.inset} min-h-search bg-med-surface border border-med-border rounded-input px-3 py-2 text-sm text-med-text-main`}
+
                 clearButtonMode="while-editing"
               />
             </View>
@@ -138,29 +137,34 @@ export const SelectModal: React.FC<SelectModalProps> = ({
         renderItem={({ item }) => {
           const checked = isSelected(item.value);
           return (
-            <Pressable
+            <ClayPressable
+              depth={checked ? 'inset' : 'control'}
               onPress={() => handleItemPress(item.value)}
               accessibilityRole={multiple ? 'checkbox' : 'radio'}
               accessibilityState={{ checked }}
               accessibilityLabel={item.label}
-              style={{ minHeight: 48 }}
-              className={`flex-row justify-between items-center px-4 py-3 border-b border-gray-100 active:bg-gray-100 ${checked ? 'bg-[#e6f4f2]' : ''}`}
+              className={`min-h-touch flex-row justify-between items-center px-4 py-3 rounded-control border-b border-med-border-light active:bg-med-surface-muted ${checked ? 'bg-med-primary-light' : 'bg-med-bg'}`}
             >
               <Text
-                className={`text-sm flex-1 mr-3 ${checked ? 'text-primary font-semibold' : 'text-neutral-900'}`}
+                className={`text-sm flex-1 min-w-0 mr-3 ${checked ? 'text-med-primary font-semibold' : 'text-med-text-main'}`}
               >
                 {item.label}
               </Text>
               {checked && (
-                <Text className="text-primary text-base font-bold">✓</Text>
+                <Text className="text-med-primary text-base font-bold">✓</Text>
               )}
-            </Pressable>
+            </ClayPressable>
           );
         }}
         ListEmptyComponent={
           <View className="p-6 items-center">
-            {loading && <ActivityIndicator color="#259487" />}
-            <Text className="text-sm text-gray-600">
+            {loading && (
+              <ActivityIndicator
+                color={tokens.colors.primary}
+                size={tokens.indicator.sm}
+              />
+            )}
+            <Text className="text-sm text-med-text-muted">
               {loading
                 ? 'Cargando opciones...'
                 : 'No se encontraron resultados'}
@@ -169,7 +173,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
         }
         ListFooterComponent={
           multiple ? (
-            <View className="p-4 border-t border-gray-200">
+            <View className="p-4 border-t border-med-border-light">
               <Button
                 text={`Confirmar (${tempMultiSelected.length})`}
                 onPress={handleConfirmMulti}
@@ -180,7 +184,7 @@ export const SelectModal: React.FC<SelectModalProps> = ({
           ) : null
         }
       />
-    </View>
+    </ClaySurface>
   );
 
   if (embedded) return isOpen ? content : null;
@@ -192,18 +196,9 @@ export const SelectModal: React.FC<SelectModalProps> = ({
       transparent
       onRequestClose={onClose}
     >
-      <ModalViewport style={{ backgroundColor: 'rgba(0,0,0,0.4)' }}>
-        <View style={{ flex: 1, minHeight: 0, justifyContent: 'flex-end' }}>
-          <View
-            style={{
-              height: '85%',
-              maxHeight: '100%',
-              minHeight: 0,
-              flexShrink: 1,
-            }}
-          >
-            {content}
-          </View>
+      <ModalViewport style={{ backgroundColor: tokens.colors.overlaySoft }}>
+        <View className="flex-1 min-h-0 justify-end">
+          <View className="h-select max-h-full min-h-0 shrink">{content}</View>
         </View>
       </ModalViewport>
     </AppModal>
