@@ -1,15 +1,13 @@
-import { useEffect, useState } from 'react';
-
-import { useLocalSearchParams, useRouter } from 'expo-router';
+import { useCallback, useRef, useState } from 'react';
+import { useFocusEffect, useLocalSearchParams, useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import appointmentsApi from '../../api/appointments';
 import apiClient from '../../api/client';
-import {
-  appointmentReminders,
-  refreshAppointmentReminders,
-} from './reminders/appointmentReminders';
+import { refreshAppointmentReminders } from './reminders/appointmentReminders';
 import { DoctorAppointmentView } from '../../api/types';
 import { appAlerts } from '../../utils/appAlerts';
+import { useAppointmentAction } from '../../hooks/useAppointmentAction';
+import { useFocusedRefresh } from '../../hooks/useFocusedRefresh';
 
 export interface EditAppointmentForm {
   appointment_description: string;
@@ -19,110 +17,145 @@ export function useAppointmentDetail() {
   const router = useRouter();
   const { id } = useLocalSearchParams<{ id: string }>();
   const appointmentId = Number(id);
-
   const [appointment, setAppointment] = useState<DoctorAppointmentView | null>(
     null,
   );
   const [loading, setLoading] = useState(true);
   const [updating, setUpdating] = useState(false);
-  const [cancelling, setCancelling] = useState(false);
   const [rescheduleVisible, setRescheduleVisible] = useState(false);
   const [error, setError] = useState<string | null>(null);
-
+  const generation = useRef(0);
+  const active = useRef(false);
+  const routeId = useRef(appointmentId);
+  const loadedRouteId = useRef<number | null>(null);
+  routeId.current = appointmentId;
+  const notesBusy = useRef(false);
   const {
     control,
     handleSubmit,
     reset,
     formState: { isDirty },
   } = useForm<EditAppointmentForm>({
-    defaultValues: {
-      appointment_description: '',
-    },
+    defaultValues: { appointment_description: '' },
   });
+  const dirty = useRef(isDirty);
+  dirty.current = isDirty;
 
-  useEffect(() => {
-    if (!appointmentId) return;
-    let active = true;
-
-    (async () => {
-      setLoading(true);
-      setError(null);
-      try {
-        const list = await appointmentsApi.getPatientAppointments();
-        const found = list.find((a) => a.appointment_id === appointmentId);
-        if (active) {
-          if (found) {
-            setAppointment(found);
-            reset({
-              appointment_description: found.appointment_description || '',
-            });
-          } else {
-            setError('No se encontró la cita especificada.');
-          }
-        }
-      } catch (err: any) {
-        if (active)
-          setError(err.message || 'Error al cargar los datos de la cita');
-      } finally {
-        if (active) setLoading(false);
+  const loadAppointment = useCallback(
+    async (quiet = false, resetNotes = false) => {
+      if (!Number.isInteger(appointmentId) || appointmentId <= 0) {
+        setError('No se encontró la cita especificada.');
+        setLoading(false);
+        return;
       }
-    })();
+      const request = ++generation.current;
+      const sessionId = apiClient.getSessionId();
+      const current = () =>
+        active.current &&
+        request === generation.current &&
+        sessionId === apiClient.getSessionId();
+      if (!quiet) setLoading(true);
+      try {
+        const data = await appointmentsApi.getAppointment(appointmentId);
+        if (!current()) return;
+        setAppointment(data);
+        setError(null);
+        if (resetNotes || !dirty.current)
+          reset({
+            appointment_description: data.appointment_description || '',
+          });
+        await refreshAppointmentReminders();
+      } catch (cause: any) {
+        if (current())
+          setError(
+            cause?.message ||
+              'No se pudo actualizar la cita. Desliza hacia abajo para reintentar.',
+          );
+      } finally {
+        if (current()) setLoading(false);
+      }
+    },
+    [appointmentId, reset],
+  );
 
-    return () => {
-      active = false;
-    };
-  }, [appointmentId, reset]);
+  useFocusEffect(
+    useCallback(() => {
+      active.current = true;
+      const changedRoute = loadedRouteId.current !== appointmentId;
+      if (changedRoute) {
+        loadedRouteId.current = appointmentId;
+        setAppointment(null);
+        setRescheduleVisible(false);
+        setError(null);
+        reset({ appointment_description: '' });
+      }
+      void loadAppointment(false, changedRoute);
+      return () => {
+        active.current = false;
+        ++generation.current;
+      };
+    }, [appointmentId, loadAppointment, reset]),
+  );
+  useFocusedRefresh(() => loadAppointment(true));
 
-  const onUpdate = async (data: EditAppointmentForm) => {
-    if (!isDirty) {
-      appAlerts.alert(
-        'Información',
-        'No has realizado cambios en la cita.',
-        undefined,
-        { variant: 'primary' },
-      );
+  const { pending, requestAction } = useAppointmentAction(async (state) => {
+    if (state.appointment_id !== routeId.current) return;
+    setAppointment((previous) => (previous ? { ...previous, ...state } : null));
+    await loadAppointment(true);
+  }, appointmentId);
+
+  const onUpdate = (data: EditAppointmentForm) => {
+    if (
+      !appointment?.can_edit_notes ||
+      !isDirty ||
+      notesBusy.current ||
+      pending
+    )
       return;
-    }
-
+    const target = appointment;
+    const sessionId = apiClient.getSessionId();
+    const targetId = appointmentId;
+    const current = () =>
+      active.current &&
+      sessionId === apiClient.getSessionId() &&
+      targetId === routeId.current;
     appAlerts.alert(
-      'Confirmar Modificación',
-      '¿Deseas guardar los cambios realizados en las notas de tu cita?',
+      'Guardar notas',
+      '¿Deseas guardar los cambios en las notas de tu cita?',
       [
-        { text: 'Cancelar', style: 'cancel' },
+        { text: 'Volver', style: 'cancel' },
         {
-          text: 'Guardar Cambios',
+          text: 'Guardar',
           onPress: async () => {
+            if (!current() || notesBusy.current) return;
+            notesBusy.current = true;
             setUpdating(true);
             try {
-              const sessionId = apiClient.getSessionId();
               await appointmentsApi.updateAppointment(appointmentId, {
                 appointment_description: data.appointment_description.trim(),
+                expected_version: target.status_version,
               });
-              if (sessionId !== apiClient.getSessionId()) return;
-              await refreshAppointmentReminders();
-              setAppointment((prev) =>
-                prev
-                  ? {
-                      ...prev,
-                      appointment_description: data.appointment_description.trim(),
-                    }
-                  : null,
-              );
-              reset(data);
-              appAlerts.alert(
-                'Éxito',
-                'Las notas de la cita se han actualizado correctamente.',
-                undefined,
-                { variant: 'success' },
-              );
-            } catch (err: any) {
-              appAlerts.alert(
-                'Error',
-                err.message || 'No se pudieron guardar los cambios.',
-                undefined,
-                { variant: 'error' },
-              );
+              if (current()) {
+                await loadAppointment(true, true);
+                appAlerts.alert(
+                  'Notas guardadas',
+                  'Las notas de tu cita se actualizaron.',
+                  undefined,
+                  { variant: 'success' },
+                );
+              }
+            } catch (cause: any) {
+              if (current()) {
+                await loadAppointment(true);
+                appAlerts.alert(
+                  'No se pudieron guardar las notas',
+                  cause?.message || 'Actualiza la cita y vuelve a intentarlo.',
+                  undefined,
+                  { variant: 'error' },
+                );
+              }
             } finally {
+              notesBusy.current = false;
               setUpdating(false);
             }
           },
@@ -132,89 +165,23 @@ export function useAppointmentDetail() {
     );
   };
 
-  const handleCancelAppointment = () => {
-    const doctorName = appointment
-      ? `Dr(a). ${appointment.first_name} ${appointment.first_last_name}`
-      : 'el médico';
-
-    appAlerts.alert(
-      'Confirmación de Cancelación',
-      `¿Estás seguro de que deseas cancelar tu cita con ${doctorName}? Esta acción liberará el cupo y no se puede deshacer.`,
-      [
-        { text: 'No, conservar cita', style: 'cancel' },
-        {
-          text: 'Sí, Cancelar Cita',
-          style: 'destructive',
-          onPress: async () => {
-            setCancelling(true);
-            try {
-              const sessionId = apiClient.getSessionId();
-              await appointmentsApi.cancelAppointment(appointmentId);
-              if (sessionId !== apiClient.getSessionId()) return;
-              try {
-                await appointmentReminders.cancelAppointment(appointmentId);
-              } catch {
-                appAlerts.alert(
-                  'Cita cancelada',
-                  'La cita se canceló, pero no se pudieron retirar sus avisos del teléfono. Vuelve a abrir la app para reintentar la sincronización.',
-                  undefined,
-                  { variant: 'warning' },
-                );
-              }
-              void refreshAppointmentReminders();
-              appAlerts.alert(
-                'Cita Cancelada',
-                'Tu cita médica ha sido cancelada exitosamente.',
-                [
-                  {
-                    text: 'Aceptar',
-                    onPress: () => router.replace('/appointments' as any),
-                  },
-                ],
-                { variant: 'success' },
-              );
-            } catch (err: any) {
-              appAlerts.alert(
-                'Error',
-                err.message || 'No se pudo cancelar la cita.',
-                undefined,
-                { variant: 'error' },
-              );
-            } finally {
-              setCancelling(false);
-            }
-          },
-        },
-      ],
-      { variant: 'danger' },
-    );
-  };
-
   const handleOpenReschedule = () => {
-    if (updating || cancelling || !appointment) return;
-    if (Date.parse(appointment.start_date_time) <= Date.now()) {
-      appAlerts.alert(
-        'Cita finalizada',
-        'Solo puedes reprogramar citas futuras.',
-        undefined,
-        { variant: 'warning' },
-      );
-      return;
-    }
-    setRescheduleVisible(true);
+    if (!updating && !pending && appointment?.can_reschedule)
+      setRescheduleVisible(true);
   };
-
   const onRescheduled = (result: {
     appointment: DoctorAppointmentView;
     remindersUpdated: boolean;
   }) => {
+    if (result.appointment.appointment_id !== routeId.current) return;
     setAppointment(result.appointment);
     setRescheduleVisible(false);
+    void loadAppointment(true, true);
     appAlerts.alert(
       'Cita reprogramada',
       result.remindersUpdated
         ? 'El nuevo horario quedó guardado y se actualizaron los recordatorios habilitados.'
-        : 'El nuevo horario quedó guardado. No pudimos completar la actualización de sus avisos; vuelve a abrir Mis Citas con conexión para reintentarlo.',
+        : 'El nuevo horario quedó guardado. Abre Mis Citas con conexión para reintentar la actualización de sus avisos.',
       undefined,
       { variant: result.remindersUpdated ? 'success' : 'warning' },
     );
@@ -223,16 +190,18 @@ export function useAppointmentDetail() {
   return {
     router,
     appointmentId,
-    appointment,
+    appointment:
+      appointment?.appointment_id === appointmentId ? appointment : null,
     loading,
     updating,
-    cancelling,
     error,
     control,
     handleSubmit,
     isDirty,
     onUpdate,
-    handleCancelAppointment,
+    pending: pending?.appointmentId === appointmentId ? pending : null,
+    requestAction,
+    loadAppointment,
     rescheduleVisible,
     handleOpenReschedule,
     closeReschedule: () => setRescheduleVisible(false),

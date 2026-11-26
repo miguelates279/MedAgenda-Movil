@@ -12,6 +12,9 @@ import { Badge, Button, ConfirmModal } from '../../components';
 import { useHome } from '../../hooks/useHome';
 import { ClaySurface, ClayPressable } from '../../components/ClaySurface';
 import { tokens } from '../../theme/tokens';
+import { AppointmentStatusBadge } from '../../components/AppointmentStatusBadge';
+import { CLINIC_TIME_ZONE } from '../../utils/appointmentAvailability';
+import { ReceptionClinicsSection } from './ReceptionClinicsSection';
 
 export const HomeScreen: React.FC = () => {
   const {
@@ -131,7 +134,7 @@ export const HomeScreen: React.FC = () => {
               accessibilityLabel="Ver detalles de la próxima cita"
             >
               <View className="flex-row flex-wrap gap-2 justify-between items-center mb-2">
-                <Badge text="Próxima Cita" variant="primary" />
+                <AppointmentStatusBadge appointment={upcomingAppt} />
                 <View className="flex-row items-center">
                   <Ionicons
                     name="calendar-outline"
@@ -142,6 +145,7 @@ export const HomeScreen: React.FC = () => {
                     {new Date(upcomingAppt.start_date_time).toLocaleDateString(
                       'es-ES',
                       {
+                        timeZone: CLINIC_TIME_ZONE,
                         weekday: 'short',
                         day: 'numeric',
                         month: 'short',
@@ -151,6 +155,7 @@ export const HomeScreen: React.FC = () => {
                     {new Date(upcomingAppt.start_date_time).toLocaleTimeString(
                       'es-ES',
                       {
+                        timeZone: CLINIC_TIME_ZONE,
                         hour: '2-digit',
                         minute: '2-digit',
                       },
@@ -224,6 +229,8 @@ export const HomeScreen: React.FC = () => {
             </ClaySurface>
           )}
         </View>
+
+        <ReceptionClinicsSection />
 
         {/* 3. Acciones Rápidas del Paciente */}
         <View className="mb-4">

@@ -1,9 +1,48 @@
 import apiClient from './client';
-import { CreateAppointmentDto, DoctorAppointmentView, UpdateAppointmentDto } from './types';
+import {
+  AppointmentAction,
+  AppointmentState,
+  CreateAppointmentDto,
+  DispatchClinic,
+  DoctorAppointmentView,
+  UpdateAppointmentDto,
+} from './types';
 
 export const appointmentsApi = {
+  async getDispatchClinics(): Promise<DispatchClinic[]> {
+    return apiClient.get<DispatchClinic[]>('/appointments/dispatch-clinics');
+  },
   async getPatientAppointments(): Promise<DoctorAppointmentView[]> {
     return apiClient.get<DoctorAppointmentView[]>('/appointments/patient');
+  },
+
+  async getAppointment(appointmentId: number): Promise<DoctorAppointmentView> {
+    return apiClient.get<DoctorAppointmentView>(
+      `/appointments/${appointmentId}`,
+    );
+  },
+
+  async getClinicAppointments(
+    clinicId: number,
+    date: string,
+  ): Promise<DoctorAppointmentView[]> {
+    return apiClient.get<DoctorAppointmentView[]>(
+      `/appointments/clinic/${clinicId}?date=${encodeURIComponent(date)}`,
+    );
+  },
+
+  async performAction(
+    appointmentId: number,
+    action: AppointmentAction,
+    expectedVersion: number,
+  ): Promise<AppointmentState> {
+    return apiClient.post<AppointmentState>(
+      `/appointments/${appointmentId}/actions`,
+      {
+        action,
+        expected_version: expectedVersion,
+      },
+    );
   },
 
   async scheduleAppointment(dto: CreateAppointmentDto): Promise<void> {
@@ -26,13 +65,18 @@ export const appointmentsApi = {
 
   async updateAppointment(
     appointmentId: number,
-    dto: UpdateAppointmentDto
+    dto: UpdateAppointmentDto,
   ): Promise<{ message: string }> {
-    return apiClient.put<{ message: string }>(`/appointments/${appointmentId}`, dto);
+    return apiClient.put<{ message: string }>(
+      `/appointments/${appointmentId}`,
+      dto,
+    );
   },
 
   async cancelAppointment(appointmentId: number): Promise<{ message: string }> {
-    return apiClient.delete<{ message: string }>(`/appointments/${appointmentId}`);
+    return apiClient.delete<{ message: string }>(
+      `/appointments/${appointmentId}`,
+    );
   },
 };
 

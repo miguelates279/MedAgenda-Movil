@@ -194,7 +194,9 @@ export function AppointmentsScreen() {
           refreshControl={
             <RefreshControl
               refreshing={loading}
-              onRefresh={loadAppointments}
+              onRefresh={() => {
+                void loadAppointments();
+              }}
               tintColor={tokens.colors.primary}
               colors={[tokens.colors.primary]}
             />
@@ -209,7 +211,7 @@ export function AppointmentsScreen() {
               <Text className="text-xs text-med-text-light text-center leading-5">
                 {tab === 'upcoming'
                   ? 'Busca una clínica en el catálogo para ver sus médicos disponibles y agendar tu cita.'
-                  : 'Las citas finalizadas aparecerán aquí.'}
+                  : 'Las citas anteriores, atendidas, canceladas o no asistidas aparecerán aquí.'}
               </Text>
               {tab === 'upcoming' && (
                 <Button

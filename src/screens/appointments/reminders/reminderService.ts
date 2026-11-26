@@ -1,6 +1,7 @@
 import type { DoctorAppointmentView } from '../../../api/types';
 import {
   buildReminderPlan,
+  needsAppointmentReminder,
   readReminderData,
   REMINDER_PREFIX,
 } from './reminderPlan';
@@ -150,10 +151,9 @@ export class AppointmentReminderService {
         }
         const presented = await this.device.presented();
         const starts = new Map(
-          appointments.map((a) => [
-            a.appointment_id,
-            Date.parse(a.start_date_time),
-          ]),
+          appointments
+            .filter(needsAppointmentReminder)
+            .map((a) => [a.appointment_id, Date.parse(a.start_date_time)]),
         );
         for (const item of presented) {
           if (!valid()) return;

@@ -1,206 +1,136 @@
 import React from 'react';
-import { ActivityIndicator, Text, View } from 'react-native';
-import { Ionicons } from '@expo/vector-icons';
+import {
+  ActivityIndicator,
+  RefreshControl,
+  SectionList,
+  Text,
+  View,
+} from 'react-native';
 import { Badge, Button, Card } from '../../../components';
-import { DoctorAppointmentView } from '../../../api/types';
+import { AppointmentDispatchCard } from '../../../components/AppointmentDispatchCard';
+import { AppointmentAction, DoctorAppointmentView } from '../../../api/types';
 import { ClaySurface } from '../../../components/ClaySurface';
 import { tokens } from '../../../theme/tokens';
+import { groupAppointmentsByHour } from '../../../utils/appointmentStatus';
 
 export interface TodayAgendaSectionProps {
   todayAppointments: DoctorAppointmentView[];
   todayFormattedDate: string;
   loading: boolean;
   error: string | null;
+  pending: { appointmentId: number; action: AppointmentAction } | null;
   onRetry: () => void;
+  onAction: (
+    appointment: DoctorAppointmentView,
+    action: AppointmentAction,
+  ) => void;
+  onPrescribe: (appointment: DoctorAppointmentView) => void;
+  header: React.ReactNode;
+  footer: React.ReactNode;
 }
 
-export const TodayAgendaSection: React.FC<TodayAgendaSectionProps> = ({
+export function TodayAgendaSection({
   todayAppointments,
   todayFormattedDate,
   loading,
   error,
+  pending,
   onRetry,
-}) => {
+  onAction,
+  onPrescribe,
+  header,
+  footer,
+}: TodayAgendaSectionProps) {
   return (
-    <View className="mb-5">
-      {/* Encabezado de la Agenda de Hoy */}
-      <ClaySurface className="bg-med-bg p-4 rounded-clay border border-med-border-light mb-3">
-        <View className="flex-row flex-wrap gap-2 items-center justify-between">
-          <View
-            className="grow min-w-0 max-w-full"
-            style={{ flexBasis: tokens.layout.cardMinWidth }}
-          >
-            <View className="flex-row items-center">
-              <Ionicons
-                name="calendar"
-                size={tokens.iconSize[15]}
-                color={tokens.colors.primary}
-              />
-              <Text className="min-w-0 max-w-full shrink text-xs font-bold text-med-primary uppercase tracking-wider ml-1.5">
-                Agenda de Hoy
+    <SectionList
+      className="flex-1 bg-med-surface"
+      sections={groupAppointmentsByHour(todayAppointments)}
+      keyExtractor={(item) => String(item.appointment_id)}
+      stickySectionHeadersEnabled={false}
+      keyboardShouldPersistTaps="handled"
+      keyboardDismissMode="on-drag"
+      contentContainerStyle={{
+        padding: tokens.spacing.md,
+        paddingBottom: tokens.layout.contentBottom,
+      }}
+      refreshControl={
+        <RefreshControl
+          refreshing={loading}
+          onRefresh={onRetry}
+          tintColor={tokens.colors.primary}
+        />
+      }
+      ListHeaderComponent={
+        <>
+          {header}
+          <ClaySurface className="bg-med-bg p-4 rounded-clay border border-med-border-light mb-3">
+            <View className="flex-row flex-wrap gap-2 justify-between items-center">
+              <Text className="min-w-0 max-w-full shrink text-lg font-bold text-med-text-main">
+                Agenda de hoy
               </Text>
+              <Badge
+                text={`${todayAppointments.length} citas`}
+                variant="info"
+              />
             </View>
-            <Text className="text-base font-bold text-med-text-main mt-1 capitalize">
+            <Text className="text-sm text-med-text-muted mt-2">
               {todayFormattedDate}
             </Text>
-          </View>
-          <Badge
-            text={`${todayAppointments.length} ${todayAppointments.length === 1 ? 'cita' : 'citas'}`}
-            variant="primary"
-          />
-        </View>
-      </ClaySurface>
-
-      {/* Estados: Carga, Error, Vacío o Listado de Citas de Hoy */}
-      {loading && todayAppointments.length === 0 && !error ? (
-        <Card className="p-6 items-center justify-center">
-          <ActivityIndicator
-            size={tokens.indicator.sm}
-            color={tokens.colors.primary}
-          />
-          <Text className="text-xs text-med-text-soft mt-2">
-            Cargando agenda de hoy...
-          </Text>
-        </Card>
-      ) : error ? (
-        <Card className="p-5 items-center justify-center border-med-error-border bg-med-error-bg/50">
-          <ClaySurface
-            depth="badge"
-            className="w-10 h-10 rounded-full bg-med-error-bg border border-med-error-border items-center justify-center mb-2"
-          >
-            <Ionicons
-              name="alert-circle-outline"
-              size={tokens.iconSize[22]}
-              color={tokens.colors.error.text}
-            />
+            <Text className="text-xs text-med-text-soft mt-1">
+              Horario de Colombia · Desliza hacia abajo para actualizar.
+            </Text>
           </ClaySurface>
-          <Text className="text-sm font-bold text-med-text-main text-center mb-1">
-            No se pudo cargar la agenda de hoy
-          </Text>
-          <Text className="text-xs text-med-error-badge-text text-center mb-3">
-            {error}
-          </Text>
-          <Button
-            text="Reintentar agenda"
-            variant="outline"
-            onPress={onRetry}
-            className="py-1.5 px-4"
-          />
-        </Card>
-      ) : todayAppointments.length === 0 ? (
-        <Card className="p-6 items-center justify-center">
-          <ClaySurface
-            depth="badge"
-            className="w-12 h-12 rounded-full bg-med-surface-muted items-center justify-center mb-3"
-          >
-            <Ionicons
-              name="calendar-outline"
-              size={tokens.iconSize[24]}
-              color={tokens.colors.textLight}
+          {error ? (
+            <Card className="mb-3 border-med-error-border bg-med-error-bg">
+              <Text className="text-sm text-med-error-badge-text mb-2">
+                {error}
+              </Text>
+              <Button
+                text="Reintentar agenda"
+                variant="outline"
+                onPress={onRetry}
+              />
+            </Card>
+          ) : null}
+          {loading && !todayAppointments.length ? (
+            <ActivityIndicator
+              size={tokens.indicator.sm}
+              color={tokens.colors.primary}
             />
-          </ClaySurface>
-          <Text className="text-sm font-semibold text-med-text-main text-center mb-1">
-            Sin citas hoy
-          </Text>
-          <Text className="text-xs text-med-text-soft text-center">
-            No tienes citas programadas para hoy.
-          </Text>
-        </Card>
-      ) : (
-        <View className="gap-2.5">
-          {todayAppointments.map((appt) => {
-            const startDate = new Date(appt.start_date_time);
-            const endDate = new Date(appt.end_date_time);
-
-            const hasValidStart = !isNaN(startDate.getTime());
-            const hasValidEnd = !isNaN(endDate.getTime());
-
-            const timeStr = hasValidStart
-              ? `${startDate.toLocaleTimeString('es-ES', {
-                  hour: '2-digit',
-                  minute: '2-digit',
-                })}${
-                  hasValidEnd
-                    ? ` - ${endDate.toLocaleTimeString('es-ES', {
-                        hour: '2-digit',
-                        minute: '2-digit',
-                      })}`
-                    : ''
-                }`
-              : 'Horario no especificado';
-
-            const patientName =
-              [
-                appt.first_name,
-                appt.second_name,
-                appt.first_last_name,
-                appt.second_last_name,
-              ]
-                .filter(Boolean)
-                .join(' ')
-                .trim() || 'Paciente';
-
-            return (
-              <Card
-                key={appt.appointment_id}
-                className="border-l-4 border-l-med-primary"
-              >
-                <View className="flex-row flex-wrap gap-2 justify-between items-start mb-1.5">
-                  <View
-                    className="flex-row items-center grow min-w-0 max-w-full"
-                    style={{ flexBasis: tokens.layout.cardMinWidth }}
-                  >
-                    <Ionicons
-                      name="time-outline"
-                      size={tokens.iconSize[14]}
-                      color={tokens.colors.primary}
-                    />
-                    <Text className="min-w-0 max-w-full shrink text-xs font-bold text-med-primary ml-1">
-                      {timeStr}
-                    </Text>
-                  </View>
-                  <Badge text="Cita de Hoy" variant="info" />
-                </View>
-
-                <View className="flex-row items-center mt-1">
-                  <Ionicons
-                    name="person-outline"
-                    size={tokens.iconSize[15]}
-                    color={tokens.colors.textMuted}
-                  />
-                  <Text className="min-w-0 max-w-full shrink text-sm font-bold text-med-text-main ml-1.5">
-                    {patientName}
-                  </Text>
-                </View>
-
-                <View className="flex-row items-center mt-1">
-                  <Ionicons
-                    name="business-outline"
-                    size={tokens.iconSize[15]}
-                    color={tokens.colors.textMuted}
-                  />
-                  <Text className="min-w-0 max-w-full shrink text-xs text-med-text-muted ml-1.5">
-                    {appt.clinic_name}
-                  </Text>
-                </View>
-
-                {appt.appointment_description ? (
-                  <View className="mt-2 pt-2 border-t border-med-border-light">
-                    <Text
-                      className="text-xs text-med-text-soft italic"
-                      numberOfLines={2}
-                    >
-                      Motivo: {appt.appointment_description}
-                    </Text>
-                  </View>
-                ) : null}
-              </Card>
-            );
-          })}
-        </View>
+          ) : null}
+          {!loading && !error && !todayAppointments.length ? (
+            <Card className="mb-4">
+              <Text className="text-sm font-bold text-med-text-main text-center">
+                Sin citas hoy
+              </Text>
+              <Text className="text-sm text-med-text-muted text-center mt-2">
+                No tienes citas programadas para hoy.
+              </Text>
+            </Card>
+          ) : null}
+        </>
+      }
+      renderSectionHeader={({ section }) => (
+        <Text className="text-sm font-bold text-med-text-main mt-2 mb-2">
+          {section.title}
+        </Text>
       )}
-    </View>
+      renderItem={({ item }) => (
+        <AppointmentDispatchCard
+          appointment={item}
+          pendingAction={
+            pending?.appointmentId === item.appointment_id
+              ? pending.action
+              : null
+          }
+          disabled={!!pending || loading}
+          onAction={(action) => onAction(item, action)}
+          onPrescribe={() => onPrescribe(item)}
+        />
+      )}
+      ListFooterComponent={<View className="mt-3">{footer}</View>}
+    />
   );
-};
+}
 
 export default TodayAgendaSection;

@@ -72,15 +72,31 @@ export function useRescheduleAppointment(
             setError(null);
             try {
               const result = await rescheduleAppointment(appointment, slot, {
-                update: (id, dates) => appointmentsApi.updateAppointment(id, dates),
-                cancelReminders: (id) => appointmentReminders.cancelAppointment(id),
+                update: (id, dates) =>
+                  appointmentsApi.updateAppointment(id, dates),
+                cancelReminders: (id) =>
+                  appointmentReminders.cancelAppointment(id),
                 refreshReminders: () =>
                   appointmentReminders.refresh(false, {
                     throwOnDeviceError: true,
                   }),
                 sessionIsCurrent,
               });
-              if (result && sessionIsCurrent()) onComplete(result);
+              if (result && sessionIsCurrent()) {
+                try {
+                  result.appointment = await appointmentsApi.getAppointment(
+                    appointment.appointment_id,
+                  );
+                } catch {
+                  result.appointment = {
+                    ...result.appointment,
+                    allowed_actions: [],
+                    can_reschedule: false,
+                    can_edit_notes: false,
+                  };
+                }
+                if (sessionIsCurrent()) onComplete(result);
+              }
             } catch (cause: any) {
               if (sessionIsCurrent()) {
                 const message =

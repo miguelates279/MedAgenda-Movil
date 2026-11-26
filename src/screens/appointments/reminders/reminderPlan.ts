@@ -29,6 +29,16 @@ export interface StoredReminder {
   data: unknown;
 }
 
+export function needsAppointmentReminder(appointment: {
+  appointment_status?: string | null;
+}): boolean {
+  return (
+    appointment.appointment_status === undefined ||
+    appointment.appointment_status === 'scheduled' ||
+    appointment.appointment_status === 'confirmed'
+  );
+}
+
 export function readReminderData(value: unknown): ReminderData | null {
   if (!value || typeof value !== 'object') return null;
   const data = value as Record<string, unknown>;
@@ -67,6 +77,7 @@ export function buildReminderPlan(
   for (const appointment of appointments) {
     const startsAt = Date.parse(appointment.start_date_time);
     if (
+      !needsAppointmentReminder(appointment) ||
       !Number.isSafeInteger(appointment.appointment_id) ||
       appointment.appointment_id <= 0 ||
       !Number.isFinite(startsAt) ||

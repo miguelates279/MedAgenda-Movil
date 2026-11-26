@@ -1,11 +1,11 @@
 const http = require('node:http');
 
-function createLayoutServer() {
+function createLayoutServer({ now = Date.now, log = console.log } = {}) {
   const HOUR = 3_600_000;
   const DAY = 24 * HOUR;
   const pad = (number) => String(number).padStart(2, '0');
   const dayAt = (offset = 0) =>
-    new Date(Date.now() - 5 * HOUR + offset * DAY).toISOString().slice(0, 10);
+    new Date(now() - 5 * HOUR + offset * DAY).toISOString().slice(0, 10);
   const instant = (offset, minute = 540) =>
     new Date(
       `${dayAt(offset)}T${pad(Math.floor(minute / 60))}:${pad(minute % 60)}:00-05:00`,
@@ -60,6 +60,7 @@ function createLayoutServer() {
       patient: 'Paciente',
       doctor: 'Medico',
       admin: 'Administrador',
+      employee: 'Recepcion',
     }[role],
     first_last_name: 'Pruebas',
     second_last_name: 'Locales',
@@ -79,12 +80,18 @@ function createLayoutServer() {
     patient: profileFor('patient', 42),
     doctor: profileFor('doctor', 84),
     admin: profileFor('admin', 126),
+    employee: profileFor('employee', 168),
   };
   const ownedClinics = {
     patient: new Set(),
     doctor: new Set(),
     admin: new Set(clinics.map((clinic) => clinic.clinic_id)),
+    employee: new Set(),
   };
+  const receptionClinics = new Set([1]);
+  const canDispatchClinic = (role, clinicId) =>
+    (role === 'admin' && ownedClinics.admin.has(clinicId)) ||
+    (role === 'employee' && receptionClinics.has(clinicId));
   let appointments = Array.from({ length: 40 }, (_, index) => {
     const future = index < 20;
     const ordinal = future ? index + 1 : index - 19;
@@ -98,10 +105,20 @@ function createLayoutServer() {
       clinic_id: 1,
       doctor_id: 84,
       patient_id: 42,
+      patient_first_name: 'Paciente',
+      patient_first_last_name: 'Pruebas',
+      patient_second_last_name: 'Locales',
       clinic_name: clinics[0].clinic_name,
       first_name: 'Ana',
       first_last_name: 'Ruiz',
       second_last_name: 'Pruebas',
+      appointment_status: future
+        ? 'scheduled'
+        : index % 2
+          ? 'completed'
+          : 'scheduled',
+      status_version: 0,
+      status_updated_at: null,
       start_date_time: start.toISOString(),
       end_date_time: new Date(start.getTime() + 30 * 60_000).toISOString(),
       appointment_description:
@@ -110,6 +127,34 @@ function createLayoutServer() {
           : `Consulta de prueba ${ordinal}`,
     };
   });
+  const statuses = [
+    'scheduled',
+    'confirmed',
+    'waiting',
+    'called',
+    'in_progress',
+    'completed',
+    'cancelled',
+    'no_show',
+    'scheduled',
+    'waiting',
+  ];
+  appointments.push(
+    ...statuses.map((appointment_status, index) => ({
+      ...appointments[0],
+      appointment_id: 1000 + index,
+      patient_first_name: `Paciente ${pad(index + 1)}`,
+      patient_first_last_name: 'Pruebas',
+      patient_second_last_name:
+        index === 9
+          ? 'Apellidos extensos de verificaciones de interfaz'
+          : 'Locales',
+      start_date_time: instant(0, 480 + index * 30),
+      end_date_time: instant(0, 510 + index * 30),
+      appointment_status,
+      appointment_description: `Despacho de prueba ${index + 1}. ${appointments[0].appointment_description}`,
+    })),
+  );
   const history = Array.from({ length: 20 }, (_, index) => ({
     user_id: index === 0 ? 42 : 400 + index,
     first_name: `Paciente ${pad(index + 1)}`,
@@ -137,13 +182,119 @@ function createLayoutServer() {
   let nextClinicId = 21;
   let nextAppointmentId = 41;
   let nextPrescriptionId = 41;
+  const appointmentEvents = [];
+  const statusTargets = {
+    confirm: 'confirmed',
+    check_in: 'waiting',
+    call: 'called',
+    start: 'in_progress',
+    complete: 'completed',
+    no_show: 'no_show',
+    cancel: 'cancelled',
+  };
+  const appointmentDay = (item) =>
+    new Date(Date.parse(item.start_date_time) - 5 * HOUR)
+      .toISOString()
+      .slice(0, 10);
+  const canViewAppointment = (item, role) =>
+    (role === 'patient' && item.patient_id === profiles.patient.user_id) ||
+    (role === 'doctor' && item.doctor_id === profiles.doctor.user_id) ||
+    canDispatchClinic(role, item.clinic_id);
+  const appointmentCapabilities = (item, role) => {
+    const status = item.appointment_status;
+    const preconsult = ['scheduled', 'confirmed', 'waiting', 'called'].includes(
+      status,
+    );
+    const today = appointmentDay(item) === dayAt();
+    const future = Date.parse(item.start_date_time) > now();
+    const patient =
+      role === 'patient' && item.patient_id === profiles.patient.user_id;
+    const staff = canDispatchClinic(role, item.clinic_id);
+    const doctor =
+      role === 'doctor' && item.doctor_id === profiles.doctor.user_id;
+    const allowed_actions = [];
+    if ((patient || staff) && status === 'scheduled' && future)
+      allowed_actions.push('confirm');
+    if (
+      (patient || staff) &&
+      ['scheduled', 'confirmed'].includes(status) &&
+      today
+    )
+      allowed_actions.push('check_in');
+    if (
+      (doctor || staff) &&
+      ['scheduled', 'confirmed', 'waiting'].includes(status) &&
+      today
+    )
+      allowed_actions.push('call');
+    if (doctor && ['waiting', 'called'].includes(status) && today)
+      allowed_actions.push('start');
+    if (doctor && status === 'in_progress') allowed_actions.push('complete');
+    if (
+      (doctor || staff) &&
+      ['scheduled', 'confirmed', 'called'].includes(status) &&
+      today &&
+      !future
+    )
+      allowed_actions.push('no_show');
+    if (
+      preconsult &&
+      ((patient && future) || (staff && appointmentDay(item) >= dayAt()))
+    )
+      allowed_actions.push('cancel');
+    return {
+      allowed_actions,
+      can_reschedule:
+        patient && ['scheduled', 'confirmed'].includes(status) && future,
+      can_edit_notes:
+        patient && ['scheduled', 'confirmed'].includes(status) && future,
+    };
+  };
+  const statusSnapshot = (item, role) => ({
+    appointment_id: item.appointment_id,
+    appointment_status: item.appointment_status,
+    status_version: item.status_version,
+    status_updated_at: item.status_updated_at,
+    ...appointmentCapabilities(item, role),
+  });
+  const appointmentView = (item, role) => ({
+    ...item,
+    ...statusSnapshot(item, role),
+    ...(role === 'patient'
+      ? {}
+      : {
+          first_name: item.patient_first_name,
+          second_name: null,
+          first_last_name: item.patient_first_last_name,
+          second_last_name: item.patient_second_last_name,
+          doctor_first_name: item.first_name,
+          doctor_second_name: item.second_name,
+          doctor_first_last_name: item.first_last_name,
+          doctor_second_last_name: item.second_last_name,
+        }),
+  });
+  const changeStatus = (item, role, action) => {
+    const from_status = item.appointment_status;
+    item.appointment_status = statusTargets[action];
+    item.status_version += 1;
+    item.status_updated_at = new Date(now()).toISOString();
+    appointmentEvents.push({
+      appointment_id: item.appointment_id,
+      from_status,
+      to_status: item.appointment_status,
+      action,
+      actor_user_id: profiles[role].user_id,
+      occurred_at: item.status_updated_at,
+      version: item.status_version,
+    });
+  };
 
   const server = http.createServer(async (request, response) => {
     const url = new URL(request.url, 'http://127.0.0.1');
     const method = request.method;
     const token = (request.headers.authorization ?? '').replace(/^Bearer /, '');
     const role =
-      ['patient', 'doctor', 'admin'].find(
+      ['patient', 'doctor', 'admin', 'employee'].find(
         (candidate) => token === `layout-${candidate}`,
       ) ?? 'patient';
     const reply = (status, data) => {
@@ -168,7 +319,7 @@ function createLayoutServer() {
       reply(400, { message: 'Invalid JSON' });
       return;
     }
-    console.log(method, url.pathname);
+    log(method, url.pathname);
     if (method === 'POST' && url.pathname === '/__qa/failures') {
       if (
         !Array.isArray(body.routes) ||
@@ -217,7 +368,7 @@ function createLayoutServer() {
     }
 
     if (method === 'POST' && url.pathname === '/auth/login') {
-      const selectedRole = ['patient', 'doctor', 'admin'].find(
+      const selectedRole = ['patient', 'doctor', 'admin', 'employee'].find(
         (candidate) => body.email === `${candidate}@layout.test`,
       );
       if (!selectedRole) {
@@ -266,8 +417,8 @@ function createLayoutServer() {
           .map((clinic) => ({
             clinic_id: clinic.clinic_id,
             clinic_name: clinic.clinic_name,
-            role_within_clinic: 'Owner',
-            role_description: 'Propietario de pruebas',
+            role_within_clinic: clinic.clinic_id === 2 ? 'Admin' : 'Owner',
+            role_description: clinic.clinic_id === 2 ? 'Administrador de pruebas' : 'Propietario de pruebas',
           })),
       );
       return;
@@ -350,6 +501,7 @@ function createLayoutServer() {
           (item) =>
             item.clinic_id === Number(url.searchParams.get('clinic_id')) &&
             item.doctor_id === Number(url.searchParams.get('doctor_id')) &&
+            !['cancelled', 'no_show'].includes(item.appointment_status) &&
             new Date(Date.parse(item.start_date_time) - 5 * HOUR)
               .toISOString()
               .slice(0, 10) === url.searchParams.get('appointment_date'),
@@ -396,7 +548,25 @@ function createLayoutServer() {
       return;
     }
     if (url.pathname === '/appointments/patient') {
-      reply(200, appointments);
+      reply(
+        200,
+        appointments
+          .filter((item) => item.patient_id === profiles[role].user_id)
+          .map((item) => appointmentView(item, 'patient')),
+      );
+      return;
+    }
+    if (url.pathname === '/appointments/dispatch-clinics') {
+      reply(
+        200,
+        clinics
+          .filter((clinic) => canDispatchClinic(role, clinic.clinic_id))
+          .map((clinic) => ({
+            clinic_id: clinic.clinic_id,
+            clinic_name: clinic.clinic_name,
+            role_within_clinic: role === 'admin' ? (clinic.clinic_id === 2 ? 'Admin' : 'Owner') : 'Employee',
+          })),
+      );
       return;
     }
     if (
@@ -407,10 +577,108 @@ function createLayoutServer() {
         ...appointments[0],
         ...body,
         appointment_id: nextAppointmentId++,
+        patient_id: profiles[role].user_id,
+        appointment_status: 'scheduled',
+        status_version: 0,
+        status_updated_at: new Date(now()).toISOString(),
       };
       appointments.push(item);
       mutations.push({ method, path: url.pathname, id: item.appointment_id });
       reply(201, { appointment_id: item.appointment_id });
+      return;
+    }
+    const clinicAgendaMatch = url.pathname.match(
+      /^\/appointments\/clinic\/(\d+)$/,
+    );
+    if (method === 'GET' && clinicAgendaMatch) {
+      const clinicId = Number(clinicAgendaMatch[1]);
+      if (!canDispatchClinic(role, clinicId)) {
+        reply(404, {
+          message: 'No puedes consultar la agenda de esta clinica.',
+        });
+        return;
+      }
+      const date = url.searchParams.get('date');
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(date ?? '')) {
+        reply(400, {
+          message: 'Indica una fecha valida para consultar la agenda.',
+        });
+        return;
+      }
+      reply(
+        200,
+        appointments
+          .filter(
+            (item) =>
+              item.clinic_id === clinicId && appointmentDay(item) === date,
+          )
+          .sort(
+            (a, b) =>
+              Date.parse(a.start_date_time) - Date.parse(b.start_date_time),
+          )
+          .map((item) => appointmentView(item, role)),
+      );
+      return;
+    }
+    const actionMatch = url.pathname.match(/^\/appointments\/(\d+)\/actions$/);
+    if (method === 'POST' && actionMatch) {
+      const item = appointments.find(
+        (appointment) => appointment.appointment_id === Number(actionMatch[1]),
+      );
+      if (!item || !canViewAppointment(item, role)) {
+        reply(404, { message: 'Cita no encontrada.' });
+        return;
+      }
+      if (
+        !Number.isSafeInteger(body.expected_version) ||
+        !Object.hasOwn(statusTargets, body.action)
+      ) {
+        reply(400, {
+          message: 'La accion y la version de la cita son obligatorias.',
+        });
+        return;
+      }
+      if (body.expected_version !== item.status_version) {
+        reply(409, {
+          message: 'La cita cambio. Actualiza la agenda e intenta otra vez.',
+        });
+        return;
+      }
+      if (
+        !appointmentCapabilities(item, role).allowed_actions.includes(
+          body.action,
+        )
+      ) {
+        reply(400, {
+          message:
+            'Esta accion no esta disponible para el estado actual de la cita.',
+        });
+        return;
+      }
+      if (
+        body.action === 'start' &&
+        appointments.some(
+          (other) =>
+            other !== item &&
+            other.doctor_id === item.doctor_id &&
+            other.appointment_status === 'in_progress',
+        )
+      ) {
+        reply(409, {
+          message:
+            'El medico ya tiene una consulta en curso. Finalizala antes de atender otra.',
+        });
+        return;
+      }
+      changeStatus(item, role, body.action);
+      mutations.push({
+        method,
+        path: url.pathname,
+        id: item.appointment_id,
+        action: body.action,
+        role,
+      });
+      reply(200, statusSnapshot(item, role));
       return;
     }
     const appointmentMatch = url.pathname.match(/^\/appointments\/(\d+)$/);
@@ -419,41 +687,112 @@ function createLayoutServer() {
       const item = appointments.find(
         (appointment) => appointment.appointment_id === id,
       );
-      if (!item) {
+      if (!item || !canViewAppointment(item, role)) {
         reply(404, { message: 'Appointment not found.' });
         return;
       }
-      if (method === 'PUT') Object.assign(item, body);
-      else if (method === 'DELETE')
-        appointments = appointments.filter(
-          (appointment) => appointment !== item,
-        );
+      if (method === 'GET') {
+        reply(200, appointmentView(item, role));
+        return;
+      }
+      if (method === 'PUT') {
+        if (role !== 'patient' || item.patient_id !== profiles[role].user_id) {
+          reply(404, { message: 'Cita no encontrada.' });
+          return;
+        }
+        if (
+          body.expected_version !== undefined &&
+          body.expected_version !== item.status_version
+        ) {
+          reply(409, {
+            message: 'La cita cambio. Actualiza antes de guardar.',
+          });
+          return;
+        }
+        if (!appointmentCapabilities(item, role).can_reschedule) {
+          reply(400, { message: 'Esta cita ya no se puede modificar.' });
+          return;
+        }
+        if (
+          body.start_date_time !== undefined ||
+          body.end_date_time !== undefined
+        ) {
+          if (
+            !Number.isFinite(Date.parse(body.start_date_time)) ||
+            !Number.isFinite(Date.parse(body.end_date_time)) ||
+            Date.parse(body.start_date_time) <= now() ||
+            Date.parse(body.end_date_time) -
+              Date.parse(body.start_date_time) !==
+              30 * 60_000
+          ) {
+            reply(400, { message: 'El nuevo horario no es valido.' });
+            return;
+          }
+          item.start_date_time = body.start_date_time;
+          item.end_date_time = body.end_date_time;
+          const from_status = item.appointment_status;
+          item.appointment_status = 'scheduled';
+          item.status_version += 1;
+          item.status_updated_at = new Date(now()).toISOString();
+          appointmentEvents.push({
+            appointment_id: item.appointment_id,
+            from_status,
+            to_status: 'scheduled',
+            action: 'reschedule',
+            actor_user_id: profiles[role].user_id,
+            occurred_at: item.status_updated_at,
+            version: item.status_version,
+          });
+        }
+        if (body.appointment_description !== undefined) {
+          item.appointment_description = body.appointment_description;
+          if (body.start_date_time === undefined) {
+            item.status_version += 1;
+            item.status_updated_at = new Date(now()).toISOString();
+            appointmentEvents.push({
+              appointment_id: item.appointment_id,
+              from_status: item.appointment_status,
+              to_status: item.appointment_status,
+              action: 'update_notes',
+              actor_user_id: profiles[role].user_id,
+              occurred_at: item.status_updated_at,
+              version: item.status_version,
+            });
+          }
+        }
+      } else if (method === 'DELETE') {
+        if (role !== 'patient' || item.patient_id !== profiles[role].user_id) {
+          reply(404, { message: 'Cita no encontrada.' });
+          return;
+        }
+        if (item.appointment_status === 'cancelled') {
+          reply(200, { message: 'Guardado' });
+          return;
+        }
+        if (
+          !appointmentCapabilities(item, role).allowed_actions.includes(
+            'cancel',
+          )
+        ) {
+          reply(400, { message: 'Esta cita no se puede cancelar.' });
+          return;
+        }
+        changeStatus(item, role, 'cancel');
+      } else {
+        reply(405, { message: 'Metodo no permitido.' });
+        return;
+      }
       mutations.push({ method, path: url.pathname, id });
       reply(200, { message: 'Guardado' });
       return;
     }
     if (url.pathname === '/doctors/getDoctorAppointments') {
-      const today = Array.from({ length: 10 }, (_, index) => ({
-        ...appointments[index],
-        appointment_id: 1000 + index,
-        first_name: `Paciente ${pad(index + 1)}`,
-        first_last_name: 'Pruebas',
-        start_date_time: instant(0, 480 + index * 30),
-        end_date_time: instant(0, 510 + index * 30),
-      }));
-      reply(200, [
-        ...today,
-        ...appointments
-          .filter(
-            (appointment) =>
-              Date.parse(appointment.start_date_time) > Date.now(),
-          )
-          .map((appointment, index) => ({
-            ...appointment,
-            first_name: `Paciente ${pad(index + 1)}`,
-            first_last_name: 'Pruebas',
-          })),
-      ]);
+      reply(
+        200,
+        appointments
+          .filter((item) => item.doctor_id === profiles[role].user_id)
+          .map((item) => appointmentView(item, role)),
+      );
       return;
     }
     if (url.pathname === '/doctors/getDoctorPatientHistories') {
@@ -496,7 +835,7 @@ function createLayoutServer() {
       const prescription = {
         ...body,
         prescription_id: nextPrescriptionId++,
-        date_emitted: new Date().toISOString(),
+        date_emitted: new Date(now()).toISOString(),
       };
       prescriptions.push(prescription);
       mutations.push({
@@ -530,6 +869,7 @@ function createLayoutServer() {
       reply(200, {
         mutations,
         appointments,
+        appointmentEvents,
         prescriptions,
         clinics,
         roleFailure,
@@ -539,8 +879,34 @@ function createLayoutServer() {
           'patient@layout.test',
           'doctor@layout.test',
           'admin@layout.test',
+          'employee@layout.test',
         ],
       });
+      return;
+    }
+    if (method === 'POST' && url.pathname === '/__qa/appointment') {
+      const item = appointments.find(
+        (appointment) =>
+          appointment.appointment_id === Number(body.appointment_id),
+      );
+      if (
+        !item ||
+        (body.appointment_status && !statuses.includes(body.appointment_status))
+      ) {
+        reply(400, { message: 'Cita o estado de prueba invalido.' });
+        return;
+      }
+      for (const key of [
+        'appointment_status',
+        'start_date_time',
+        'end_date_time',
+        'appointment_description',
+      ]) {
+        if (body[key] !== undefined) item[key] = body[key];
+      }
+      item.status_version += 1;
+      item.status_updated_at = new Date(now()).toISOString();
+      reply(200, item);
       return;
     }
     if (method === 'POST' && url.pathname === '/__qa/role-error') {

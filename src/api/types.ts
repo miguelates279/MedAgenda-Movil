@@ -132,6 +132,35 @@ export interface AppointmentSlot {
   end_date_time: string;
 }
 
+export type AppointmentStatus =
+  | 'scheduled'
+  | 'confirmed'
+  | 'waiting'
+  | 'called'
+  | 'in_progress'
+  | 'completed'
+  | 'cancelled'
+  | 'no_show';
+
+export type AppointmentAction =
+  'confirm' | 'check_in' | 'call' | 'start' | 'complete' | 'no_show' | 'cancel';
+
+export interface AppointmentState {
+  appointment_id: number;
+  appointment_status: AppointmentStatus;
+  status_version: number;
+  status_updated_at: string | null;
+  allowed_actions: AppointmentAction[];
+  can_reschedule: boolean;
+  can_edit_notes: boolean;
+}
+
+export interface DispatchClinic {
+  clinic_id: number;
+  clinic_name: string;
+  role_within_clinic: 'Owner' | 'Admin' | 'Employee';
+}
+
 export interface DoctorAppointmentView {
   appointment_id: number;
   start_date_time: string;
@@ -144,6 +173,17 @@ export interface DoctorAppointmentView {
   clinic_name: string;
   clinic_id?: number;
   doctor_id?: number;
+  patient_id?: number;
+  doctor_first_name?: string;
+  doctor_second_name?: string | null;
+  doctor_first_last_name?: string;
+  doctor_second_last_name?: string;
+  appointment_status?: AppointmentStatus;
+  status_version?: number;
+  status_updated_at?: string | null;
+  allowed_actions?: AppointmentAction[];
+  can_reschedule?: boolean;
+  can_edit_notes?: boolean;
 }
 
 export interface CreateAppointmentDto {
@@ -155,6 +195,7 @@ export interface CreateAppointmentDto {
 }
 
 export interface UpdateAppointmentDto {
+  expected_version?: number;
   appointment_description?: string;
   start_date_time?: string;
   end_date_time?: string;

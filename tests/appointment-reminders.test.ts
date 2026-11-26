@@ -237,6 +237,122 @@ test('una cita eliminada del servidor o ya cumplida retira sus avisos al reconci
   assert.equal(device.pending.size, 0);
 });
 
+test('solo las citas programadas, confirmadas o anteriores a la migración generan recordatorios', () => {
+  const statuses = [
+    undefined,
+    'scheduled',
+    'confirmed',
+    'waiting',
+    'called',
+    'in_progress',
+    'completed',
+    'cancelled',
+    'no_show',
+    'unknown',
+    null,
+  ];
+  const plan = buildReminderPlan(
+    statuses.map((appointment_status, index) => ({
+      ...appointment(index + 1),
+      appointment_status,
+    })) as DoctorAppointmentView[],
+    42,
+    NOW,
+  );
+  assert.deepEqual(
+    plan.map((reminder) => reminder.data.appointmentId).sort(),
+    [1, 1, 2, 2, 3, 3],
+  );
+});
+
+test('un cambio remoto de estado retira los avisos pendientes y visibles aunque la cita siga en el historial', async () => {
+  for (const appointment_status of [
+    'waiting',
+    'called',
+    'in_progress',
+    'completed',
+    'cancelled',
+    'no_show',
+  ]) {
+    const { service, device, state } = setup();
+    state.appointments.push(appointment(8));
+    await service.setSession({ patientId: 42, sessionId: 1 });
+    await service.refresh();
+    for (const reminder of device.pending.values()) {
+      device.visible.set(reminder.identifier, reminder);
+    }
+    device.visible.set('another-feature', {
+      identifier: 'another-feature',
+      data: {},
+    });
+    state.appointments = [
+      { ...appointment(), appointment_status } as DoctorAppointmentView,
+      appointment(8),
+    ];
+    const retained = await service.refresh();
+    assert.equal(retained.length, 2, appointment_status);
+    assert.equal(device.pending.size, 2, appointment_status);
+    assert.equal(device.visible.size, 3, appointment_status);
+    assert.ok(device.visible.has('another-feature'), appointment_status);
+    assert.ok(
+      [...device.pending.values(), ...device.visible.values()].every(
+        (reminder) => readReminderData(reminder.data)?.appointmentId !== 7,
+      ),
+      appointment_status,
+    );
+  }
+});
+
+test('confirmar conserva los avisos existentes y reprogramar después de confirmar sustituye sus horarios', async () => {
+  const { service, device, state } = setup();
+  await service.setSession({ patientId: 42, sessionId: 1 });
+  await service.refresh();
+  state.appointments = [
+    {
+      ...appointment(),
+      appointment_status: 'confirmed',
+    } as DoctorAppointmentView,
+  ];
+  await service.refresh();
+  assert.equal(device.scheduledCalls, 2);
+  state.appointments = [
+    {
+      ...appointment(7, NOW + 72 * HOUR),
+      appointment_status: 'scheduled',
+    } as DoctorAppointmentView,
+  ];
+  await service.refresh();
+  assert.equal(device.pending.size, 2);
+  assert.equal(device.scheduledCalls, 4);
+  assert.ok(
+    [...device.pending.values()].every(
+      (reminder) =>
+        readReminderData(reminder.data)?.startsAt === NOW + 72 * HOUR,
+    ),
+  );
+});
+
+test('una respuesta atrasada no restaura recordatorios después de observar la cancelación persistida', async () => {
+  const { service, device, state } = setup();
+  await service.setSession({ patientId: 42, sessionId: 1 });
+  await service.refresh();
+  const old = deferred<DoctorAppointmentView[]>();
+  state.load = () => old.promise;
+  const staleRefresh = service.refresh();
+  state.load = null;
+  state.appointments = [
+    {
+      ...appointment(),
+      appointment_status: 'cancelled',
+    } as DoctorAppointmentView,
+  ];
+  await service.refresh();
+  old.resolve([appointment()]);
+  await staleRefresh;
+  assert.equal(device.pending.size, 0);
+  assert.equal(device.scheduledCalls, 2);
+});
+
 test('autorizar alarmas exactas reemplaza avisos anteriores y revocar permisos los retira', async () => {
   const { service, device } = setup();
   for (const reminder of buildReminderPlan(

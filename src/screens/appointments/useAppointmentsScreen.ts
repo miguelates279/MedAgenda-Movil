@@ -3,10 +3,16 @@ import { AppState } from 'react-native';
 import { useFocusEffect, useRouter } from 'expo-router';
 import apiClient from '../../api/client';
 import { appointmentReminders } from './reminders/appointmentReminders';
-import { hasPreciseReminderAccess, hasReminderPermission, remindersSupported } from './reminders/deviceNotifications';
+import {
+  hasPreciseReminderAccess,
+  hasReminderPermission,
+  remindersSupported,
+} from './reminders/deviceNotifications';
 import { DoctorAppointmentView } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
 import { appAlerts } from '../../utils/appAlerts';
+import { isAppointmentUpcoming } from '../../utils/appointmentStatus';
+import { useFocusedRefresh } from '../../hooks/useFocusedRefresh';
 
 export function useAppointmentsScreen() {
   const router = useRouter();
@@ -17,52 +23,71 @@ export function useAppointmentsScreen() {
   const [tab, setTab] = useState<'upcoming' | 'past'>('upcoming');
   const [error, setError] = useState<string | null>(null);
   const [remindersEnabled, setRemindersEnabled] = useState(false);
-  const [remindersPrecise, setRemindersPrecise] = useState(hasPreciseReminderAccess);
+  const [remindersPrecise, setRemindersPrecise] = useState(
+    hasPreciseReminderAccess,
+  );
   const [enablingReminders, setEnablingReminders] = useState(false);
   const requestGeneration = useRef(0);
 
-  const loadAppointments = useCallback(async () => {
-    if (!isAuthenticated) {
-      setLoading(false);
-      return;
-    }
-    setLoading(true);
-    setError(null);
-    const sessionId = apiClient.getSessionId();
-    const generation = ++requestGeneration.current;
-    const current = () => generation === requestGeneration.current && sessionId === apiClient.getSessionId();
-    try {
-      const data = await appointmentReminders.refresh();
-      if (!current()) return;
-      setAppointments(data || []);
-      const allowed = await hasReminderPermission().catch(() => false);
-      if (current()) {
-        setRemindersEnabled(allowed);
-        setRemindersPrecise(hasPreciseReminderAccess());
+  const loadAppointments = useCallback(
+    async (quiet = false) => {
+      if (!isAuthenticated) {
+        setLoading(false);
+        return;
       }
-    } catch (err: any) {
-      if (current()) setError(err.message || 'Error al cargar las citas');
-    } finally {
-      if (current()) setLoading(false);
-    }
-  }, [isAuthenticated]);
-
-  useFocusEffect(useCallback(() => {
-    void loadAppointments();
-    return () => { ++requestGeneration.current; };
-  }, [loadAppointments]));
-
-  useEffect(() => {
-    let mounted = true;
-    const subscription = AppState.addEventListener('change', state => {
-      if (state === 'active') void hasReminderPermission().then(allowed => {
-        if (mounted) {
+      if (!quiet) setLoading(true);
+      setError(null);
+      const sessionId = apiClient.getSessionId();
+      const generation = ++requestGeneration.current;
+      const current = () =>
+        generation === requestGeneration.current &&
+        sessionId === apiClient.getSessionId();
+      try {
+        const data = await appointmentReminders.refresh();
+        if (!current()) return;
+        setAppointments(data || []);
+        const allowed = await hasReminderPermission().catch(() => false);
+        if (current()) {
           setRemindersEnabled(allowed);
           setRemindersPrecise(hasPreciseReminderAccess());
         }
-      }).catch(() => {});
+      } catch (err: any) {
+        if (current()) setError(err.message || 'Error al cargar las citas');
+      } finally {
+        if (current()) setLoading(false);
+      }
+    },
+    [isAuthenticated],
+  );
+
+  useFocusEffect(
+    useCallback(() => {
+      void loadAppointments();
+      return () => {
+        ++requestGeneration.current;
+      };
+    }, [loadAppointments]),
+  );
+
+  useFocusedRefresh(() => loadAppointments(true), isAuthenticated);
+
+  useEffect(() => {
+    let mounted = true;
+    const subscription = AppState.addEventListener('change', (state) => {
+      if (state === 'active')
+        void hasReminderPermission()
+          .then((allowed) => {
+            if (mounted) {
+              setRemindersEnabled(allowed);
+              setRemindersPrecise(hasPreciseReminderAccess());
+            }
+          })
+          .catch(() => {});
     });
-    return () => { mounted = false; subscription.remove(); };
+    return () => {
+      mounted = false;
+      subscription.remove();
+    };
   }, []);
 
   const enableReminders = async () => {
@@ -91,16 +116,16 @@ export function useAppointmentsScreen() {
 
   const filteredAppointments = appointments
     .filter((appt) => {
-      const apptDate = new Date(appt.start_date_time);
       if (tab === 'upcoming') {
-        return apptDate >= now;
+        return isAppointmentUpcoming(appt, now.getTime());
       }
-      return apptDate < now;
+      return !isAppointmentUpcoming(appt, now.getTime());
     })
     .filter((appt) => {
       if (!search.trim()) return true;
       const term = search.toLowerCase();
-      const doctorName = `${appt.first_name} ${appt.first_last_name}`.toLowerCase();
+      const doctorName =
+        `${appt.first_name} ${appt.first_last_name}`.toLowerCase();
       const clinicName = (appt.clinic_name || '').toLowerCase();
       const desc = (appt.appointment_description || '').toLowerCase();
       return (

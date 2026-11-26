@@ -10,6 +10,7 @@ import {
 import { useClinicDetail } from './useClinicDetail';
 import { ClaySurface } from '../../components/ClaySurface';
 import { tokens } from '../../theme/tokens';
+import { ClinicAppointmentAgenda } from './ClinicAppointmentAgenda';
 
 export function ClinicDetailScreen() {
   const {
@@ -149,6 +150,8 @@ export function ClinicDetailScreen() {
             )}
           </Card>
         )}
+
+        {clinic && <ClinicAppointmentAgenda clinicId={clinic.clinic_id} />}
 
         <View className="mt-2">
           <Text className="text-base font-bold text-med-text-main mb-3">

@@ -5,6 +5,8 @@ import { DoctorAppointmentView } from '../api/types';
 import { useAuth } from '../context/AuthContext';
 import { useUserInfo } from './useUserInfo';
 import { useLogout } from './useLogout';
+import { isAppointmentUpcoming } from '../utils/appointmentStatus';
+import { useFocusedRefresh } from './useFocusedRefresh';
 
 export const useHome = () => {
   const router = useRouter();
@@ -29,7 +31,8 @@ export const useHome = () => {
     redirectTo: '/clinics',
   });
 
-  const [upcomingAppt, setUpcomingAppt] = useState<DoctorAppointmentView | null>(null);
+  const [upcomingAppt, setUpcomingAppt] =
+    useState<DoctorAppointmentView | null>(null);
   const [loadingAppt, setLoadingAppt] = useState(false);
   const [apptError, setApptError] = useState<string | null>(null);
 
@@ -54,7 +57,7 @@ export const useHome = () => {
     }
   }, [token]);
 
-  const loadNextAppointment = useCallback(async () => {
+  const loadNextAppointment = useCallback(async (quiet = false) => {
     if (!activeAuthRef.current || !activeTokenRef.current) {
       requestGenRef.current += 1;
       setUpcomingAppt(null);
@@ -66,7 +69,7 @@ export const useHome = () => {
     const currentToken = activeTokenRef.current;
     const currentGen = ++requestGenRef.current;
 
-    setLoadingAppt(true);
+    if (!quiet) setLoadingAppt(true);
     setApptError(null);
 
     try {
@@ -86,12 +89,12 @@ export const useHome = () => {
       const upcoming = validList
         .filter((a) => {
           const startTime = new Date(a.start_date_time).getTime();
-          // Cita futura: timestamp numérico válido y hora de inicio aún no transcurrida
-          return !isNaN(startTime) && startTime >= now;
+          return !isNaN(startTime) && isAppointmentUpcoming(a, now);
         })
         .sort(
           (a, b) =>
-            new Date(a.start_date_time).getTime() - new Date(b.start_date_time).getTime()
+            new Date(a.start_date_time).getTime() -
+            new Date(b.start_date_time).getTime(),
         )[0];
 
       setUpcomingAppt(upcoming || null);
@@ -121,8 +124,10 @@ export const useHome = () => {
   useFocusEffect(
     useCallback(() => {
       loadNextAppointment();
-    }, [loadNextAppointment])
+    }, [loadNextAppointment]),
   );
+
+  useFocusedRefresh(() => loadNextAppointment(true), isAuthenticated);
 
   const navigateToClinics = () => router.push('/clinics' as any);
   const navigateToAppointments = () => router.push('/appointments' as any);

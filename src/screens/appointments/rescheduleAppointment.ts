@@ -50,7 +50,12 @@ export async function rescheduleAppointment(
     start_date_time: slot.start.toISOString(),
     end_date_time: slot.end.toISOString(),
   };
-  await dependencies.update(appointment.appointment_id, dates);
+  await dependencies.update(appointment.appointment_id, {
+    ...dates,
+    ...(appointment.status_version === undefined
+      ? {}
+      : { expected_version: appointment.status_version }),
+  });
   if (!dependencies.sessionIsCurrent()) return null;
   let remindersUpdated = true;
   try {
