@@ -18,6 +18,13 @@ import {
 } from 'react-native';
 import { tokens } from '../theme/tokens';
 
+// El campo enfocado se ubica a esta fracción del área visible (desde arriba)
+// cuando el teclado está abierto y el campo quedaría en la parte baja.
+const FIELD_ANCHOR_RATIO = 0.2;
+// Con el teclado abierto, un campo cuyo borde inferior pase de esta fracción
+// del área visible se reubica en el ancla, para dejar ver el siguiente campo.
+const FIELD_COMFORT_LIMIT = 0.6;
+
 export interface FormScrollContextType {
   scrollToField: (targetView: View | null) => void;
 }
@@ -64,6 +71,11 @@ export const KeyboardAwareScrollView = React.forwardRef<
     const innerContainerRef = useRef<View | null>(null);
     const activeFieldRef = useRef<View | null>(null);
     const currentScrollY = useRef(0);
+    // Borde superior del teclado en coordenadas de pantalla (null si está oculto).
+    // Con edge-to-edge en Android el KeyboardAvoidingView no siempre encoge la
+    // vista, así que el área visible se limita explícitamente por el teclado.
+    const keyboardTopRef = useRef<number | null>(null);
+    const [keyboardHeight, setKeyboardHeight] = useState(0);
 
     const scrollTimer = useRef<ReturnType<typeof setTimeout> | null>(null);
 
@@ -101,12 +113,26 @@ export const KeyboardAwareScrollView = React.forwardRef<
                 viewportHeight <= 0
               )
                 return;
-              const top = viewportTop + extraScrollHeight;
-              const bottom = viewportTop + viewportHeight - extraScrollHeight;
+              const keyboardTop = keyboardTopRef.current;
+              const visibleBottom =
+                keyboardTop !== null && Number.isFinite(keyboardTop)
+                  ? Math.min(viewportTop + viewportHeight, keyboardTop)
+                  : viewportTop + viewportHeight;
+              const keyboardOpen =
+                keyboardTop !== null && Number.isFinite(keyboardTop);
+              const visibleHeight = Math.max(1, visibleBottom - viewportTop);
+              const minTop = viewportTop + tokens.spacing.sm;
+              const comfortableBottom = keyboardOpen
+                ? viewportTop + visibleHeight * FIELD_COMFORT_LIMIT
+                : visibleBottom - extraScrollHeight;
+              const anchor =
+                fieldHeight > visibleHeight * (1 - FIELD_ANCHOR_RATIO)
+                  ? minTop
+                  : viewportTop + visibleHeight * FIELD_ANCHOR_RATIO;
               const delta =
-                fieldHeight > bottom - top || fieldTop < top
-                  ? fieldTop - top
-                  : Math.max(0, fieldTop + fieldHeight - bottom);
+                fieldTop < minTop || fieldTop + fieldHeight > comfortableBottom
+                  ? fieldTop - anchor
+                  : 0;
               if (delta !== 0)
                 internalScrollRef.current?.scrollTo({
                   y: Math.max(0, currentScrollY.current + delta),
@@ -125,7 +151,9 @@ export const KeyboardAwareScrollView = React.forwardRef<
     useEffect(() => {
       const showEvent =
         Platform.OS === 'ios' ? 'keyboardWillShow' : 'keyboardDidShow';
-      const showSub = Keyboard.addListener(showEvent, () => {
+      const showSub = Keyboard.addListener(showEvent, (event) => {
+        keyboardTopRef.current = event.endCoordinates.screenY;
+        setKeyboardHeight(event.endCoordinates.height);
         measureViewport();
         if (activeFieldRef.current) {
           performScrollTo(activeFieldRef.current);
@@ -135,6 +163,8 @@ export const KeyboardAwareScrollView = React.forwardRef<
       const hideEvent =
         Platform.OS === 'ios' ? 'keyboardWillHide' : 'keyboardDidHide';
       const hideSub = Keyboard.addListener(hideEvent, () => {
+        keyboardTopRef.current = null;
+        setKeyboardHeight(0);
         activeFieldRef.current = null;
       });
 
@@ -181,6 +211,10 @@ export const KeyboardAwareScrollView = React.forwardRef<
                   if (activeFieldRef.current)
                     performScrollTo(activeFieldRef.current);
                 }}
+                onContentSizeChange={() => {
+                  if (activeFieldRef.current)
+                    performScrollTo(activeFieldRef.current);
+                }}
                 onScroll={(e) => {
                   currentScrollY.current = e.nativeEvent.contentOffset.y;
                   onScroll?.(e);
@@ -190,10 +224,12 @@ export const KeyboardAwareScrollView = React.forwardRef<
                 contentContainerStyle={[
                   contentContainerStyle,
                   {
-                    paddingBottom: Math.max(
-                      tokens.layout.formBottom,
-                      (contentContainerStyle as any)?.paddingBottom || tokens.layout.formBottom,
-                    ),
+                    paddingBottom:
+                      Math.max(
+                        tokens.layout.formBottom,
+                        (contentContainerStyle as any)?.paddingBottom ||
+                          tokens.layout.formBottom,
+                      ) + keyboardHeight,
                   },
                 ]}
                 style={style}
