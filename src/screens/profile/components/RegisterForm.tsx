@@ -5,6 +5,11 @@ import { Controller } from 'react-hook-form';
 import { Button, Field } from '../../../components';
 import { tokens } from '../../../theme/tokens';
 import { DataPolicyModal } from './DataPolicyModal';
+import {
+  validateEmail,
+  validateLegalId,
+  validatePhone,
+} from '../../../utils/registerValidation';
 import { useRegisterForm } from '../../../hooks/useRegisterForm';
 import { ClaySurface } from '../../../components/ClaySurface';
 
@@ -62,7 +67,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         name="legal_id"
         label="Identificación *"
         placeholder="Cédula o pasaporte"
-        rules={{ required: 'La identificación es requerida' }}
+        autoCapitalize="none"
+        rules={{ validate: validateLegalId }}
       />
 
       <Field
@@ -71,6 +77,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         label="Teléfono"
         placeholder="+57 300 000 0000"
         keyboardType="phone-pad"
+        rules={{ validate: validatePhone }}
       />
 
       <Field
@@ -80,7 +87,8 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         placeholder="correo@ejemplo.com"
         keyboardType="email-address"
         autoCapitalize="none"
-        rules={{ required: 'El correo es requerido' }}
+        autoCorrect={false}
+        rules={{ validate: validateEmail }}
       />
 
       <Field
