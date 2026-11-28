@@ -1,6 +1,10 @@
-import React from 'react';
+import React, { useState } from 'react';
 import { Pressable, Text, View } from 'react-native';
+import { Ionicons } from '@expo/vector-icons';
+import { Controller } from 'react-hook-form';
 import { Button, Field } from '../../../components';
+import { tokens } from '../../../theme/tokens';
+import { DataPolicyModal } from './DataPolicyModal';
 import { useRegisterForm } from '../../../hooks/useRegisterForm';
 import { ClaySurface } from '../../../components/ClaySurface';
 
@@ -19,6 +23,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     serverError,
     passwordValue,
   } = useRegisterForm();
+  const [policyVisible, setPolicyVisible] = useState(false);
 
   return (
     <View className="w-full">
@@ -103,6 +108,55 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
         }}
       />
 
+      <Controller
+        control={control}
+        name="data_consent"
+        rules={{
+          validate: (value: boolean) =>
+            value === true ||
+            'Debes autorizar el tratamiento de datos para continuar',
+        }}
+        render={({ field, fieldState }) => (
+          <View className="mb-3">
+            <Pressable
+              onPress={() => field.onChange(!field.value)}
+              accessibilityRole="checkbox"
+              accessibilityState={{ checked: !!field.value }}
+              accessibilityLabel="Autorizo el tratamiento de mis datos personales"
+              className="min-h-touch flex-row items-start py-1 active:opacity-70"
+            >
+              <Ionicons
+                name={field.value ? 'checkbox' : 'square-outline'}
+                size={tokens.iconSize[22]}
+                color={
+                  fieldState.error
+                    ? tokens.colors.error.accent
+                    : tokens.colors.primary
+                }
+              />
+              <Text className="min-w-0 flex-1 text-sm text-med-text-main ml-2 leading-5">
+                Autorizo el tratamiento de mis datos personales, incluidos
+                los datos de salud, según la Ley 1581 de 2012. *
+              </Text>
+            </Pressable>
+            <Pressable
+              onPress={() => setPolicyVisible(true)}
+              accessibilityRole="link"
+              className="min-h-touch justify-center self-start ml-8 active:opacity-70"
+            >
+              <Text className="text-sm font-bold text-med-primary">
+                Leer la política de tratamiento de datos
+              </Text>
+            </Pressable>
+            {fieldState.error ? (
+              <Text className="mt-1 text-xs text-med-error-text">
+                {fieldState.error.message}
+              </Text>
+            ) : null}
+          </View>
+        )}
+      />
+
       {serverError ? (
         <ClaySurface className="bg-med-error-bg border border-med-error-border rounded-clay p-2.5 mb-3">
           <Text className="text-med-error-badge-text text-sm font-medium">
@@ -129,6 +183,11 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
           <Text className="text-med-primary font-bold">Inicia sesión</Text>
         </Text>
       </Pressable>
+
+      <DataPolicyModal
+        visible={policyVisible}
+        onClose={() => setPolicyVisible(false)}
+      />
     </View>
   );
 };

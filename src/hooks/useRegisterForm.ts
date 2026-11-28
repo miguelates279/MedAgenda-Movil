@@ -8,7 +8,10 @@ export interface UseRegisterFormOptions {
   onSuccess?: () => void;
 }
 
-export type RegisterFormData = CreateUserDto & { confirm_password: string };
+export type RegisterFormData = CreateUserDto & {
+  confirm_password: string;
+  data_consent: boolean;
+};
 
 export const useRegisterForm = (options?: UseRegisterFormOptions) => {
   const { signUp } = useAuth();
@@ -27,6 +30,7 @@ export const useRegisterForm = (options?: UseRegisterFormOptions) => {
       user_email_address: '',
       password: '',
       confirm_password: '',
+      data_consent: false,
     },
   });
 
@@ -36,7 +40,13 @@ export const useRegisterForm = (options?: UseRegisterFormOptions) => {
     setServerError('');
     setLoading(true);
     try {
-      const { confirm_password, ...dto } = data;
+      if (!data.data_consent) {
+        setServerError(
+          'Debes autorizar el tratamiento de tus datos personales para crear la cuenta.',
+        );
+        return;
+      }
+      const { confirm_password, data_consent, ...dto } = data;
       await signUp(dto);
       if (options?.onSuccess) {
         options.onSuccess();
