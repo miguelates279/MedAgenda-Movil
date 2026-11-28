@@ -3,9 +3,12 @@ import { useRouter } from 'expo-router';
 import { useForm } from 'react-hook-form';
 import { useAuth } from '../context/AuthContext';
 import { CreateUserDto } from '../api/types';
+import { appAlerts } from '../utils/appAlerts';
 
 export interface UseRegisterFormOptions {
   onSuccess?: () => void;
+  /** Se llama si la cuenta se creó pero el inicio de sesión automático falló. */
+  onLoginRequired?: () => void;
 }
 
 export type RegisterFormData = CreateUserDto & {
@@ -14,7 +17,7 @@ export type RegisterFormData = CreateUserDto & {
 };
 
 export const useRegisterForm = (options?: UseRegisterFormOptions) => {
-  const { signUp } = useAuth();
+  const { signUp, signIn } = useAuth();
   const router = useRouter();
   const [serverError, setServerError] = useState('');
   const [loading, setLoading] = useState(false);
@@ -48,6 +51,25 @@ export const useRegisterForm = (options?: UseRegisterFormOptions) => {
       }
       const { confirm_password, data_consent, ...dto } = data;
       await signUp(dto);
+
+      // La cuenta ya existe: iniciar sesión con las mismas credenciales para
+      // entrar directo a la app. Un fallo aquí no es un error de registro.
+      try {
+        await signIn({
+          email: dto.user_email_address,
+          password: dto.password,
+        });
+      } catch {
+        appAlerts.alert(
+          'Cuenta creada',
+          'Tu cuenta se creó correctamente, pero no pudimos iniciar sesión automáticamente. Inicia sesión con tu correo y contraseña.',
+          undefined,
+          { variant: 'warning' },
+        );
+        options?.onLoginRequired?.();
+        return;
+      }
+
       if (options?.onSuccess) {
         options.onSuccess();
       } else {

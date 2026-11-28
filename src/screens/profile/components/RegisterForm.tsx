@@ -27,7 +27,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
     loading,
     serverError,
     passwordValue,
-  } = useRegisterForm();
+  } = useRegisterForm({ onLoginRequired: onSwitchToLogin });
   const [policyVisible, setPolicyVisible] = useState(false);
 
   return (
@@ -174,7 +174,7 @@ export const RegisterForm: React.FC<RegisterFormProps> = ({
       ) : null}
 
       <Button
-        text={loading ? 'Registrando...' : 'Crear Cuenta'}
+        text={loading ? 'Creando cuenta...' : 'Crear Cuenta'}
         onPress={handleSubmit(onSubmit)}
         loading={loading}
         className="mt-1"
