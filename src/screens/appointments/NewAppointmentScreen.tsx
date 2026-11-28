@@ -11,6 +11,7 @@ import { useNewAppointment } from './useNewAppointment';
 import { AppointmentSchedulePicker } from './components/AppointmentSchedulePicker';
 import { ClaySurface } from '../../components/ClaySurface';
 import { tokens } from '../../theme/tokens';
+import { useKeyboardVisibility } from '../../hooks/useKeyboardVisibility';
 
 export function NewAppointmentScreen() {
   const appointmentForm = useNewAppointment();
@@ -30,6 +31,7 @@ export function NewAppointmentScreen() {
     scheduleError,
     onSubmit,
   } = appointmentForm;
+  const keyboardVisible = useKeyboardVisibility();
 
   if (!isAuthenticated) {
     return (
@@ -178,14 +180,23 @@ export function NewAppointmentScreen() {
           </ClaySurface>
         ) : null}
 
-        <Button
-          text={submitting ? 'Agendando cita...' : 'Confirmar y Guardar Cita'}
-          onPress={handleSubmit(onSubmit)}
-          loading={submitting}
-          disabled={!selectedSlot || submitting}
-          className="mt-2"
-        />
       </KeyboardAwareScrollView>
+
+      {!keyboardVisible ? (
+        <View className="bg-med-bg border-t border-med-border-light px-4 pt-3 pb-3">
+          {selectedSlot ? null : (
+            <Text className="text-xs text-med-text-soft text-center mb-2">
+              Selecciona un horario disponible para continuar.
+            </Text>
+          )}
+          <Button
+            text={submitting ? 'Agendando cita...' : 'Confirmar y Guardar Cita'}
+            onPress={handleSubmit(onSubmit)}
+            loading={submitting}
+            disabled={!selectedSlot || submitting}
+          />
+        </View>
+      ) : null}
     </View>
   );
 }
