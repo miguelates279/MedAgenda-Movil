@@ -480,6 +480,33 @@ export function useDoctorDashboard() {
     );
   }, [patientHistories, prescriptions, patientQuery]);
 
+  const targetPatientPrescriptions = useMemo(() => {
+    if (!targetPatient) return [];
+    return prescriptions
+      .filter((p) => p.patient_id === targetPatient.patientId)
+      .sort(
+        (a, b) =>
+          new Date(b.date_emitted).getTime() -
+          new Date(a.date_emitted).getTime(),
+      )
+      .slice(0, 5)
+      .map((p) => {
+        const date = new Date(p.date_emitted);
+        return {
+          key: p.prescription_id ?? `${p.date_emitted}-${p.clinic_id}`,
+          displayDate: isNaN(date.getTime())
+            ? p.date_emitted
+            : date.toLocaleDateString('es-ES', {
+                day: '2-digit',
+                month: 'short',
+                year: 'numeric',
+                timeZone: CLINIC_TIME_ZONE,
+              }),
+          description: p.prescription_description,
+        };
+      });
+  }, [prescriptions, targetPatient]);
+
   const stats = useMemo(
     () => ({
       totalUpcoming: upcomingAppointments.length,
@@ -693,6 +720,7 @@ export function useDoctorDashboard() {
     createModalVisible,
     setCreateModalVisible,
     targetPatient,
+    targetPatientPrescriptions,
     selectedClinicId,
     setSelectedClinicId,
     prescriptionText,

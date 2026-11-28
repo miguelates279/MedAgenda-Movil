@@ -38,6 +38,7 @@ export function DoctorDashboardScreen() {
     createModalVisible,
     setCreateModalVisible,
     targetPatient,
+    targetPatientPrescriptions,
     selectedClinicId,
     setSelectedClinicId,
     prescriptionText,
@@ -634,6 +635,34 @@ export function DoctorDashboardScreen() {
                       color={tokens.colors.textSoft}
                     />
                   </ClayPressable>
+                </View>
+
+                <View className="mb-4">
+                  <Text className="text-xs font-bold text-med-text-main mb-1.5">
+                    Recetas anteriores ({targetPatientPrescriptions.length})
+                  </Text>
+                  {targetPatientPrescriptions.length === 0 ? (
+                    <Text className="text-xs text-med-text-light italic">
+                      Este paciente no tiene recetas previas contigo.
+                    </Text>
+                  ) : (
+                    targetPatientPrescriptions.map((previous) => (
+                      <View
+                        key={previous.key}
+                        className="border-l-2 border-med-primary-border pl-2.5 py-1 mb-1.5"
+                      >
+                        <Text className="text-xs font-bold text-med-primary-dark">
+                          {previous.displayDate}
+                        </Text>
+                        <Text
+                          className="text-xs text-med-text-muted leading-4"
+                          numberOfLines={3}
+                        >
+                          {previous.description}
+                        </Text>
+                      </View>
+                    ))
+                  )}
                 </View>
 
                 <Text className="text-xs font-bold text-med-text-main mb-1.5">
