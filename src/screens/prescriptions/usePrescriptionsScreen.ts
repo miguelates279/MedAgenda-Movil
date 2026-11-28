@@ -6,7 +6,6 @@ import apiClient from '../../api/client';
 import { PrescriptionUserView } from '../../api/types';
 import { useAuth } from '../../context/AuthContext';
 import { usePrescriptionExport } from '../../hooks/usePrescriptionExport';
-import { appAlerts } from '../../utils/appAlerts';
 
 export interface PrescriptionGroup {
   clinicId: number;
@@ -21,6 +20,7 @@ export function usePrescriptionsScreen() {
     items: PrescriptionUserView[];
   } | null>(null);
   const [loading, setLoading] = useState(false);
+  const [error, setError] = useState<string | null>(null);
   const focused = useRef(false);
   const mounted = useRef(true);
   const requestGeneration = useRef(0);
@@ -47,17 +47,13 @@ export function usePrescriptionsScreen() {
       apiClient.getSessionId() === sessionId &&
       apiClient.getToken() === token;
     setLoading(true);
+    setError(null);
     try {
       const data = await prescriptionsApi.getUserPrescriptions();
       if (current()) setLoaded({ sessionId, items: data || [] });
     } catch (err: any) {
       if (!current()) return;
-      appAlerts.alert(
-        'Error',
-        err?.message || 'No se pudieron cargar tus fórmulas médicas.',
-        undefined,
-        { variant: 'error' },
-      );
+      setError(err?.message || 'No se pudieron cargar tus fórmulas médicas.');
     } finally {
       if (current()) setLoading(false);
     }
@@ -105,6 +101,7 @@ export function usePrescriptionsScreen() {
   return {
     prescriptions,
     loading,
+    error,
     groups,
     loadPrescriptions,
     pdfPending,

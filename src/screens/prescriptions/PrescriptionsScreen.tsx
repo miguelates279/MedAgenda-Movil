@@ -7,7 +7,7 @@ import {
   View,
 } from 'react-native';
 import { Ionicons } from '@expo/vector-icons';
-import { Badge, Card, ScreenHeader } from '../../components';
+import { Badge, Button, Card, ScreenHeader } from '../../components';
 import { usePrescriptionsScreen } from './usePrescriptionsScreen';
 import { ClaySurface, ClayPressable } from '../../components/ClaySurface';
 import { tokens } from '../../theme/tokens';
@@ -17,6 +17,7 @@ export function PrescriptionsScreen() {
   const {
     prescriptions,
     loading,
+    error,
     groups,
     loadPrescriptions,
     pdfPending,
@@ -66,6 +67,23 @@ export function PrescriptionsScreen() {
           </Text>
         </ClaySurface>
 
+        {error ? (
+          <Card className="mb-4 border-med-error-border bg-med-error-bg">
+            <Text className="text-sm font-bold text-med-error-badge-text mb-1">
+              No se pudieron cargar tus fórmulas
+            </Text>
+            <Text className="text-sm text-med-error-badge-text mb-3">
+              {error}
+            </Text>
+            <Button
+              text="Reintentar"
+              variant="outline"
+              onPress={loadPrescriptions}
+              disabled={loading}
+            />
+          </Card>
+        ) : null}
+
         {loading && prescriptions.length === 0 ? (
           <Card className="p-8 items-center justify-center">
             <ActivityIndicator
@@ -76,7 +94,7 @@ export function PrescriptionsScreen() {
               Cargando fórmulas médicas...
             </Text>
           </Card>
-        ) : groups.length === 0 ? (
+        ) : groups.length === 0 && !error ? (
           <Card className="p-8 items-center justify-center">
             <ClaySurface
               depth="badge"
